@@ -3,12 +3,13 @@ Examples {
 
     Start =        -> put(["Greet" "World"])
                    -> put(["Greet" "Rickard"])
-                   -> put(["Fact" 6])
+                   -> put(["Fact" 4])
 
     Fact  =
-        | 0   .:y .:z -> print({"Factorial of " y " is " mul(z)})
-        | .:x .:y .:z -> put(["Fact" sub([x 1]) y append(z x)])
-        | .:x         -> put(["Fact" x          x []])
+        | .:x      -> put(["FactIter" x x 1])
+    FactIter =
+        | 0      .:arg .:result -> print({"Factorial of " arg " is " result})
+        | .:left .:arg .:result -> put(["FactIter" sub(left 1) arg mul(left result)])
 
     Greet = .:name -> print({"Hello " name "!"})
 }
