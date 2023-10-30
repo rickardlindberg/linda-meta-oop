@@ -1,5 +1,6 @@
 if __name__ == "__main__":
     import operator
+    import functools
     messages = [["Start"]]
     iteration = 0
     while messages:
@@ -11,8 +12,9 @@ if __name__ == "__main__":
         runtime = Runtime({
             "put": next_messages.append,
             "print": lambda text: print(f"Print: {text}\n"),
-            "sub": operator.sub,
-            "mul": operator.mul,
+            "append": lambda xs, item: xs+[item],
+            "sub": lambda things: functools.reduce(operator.sub, things),
+            "mul": lambda things: functools.reduce(operator.mul, things, 1),
         })
         while messages:
             message = messages.pop(0)
