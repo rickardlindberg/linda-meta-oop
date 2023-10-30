@@ -22,6 +22,7 @@ CodeGenerator {
   Range         = repr:x repr:y          -> { x " <= item <= " y ", \"" x "-" y "\""     }
   Set           = repr:x ast:y ast:z     -> { "self.bind(" x ", " y ", lambda: " z ")"   }
   String        = repr
+  Number        = repr
   List          = astList:x              -> { "self.lookup('concat')([" x "])"           }
   ListItem      = repr:x ast:y           -> { "self.lookup('splice')(" x ", " y ")"      }
   Format        = astList:x              -> { "self.lookup('join')([" x "])"             }

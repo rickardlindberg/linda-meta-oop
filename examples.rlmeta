@@ -3,6 +3,11 @@ Examples {
 
     Start =        -> put(["Greet" "World"])
                    -> put(["Greet" "Rickard"])
+                   -> put(["Fact" 3])
+
+    Fact  =
+        | 0        -> print("0")
+        | .:x      -> put(["Fact" sub(x 1)])
 
     Greet = .:name -> print({"Hello " name "!"})
 }

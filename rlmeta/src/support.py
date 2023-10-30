@@ -122,7 +122,7 @@ class SemanticAction:
 
 class Runtime:
 
-    def __init__(self, extra={"len": len, "repr": repr}):
+    def __init__(self, extra={"len": len, "repr": repr, "int": int}):
         self.vars = extra
 
     def bind(self, name, value):
