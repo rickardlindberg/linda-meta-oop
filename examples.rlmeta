@@ -1,0 +1,8 @@
+Examples {
+    run   = %
+
+    Start =        -> put(["Greet" "World"])
+                   -> put(["Greet" "Rickard"])
+
+    Greet = .:name -> print({"Hello " name "!"})
+}
