@@ -97,3 +97,20 @@ where objects can react based on messages in their surroundings.
 * Programs are expressed as information translation machines
 * They act like Erlang-style-actors
 * The communicate with Linda-style tuple spaces
+
+## TODO
+
+* Implement something Actor like
+    * An actor has state
+    * An actor can spawn new actors
+    * Move RLMeta into this style
+
+```
+actor Factorial {
+    Fact = .:x -> put(["FactIter" x x 0])
+               -> spawn(Factorial())
+}
+
+actor Main {
+}
+```
