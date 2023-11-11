@@ -122,7 +122,7 @@ class SemanticAction:
 
 class Runtime:
 
-    def __init__(self, extra={"len": len, "repr": repr, "int": int}):
+    def __init__(self, extra={}):
         self.vars = extra
 
     def bind(self, name, value):
@@ -159,7 +159,7 @@ def compile_chain(grammars, source):
     import os
     import sys
     import pprint
-    runtime = Runtime()
+    runtime = Runtime({"len": len, "repr": repr, "int": int})
     for rule in grammars:
         try:
             source = rules[rule].run(Stream(source)).eval(runtime)
@@ -200,6 +200,9 @@ def run_simulation(extra={}):
             "write": sys.stdout.write,
             "repr": repr,
             "read": read,
+            "len": len,
+            "repr": repr,
+            "int": int,
         }
         for key, value in extra.items():
             x[key] = value

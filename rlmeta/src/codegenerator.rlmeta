@@ -1,4 +1,5 @@
 CodeGenerator {
+  run           = "Ast" [asts:x]         -> write(x)
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
   Namespace     = .:x ast*:ys            -> x:namespace                                         ->

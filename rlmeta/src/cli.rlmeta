@@ -6,5 +6,5 @@ Cli {
     | "--support"             -> write(SUPPORT)
     | "--copy" .:path         -> write(read(path))
     | "--embed" .:name .:path -> write({name " = " repr(read(path)) "\n"})
-    | "--compile" .:path      -> put(["Parse" read(path)])
+    | "--compile" .:path      -> put(["SourceCode" read(path)])
 }

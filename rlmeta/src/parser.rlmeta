@@ -1,4 +1,5 @@
 Parser {
+  run = "SourceCode" [file:x]                 -> put(["Ast" x])
   file =
     | (space namespace)*:xs space !.          -> xs
   namespace =
