@@ -1,4 +1,7 @@
 if __name__ == "__main__":
+    #run_simulation({
+    #    "SUPPORT": SUPPORT,
+    #})
     import sys
     def read(path):
         if path == "-":

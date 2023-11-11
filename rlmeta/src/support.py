@@ -178,11 +178,15 @@ def compile_chain(grammars, source):
             ))
     return source
 
-def run_simulation():
+def run_simulation(extra={}):
     import sys
-    import operator
     def debug(text):
         sys.stderr.write(f"{text}\n")
+    def read(path):
+        if path == "-":
+            return sys.stdin.read()
+        with open(path) as f:
+            return f.read()
     messages = [["Args"]+sys.argv[1:]]
     iteration = 0
     while messages:
@@ -191,12 +195,15 @@ def run_simulation():
             debug(f"  Message {index:2d} = {message}")
         debug("")
         next_messages = []
-        runtime = Runtime({
+        x = {
             "put": next_messages.append,
-            "print": lambda text: print(f"Print: {text}\n"),
-            "sub": operator.sub,
-            "mul": operator.mul,
-        })
+            "write": sys.stdout.write,
+            "repr": repr,
+            "read": read,
+        }
+        for key, value in extra.items():
+            x[key] = value
+        runtime = Runtime(x)
         while messages:
             message = messages.pop(0)
             for name, rule in rules.items():
