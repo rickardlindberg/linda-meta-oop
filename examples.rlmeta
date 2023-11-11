@@ -1,17 +1,20 @@
-Examples {
+ArgsParser {
     run   = %:x !. -> x
-
-    Print = .:x    -> print(x)
-
-    Start =        -> put(["Greet" "World"])
+    Args  = .*     -> put(["Greet" "World"])
                    -> put(["Greet" "Rickard"])
                    -> put(["Fact" 4])
+}
 
+Greeter {
+    run   = %:x !. -> x
+    Greet = .:name -> print({"Hello " name "!"})
+}
+
+Factorial {
+    run   = %:x !. -> x
     Fact  =
         | .:x      -> put(["FactIter" x x 1])
     FactIter =
-        | 0      .:arg .:result -> put(["Print" {"Factorial of " arg " is " result}])
+        | 0      .:arg .:result -> print({"Factorial of " arg " is " result})
         | .:left .:arg .:result -> put(["FactIter" sub(left 1) arg mul(left result)])
-
-    Greet = .:name -> put(["Print" {"Hello " name "!"}])
 }

@@ -1,6 +1,7 @@
 if __name__ == "__main__":
+    import sys
     import operator
-    messages = [["Start"]]
+    messages = [["Args"]+sys.argv[1:]]
     iteration = 0
     while messages:
         print(f"Iteration {iteration}")
@@ -17,6 +18,16 @@ if __name__ == "__main__":
         })
         while messages:
             message = messages.pop(0)
-            rules["Examples.run"].run(Stream(message)).eval(runtime)
+            for name, rule in rules.items():
+                if name.endswith(".run"):
+                    try:
+                        rule.run(Stream(message)).eval(runtime)
+                    except MatchError:
+                        pass
+                    else:
+                        break
+            else:
+                sys.exit(f"ERROR: Message {message} not processed.")
         messages = next_messages
         iteration += 1
+    print("Done!")
