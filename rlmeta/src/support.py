@@ -177,3 +177,38 @@ def compile_chain(grammars, source):
                 runtime.indent(stream_string)
             ))
     return source
+
+def run_simulation():
+    import sys
+    import operator
+    def debug(text):
+        sys.stderr.write(f"{text}\n")
+    messages = [["Args"]+sys.argv[1:]]
+    iteration = 0
+    while messages:
+        debug(f"Iteration {iteration}")
+        for index, message in enumerate(messages):
+            debug(f"  Message {index:2d} = {message}")
+        debug("")
+        next_messages = []
+        runtime = Runtime({
+            "put": next_messages.append,
+            "print": lambda text: print(f"Print: {text}\n"),
+            "sub": operator.sub,
+            "mul": operator.mul,
+        })
+        while messages:
+            message = messages.pop(0)
+            for name, rule in rules.items():
+                if name.endswith(".run"):
+                    try:
+                        rule.run(Stream(message)).eval(runtime)
+                    except MatchError:
+                        pass
+                    else:
+                        break
+            else:
+                sys.exit(f"ERROR: Message {message} not processed.")
+        messages = next_messages
+        iteration += 1
+    debug("Simulation done!")
