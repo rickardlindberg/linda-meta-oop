@@ -12,7 +12,6 @@ if __name__ == "__main__":
         runtime = Runtime({
             "put": next_messages.append,
             "print": lambda text: print(f"Print: {text}\n"),
-            "append": lambda xs, item: xs+[item],
             "sub": operator.sub,
             "mul": operator.mul,
         })
