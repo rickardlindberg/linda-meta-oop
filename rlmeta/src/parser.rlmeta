@@ -27,6 +27,7 @@ Parser {
     | space '.'                               -> ["MatchObject" ["Any"]]
     | space '(' choice:x space ')'            -> x
     | space number:x                          -> ["MatchObject" ["Eq" x]]
+    | space string:x                          -> ["MatchObject" ["Eq" x]]
   matchChar =
     | innerChar:x                             -> ["MatchObject" ["Eq" x]]
   maybeAction =

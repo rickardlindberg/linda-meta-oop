@@ -28,6 +28,7 @@ def compile_rlmeta(rlmeta):
     return run_rlmeta(rlmeta, [
         "--embed", "SUPPORT", "src/support.py",
         "--support",
+        "--compile", "src/cli.rlmeta",
         "--compile", "src/parser.rlmeta",
         "--compile", "src/codegenerator.rlmeta",
         "--copy", "src/main.py",

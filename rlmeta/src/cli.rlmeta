@@ -1,0 +1,10 @@
+Cli {
+  run =
+    | "Args"         !. -> put(["Args" "--compile" "-"])
+    | "Args" arg*:xs !. -> xs
+  arg =
+    | "--support"             -> write(SUPPORT)
+    | "--copy" .:path         -> write(readpath)
+    | "--embed" .:name .:path -> write({name " = " repr(read(path)) "\n"})
+    | "--compile" .:path      -> put(["Parse" read(path)])
+}
