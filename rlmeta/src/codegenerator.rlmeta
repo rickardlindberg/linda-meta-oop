@@ -5,7 +5,15 @@ CodeGenerator {
   Actor         = .:x ast*:ys            -> x:namespace                                         ->
                                             []:ids                                              ->
                                             []:matchers                                         ->
-                                            { matchers ys }
+                                            { matchers ys "class " x ":\n" indent({
+                                                "def __init__(self):\n" indent({
+                                                  "pass\n"
+                                                 })
+                                                "def run(self, stream):\n" indent({
+                                                  "return rules['" x ".run'](stream)\n"
+                                                 })
+                                              })
+                                            }
   Rule          = .:x ast:y              -> { "rules['" namespace "." x "'] = " y "\n"   }
   Or            = matcher:m astList:x    -> { "stream.operator_or([" x "])"              }:body -> m
   Scope         = matcher:m ast:x        -> { "stream.with_scope(" x ")"                 }:body -> m

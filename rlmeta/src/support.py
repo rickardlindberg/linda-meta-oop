@@ -178,7 +178,7 @@ def compile_chain(grammars, source):
             ))
     return source
 
-def run_simulation(extra={}):
+def run_simulation(actors, extra={}):
     import sys
     def debug(text):
         sys.stderr.write(f"{text}\n")
@@ -209,14 +209,13 @@ def run_simulation(extra={}):
         runtime = Runtime(x)
         while messages:
             message = messages.pop(0)
-            for name, rule in rules.items():
-                if name.endswith(".run"):
-                    try:
-                        rule(Stream(message)).eval(runtime)
-                    except MatchError:
-                        pass
-                    else:
-                        break
+            for actor in actors:
+                try:
+                    actor.run(Stream(message)).eval(runtime)
+                except MatchError:
+                    pass
+                else:
+                    break
             else:
                 sys.exit(f"ERROR: Message {message} not processed.")
         messages = next_messages
