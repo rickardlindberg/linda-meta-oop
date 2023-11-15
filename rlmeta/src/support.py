@@ -12,7 +12,7 @@ class Stream:
         for matcher in matchers:
             backtrack_index = self.index
             try:
-                return matcher.run(self)
+                return matcher(self)
             except MatchError:
                 self.index = backtrack_index
         self.error("no or match")
@@ -20,7 +20,7 @@ class Stream:
     def operator_and(self, matchers):
         result = self.action()
         for matcher in matchers:
-            result = matcher.run(self)
+            result = matcher(self)
         return result
 
     def operator_star(self, matcher):
@@ -28,7 +28,7 @@ class Stream:
         while True:
             backtrack_index = self.index
             try:
-                results.append(matcher.run(self))
+                results.append(matcher(self))
             except MatchError:
                 self.index = backtrack_index
                 return self.action(lambda self: [x.eval(self.runtime) for x in results])
@@ -36,7 +36,7 @@ class Stream:
     def operator_not(self, matcher):
         backtrack_index = self.index
         try:
-            matcher.run(self)
+            matcher(self)
         except MatchError:
             return self.action()
         finally:
@@ -50,7 +50,7 @@ class Stream:
         current_scope = self.scope
         self.scope = {}
         try:
-            return matcher.run(self)
+            return matcher(self)
         finally:
             self.scope = current_scope
 
@@ -64,7 +64,7 @@ class Stream:
             try:
                 self.items = self.items[self.index]
                 self.index = 0
-                result = matcher.run(self)
+                result = matcher(self)
                 index += 1
             finally:
                 self.items, self.index = items, index
@@ -76,7 +76,7 @@ class Stream:
         if name in rules:
             rule = rules[name]
             self.index += 1
-            return rule.run(self)
+            return rule(self)
         else:
             self.error("unknown rule")
 
@@ -162,7 +162,7 @@ def compile_chain(grammars, source):
     runtime = Runtime({"len": len, "repr": repr, "int": int})
     for rule in grammars:
         try:
-            source = rules[rule].run(Stream(source)).eval(runtime)
+            source = rules[rule](Stream(source)).eval(runtime)
         except MatchError as e:
             marker = "<ERROR POSITION>"
             if os.isatty(sys.stderr.fileno()):
@@ -212,7 +212,7 @@ def run_simulation(extra={}):
             for name, rule in rules.items():
                 if name.endswith(".run"):
                     try:
-                        rule.run(Stream(message)).eval(runtime)
+                        rule(Stream(message)).eval(runtime)
                     except MatchError:
                         pass
                     else:
