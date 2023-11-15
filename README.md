@@ -32,6 +32,11 @@ Kay has said that we made objects too small. Every cell carries its DNA with
 it. How does that translate to objects in software? What is the DNA of an
 object? Is that what should make them bigger?
 
+Molecules move at random inside cells. If they happen to bump into another
+molecule that it matches with, it does. Because the speed is so fast, this
+happens often enough. This is similar to how a process fetches matches a
+message in tuple-space.
+
 ### Message Passing
 
 How do cells talk to each other? Probably not by named messages? They probably
@@ -97,6 +102,11 @@ where objects can react based on messages in their surroundings.
 * Programs are expressed as information translation machines
 * They act like Erlang-style-actors
 * The communicate with Linda-style tuple spaces
+* Small, independent, pattern-matching machines that solve problems in an
+  ensamble-like fashion.
+* Eaach machine is super simple. It is easy to test. But how does it create a
+  whole? Simulate! Let the computer do the work. How to analyze simulation
+  results?
 
 ## TODO
 
