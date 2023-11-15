@@ -43,7 +43,7 @@ def test(rlmeta):
     assert test_grammar(
         rlmeta,
         b"Grammar { x = % | . }",
-        b"print(compile_chain(['Grammar.x'], ['foo']))"
+        b"print(compile_chain(source=['foo'], matchers=[Grammar()._rules['x']]))"
     ) == b"foo\n"
 
 def test_grammar(rlmeta, grammar, main_code):

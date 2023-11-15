@@ -29,8 +29,8 @@ if __name__ == "__main__":
             ))
         elif command == "--compile":
             sys.stdout.write(compile_chain(
-                ["Parser.file", "CodeGenerator.asts"],
-                read(args.pop(0))
+                source=read(args.pop(0)),
+                matchers=[Parser()._rules["file"], CodeGenerator()._rules["asts"]],
             ))
         else:
             sys.exit("ERROR: Unknown command '{}'".format(command))

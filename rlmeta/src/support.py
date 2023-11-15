@@ -1,5 +1,3 @@
-rules = {}
-
 class Stream:
 
     def __init__(self, items):
@@ -71,14 +69,14 @@ class Stream:
             return result
         self.error("no list found")
 
-    def match_call_rule(self, namespace):
-        name = namespace + "." + self.items[self.index]
+    def match_call_rule(self, rules):
+        name = self.items[self.index]
         if name in rules:
-            rule = rules[name]
+            matcher = rules[name]
             self.index += 1
-            return rule(self)
+            return matcher(self)
         else:
-            self.error("unknown rule")
+            self.error(f"Unknown rule {name}.")
 
     def match(self, fn, description):
         if self.index < len(self.items):
@@ -155,14 +153,14 @@ class Runtime:
     def concat(self, lists):
         return [x for xs in lists for x in xs]
 
-def compile_chain(grammars, source):
+def compile_chain(source="", matchers=[]):
     import os
     import sys
     import pprint
     runtime = Runtime({"len": len, "repr": repr, "int": int})
-    for rule in grammars:
+    for matcher in matchers:
         try:
-            source = rules[rule](Stream(source)).eval(runtime)
+            source = matcher(Stream(source)).eval(runtime)
         except MatchError as e:
             marker = "<ERROR POSITION>"
             if os.isatty(sys.stderr.fileno()):
