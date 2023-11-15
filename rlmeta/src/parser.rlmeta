@@ -1,9 +1,9 @@
 Parser {
   run = "SourceCode" [file:x]                 -> put(["Ast" x])
   file =
-    | (space namespace)*:xs space !.          -> xs
-  namespace =
-    | name:x space '{' rule*:ys space '}'     -> ["Namespace" x ~ys]
+    | (space actor)*:xs space !.              -> xs
+  actor =
+    | name:x space '{' rule*:ys space '}'     -> ["Actor" x ~ys]
   rule =
     | name:x space '=' choice:y               -> ["Rule" x y]
   choice =

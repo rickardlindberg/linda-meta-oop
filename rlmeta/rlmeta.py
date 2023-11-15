@@ -456,7 +456,7 @@ class Matcher_Parser_9:
         return rules['Parser.space'].run(stream)
 class Matcher_Parser_10:
     def run(self, stream):
-        return rules['Parser.namespace'].run(stream)
+        return rules['Parser.actor'].run(stream)
 class Matcher_Parser_11:
     def run(self, stream):
         return stream.operator_and([
@@ -545,7 +545,7 @@ class Matcher_Parser_33:
 class Matcher_Parser_34:
     def run(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
-            self.lookup('splice')(0, 'Namespace'),
+            self.lookup('splice')(0, 'Actor'),
             self.lookup('splice')(0, self.lookup('x')),
             self.lookup('splice')(1, self.lookup('ys'))
         ]))
@@ -2305,7 +2305,7 @@ class Matcher_Parser_441:
         ])
 rules['Parser.run'] = Matcher_Parser_8()
 rules['Parser.file'] = Matcher_Parser_22()
-rules['Parser.namespace'] = Matcher_Parser_37()
+rules['Parser.actor'] = Matcher_Parser_37()
 rules['Parser.rule'] = Matcher_Parser_48()
 rules['Parser.choice'] = Matcher_Parser_71()
 rules['Parser.sequence'] = Matcher_Parser_80()
@@ -3321,7 +3321,7 @@ class Matcher_CodeGenerator_219:
 rules['CodeGenerator.run'] = Matcher_CodeGenerator_8()
 rules['CodeGenerator.asts'] = Matcher_CodeGenerator_17()
 rules['CodeGenerator.ast'] = Matcher_CodeGenerator_27()
-rules['CodeGenerator.Namespace'] = Matcher_CodeGenerator_36()
+rules['CodeGenerator.Actor'] = Matcher_CodeGenerator_36()
 rules['CodeGenerator.Rule'] = Matcher_CodeGenerator_44()
 rules['CodeGenerator.Or'] = Matcher_CodeGenerator_52()
 rules['CodeGenerator.Scope'] = Matcher_CodeGenerator_60()
