@@ -44,9 +44,9 @@ class Stream:
     def action(self, fn=lambda self: None):
         return SemanticAction(self.scope, fn)
 
-    def with_scope(self, matcher):
+    def with_scope(self, state, matcher):
         current_scope = self.scope
-        self.scope = {}
+        self.scope = {"_state": self.action(lambda self: state)}
         try:
             return matcher(self)
         finally:
@@ -153,48 +153,28 @@ class Runtime:
     def concat(self, lists):
         return [x for xs in lists for x in xs]
 
-def compile_chain(source="", matchers=[]):
-    import os
+def run_simulation(actors, extra={}, messages=[], debug=False):
     import sys
-    import pprint
-    runtime = Runtime({"len": len, "repr": repr, "int": int})
-    for matcher in matchers:
-        try:
-            source = matcher(Stream(source)).eval(runtime)
-        except MatchError as e:
-            marker = "<ERROR POSITION>"
-            if os.isatty(sys.stderr.fileno()):
-                marker = f"\033[0;31m{marker}\033[0m"
-            if isinstance(e.items, str):
-                stream_string = e.items[:e.index] + marker + e.items[e.index:]
-            else:
-                stream_string = pprint.pformat(e.items)
-            sys.exit("ERROR: {}\nPOSITION: {}\nSTREAM:\n{}".format(
-                str(e),
-                e.index,
-                runtime.indent(stream_string)
-            ))
-    return source
-
-def run_simulation(actors, extra={}):
-    import sys
-    def debug(text):
-        sys.stderr.write(f"{text}\n")
+    def debug_log(text):
+        if debug:
+            sys.stderr.write(f"{text}\n")
     def read(path):
         if path == "-":
             return sys.stdin.read()
         with open(path) as f:
             return f.read()
-    messages = [["Args"]+sys.argv[1:]]
+    if not messages:
+        messages.append(["Args"]+sys.argv[1:])
     iteration = 0
     while messages:
-        debug(f"Iteration {iteration}")
+        debug_log(f"Iteration {iteration}")
         for index, message in enumerate(messages):
-            debug(f"  Message {index:2d} = {message}")
-        debug("")
+            debug_log(f"  Message {index:2d} = {message}")
+        debug_log("")
         next_messages = []
         x = {
             "put": next_messages.append,
+            "spawn": actors.append,
             "write": sys.stdout.write,
             "repr": repr,
             "read": read,
@@ -205,17 +185,20 @@ def run_simulation(actors, extra={}):
         for key, value in extra.items():
             x[key] = value
         runtime = Runtime(x)
-        while messages:
-            message = messages.pop(0)
+        processed = False
+        for message in messages:
             for actor in actors:
                 try:
                     actor.run(Stream(message)).eval(runtime)
                 except MatchError:
                     pass
                 else:
+                    processed = True
                     break
             else:
-                sys.exit(f"ERROR: Message {message} not processed.")
+                next_messages.append(message)
+        if not processed:
+            sys.exit("No message processed.")
         messages = next_messages
         iteration += 1
-    debug("Simulation done!")
+    debug_log("Simulation done!")

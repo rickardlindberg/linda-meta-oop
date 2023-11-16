@@ -1,5 +1,5 @@
 CodeGenerator {
-  run           = "Ast" [asts:x]         -> write(x)
+  run           = "Ast" .:p [asts:x]     -> put(["Part" p x])
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
   Actor         = .:x ast*:ys            -> []:ids                                              ->
@@ -7,7 +7,8 @@ CodeGenerator {
                                             []:rules                                            ->
                                             { ys
                                               "class " x ":\n" indent({
-                                                "def __init__(self):\n" indent({
+                                                "def __init__(self, n=None):\n" indent({
+                                                  "self._state = {'n': n}\n"
                                                   "self._rules = {\n" indent({ rules }) "}\n"
                                                  })
                                                 "def run(self, stream):\n" indent({
@@ -18,7 +19,7 @@ CodeGenerator {
                                             }
   Rule          = .:x ast:y              -> append(rules {repr(x) ": " y ",\n"}) -> ""
   Or            = matcher:m astList:x    -> { "stream.operator_or([" x "])"              }:body -> m
-  Scope         = matcher:m ast:x        -> { "stream.with_scope(" x ")"                 }:body -> m
+  Scope         = matcher:m ast:x        -> { "stream.with_scope(self._state, " x ")"    }:body -> m
   And           = matcher:m astList:x    -> { "stream.operator_and([" x "])"             }:body -> m
   Bind          = matcher:m repr:x ast:y -> { "stream.bind(" x ", " y "(stream))"        }:body -> m
   Star          = matcher:m ast:x        -> { "stream.operator_star(" x ")"              }:body -> m
@@ -29,6 +30,7 @@ CodeGenerator {
   MatchList     = matcher:m ast:x        -> { "stream.match_list(" x ")"                 }:body -> m
   Action        = matcher:m ast:x        -> { "stream.action(lambda self: " x ")"        }:body -> m
   Any           =                        -> { "True"             ", 'any'"               }
+  State         = repr:x                 -> { "item == self._state[" x "], 'state'"      }
   Eq            = repr:x                 -> { "item == " x       ", " repr(x)            }
   Range         = repr:x repr:y          -> { x " <= item <= " y ", \"" x "-" y "\""     }
   Set           = repr:x ast:y ast:z     -> { "self.bind(" x ", " y ", lambda: " z ")"   }
@@ -37,6 +39,7 @@ CodeGenerator {
   List          = astList:x              -> { "self.lookup('concat')([" x "])"           }
   ListItem      = repr:x ast:y           -> { "self.lookup('splice')(" x ", " y ")"      }
   Format        = astList:x              -> { "self.lookup('join')([" x "])"             }
+  State2        = repr:x                 -> { "self.lookup('_state')[" x "]"             }
   Call          = ast:x astList:y        -> { x "(" y ")"                                }
   Lookup        = repr:x                 -> { "self.lookup(" x ")"                       }
   astList       = ast*:xs                -> { "\n" indent(join(xs ",\n")) "\n"           }

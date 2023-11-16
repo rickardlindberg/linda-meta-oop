@@ -1,5 +1,5 @@
 Parser {
-  run = "SourceCode" [file:x]                 -> put(["Ast" x])
+  run = "SourceCode" .:p [file:x]             -> put(["Ast" p x])
   file =
     | (space actor)*:xs space !.              -> xs
   actor =
@@ -20,6 +20,7 @@ Parser {
     | expr2:x space '?'                       -> ["Or" x ["And"]]
     | space '!' expr2:x                       -> ["Not" x]
     | space '%'                               -> ["MatchCallRule"]
+    | space '#' name:x                        -> ["MatchObject" ["State" x]]
     | expr2
   expr2 =
     | name:x !(space '=')                     -> ["MatchRule" x]
@@ -43,6 +44,7 @@ Parser {
     | space number:x                          -> ["Number" x]
     | space '[' hostListItem*:xs space ']'    -> ["List" ~xs]
     | space '{' hostExpr*:xs space '}'        -> ["Format" ~xs]
+    | space '#' name:x                        -> ["State2" x]
     | var:x space '(' hostExpr*:ys space ')'  -> ["Call" x ~ys]
     | var
   hostListItem =
