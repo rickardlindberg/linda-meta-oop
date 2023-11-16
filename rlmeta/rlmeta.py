@@ -303,7 +303,7 @@ class Cli:
     def _matcher_21(self, stream):
         return stream.match(lambda item: True, 'any')
     def _matcher_22(self, stream):
-        return stream.bind('path', self._matcher_21(stream))
+        return stream.bind('x', self._matcher_21(stream))
     def _matcher_23(self, stream):
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('concat')([
@@ -312,7 +312,7 @@ class Cli:
                 
                 )),
                 self.lookup('splice')(0, self.lookup('read')(
-                    self.lookup('path')
+                    self.lookup('x')
                 ))
             ])
         ))
@@ -329,11 +329,11 @@ class Cli:
     def _matcher_27(self, stream):
         return stream.match(lambda item: True, 'any')
     def _matcher_28(self, stream):
-        return stream.bind('name', self._matcher_27(stream))
+        return stream.bind('x', self._matcher_27(stream))
     def _matcher_29(self, stream):
         return stream.match(lambda item: True, 'any')
     def _matcher_30(self, stream):
-        return stream.bind('path', self._matcher_29(stream))
+        return stream.bind('y', self._matcher_29(stream))
     def _matcher_31(self, stream):
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('concat')([
@@ -342,11 +342,11 @@ class Cli:
                 
                 )),
                 self.lookup('splice')(0, self.lookup('join')([
-                    self.lookup('name'),
+                    self.lookup('x'),
                     ' = ',
                     self.lookup('repr')(
                         self.lookup('read')(
-                            self.lookup('path')
+                            self.lookup('y')
                         )
                     ),
                     '\n'
@@ -367,7 +367,7 @@ class Cli:
     def _matcher_35(self, stream):
         return stream.match(lambda item: True, 'any')
     def _matcher_36(self, stream):
-        return stream.bind('path', self._matcher_35(stream))
+        return stream.bind('x', self._matcher_35(stream))
     def _matcher_37(self, stream):
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('concat')([
@@ -376,7 +376,7 @@ class Cli:
                 
                 )),
                 self.lookup('splice')(0, self.lookup('read')(
-                    self.lookup('path')
+                    self.lookup('x')
                 ))
             ])
         ))

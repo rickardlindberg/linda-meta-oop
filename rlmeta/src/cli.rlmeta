@@ -5,10 +5,10 @@ Cli {
                         -> xs
                         -> spawn(SequenceWriter(0))
   arg =
-    | "--support"             -> put(["Part" next() SUPPORT])
-    | "--copy" .:path         -> put(["Part" next() read(path)])
-    | "--embed" .:name .:path -> put(["Part" next() {name " = " repr(read(path)) "\n"}])
-    | "--compile" .:path      -> put(["SourceCode" next() read(path)])
+    | "--support"       -> put(["Part"       next() SUPPORT])
+    | "--copy" .:x      -> put(["Part"       next() read(x)])
+    | "--embed" .:x .:y -> put(["Part"       next() {x " = " repr(read(y)) "\n"}])
+    | "--compile" .:x   -> put(["SourceCode" next() read(x)])
 }
 
 SequenceWriter {
