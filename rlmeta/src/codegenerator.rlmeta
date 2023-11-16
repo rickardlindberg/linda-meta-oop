@@ -19,7 +19,7 @@ CodeGenerator {
                                             }
   Rule          = .:x ast:y              -> append(rules {repr(x) ": " y ",\n"}) -> ""
   Or            = matcher:m astList:x    -> { "stream.operator_or([" x "])"              }:body -> m
-  Scope         = matcher:m ast:x        -> { "stream.with_scope(self._state, " x ")"    }:body -> m
+  Scope         = matcher:m ast:x        -> { "stream.with_scope(" x ")"                 }:body -> m
   And           = matcher:m astList:x    -> { "stream.operator_and([" x "])"             }:body -> m
   Bind          = matcher:m repr:x ast:y -> { "stream.bind(" x ", " y "(stream))"        }:body -> m
   Star          = matcher:m ast:x        -> { "stream.operator_star(" x ")"              }:body -> m
@@ -39,7 +39,6 @@ CodeGenerator {
   List          = astList:x              -> { "self.lookup('concat')([" x "])"           }
   ListItem      = repr:x ast:y           -> { "self.lookup('splice')(" x ", " y ")"      }
   Format        = astList:x              -> { "self.lookup('join')([" x "])"             }
-  State2        = repr:x                 -> { "self.lookup('_state')[" x "]"             }
   Call          = ast:x astList:y        -> { x "(" y ")"                                }
   Lookup        = repr:x                 -> { "self.lookup(" x ")"                       }
   astList       = ast*:xs                -> { "\n" indent(join(xs ",\n")) "\n"           }

@@ -44,9 +44,9 @@ class Stream:
     def action(self, fn=lambda self: None):
         return SemanticAction(self.scope, fn)
 
-    def with_scope(self, state, matcher):
+    def with_scope(self, matcher):
         current_scope = self.scope
-        self.scope = {"_state": self.action(lambda self: state)}
+        self.scope = {}
         try:
             return matcher(self)
         finally:

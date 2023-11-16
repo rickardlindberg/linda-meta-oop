@@ -44,7 +44,6 @@ Parser {
     | space number:x                          -> ["Number" x]
     | space '[' hostListItem*:xs space ']'    -> ["List" ~xs]
     | space '{' hostExpr*:xs space '}'        -> ["Format" ~xs]
-    | space '#' name:x                        -> ["State2" x]
     | var:x space '(' hostExpr*:ys space ')'  -> ["Call" x ~ys]
     | var
   hostListItem =
