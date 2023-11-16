@@ -2,7 +2,7 @@ CodeGenerator {
   run           = "Ast" .:p [asts:x]     -> put(["Part" p x])
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
-  Actor         = .:x ast*:ys            -> []:ids                                              ->
+  Actor         = .:x ast*:ys            -> Counter():nextid                                    ->
                                             []:matchers                                         ->
                                             []:rules                                            ->
                                             { ys
@@ -42,8 +42,7 @@ CodeGenerator {
   Call          = ast:x astList:y        -> { x "(" y ")"                                }
   Lookup        = repr:x                 -> { "self.lookup(" x ")"                       }
   astList       = ast*:xs                -> { "\n" indent(join(xs ",\n")) "\n"           }
-  matcher       =                        -> { "_matcher_" len(ids)                       }:id ->
-                                            append(ids id)                                    ->
+  matcher       =                        -> { "_matcher_" nextid()                       }:id ->
                                             append(matchers { "def " id "(self, stream):\n" indent({
                                                 "return " body "\n"
                                               })

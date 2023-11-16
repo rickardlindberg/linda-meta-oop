@@ -1,4 +1,4 @@
-SUPPORT = 'class Stream:\n\n    def __init__(self, items):\n        self.items = items\n        self.index = 0\n        self.latest_error = None\n        self.scope = None\n\n    def operator_or(self, matchers):\n        for matcher in matchers:\n            backtrack_index = self.index\n            try:\n                return matcher(self)\n            except MatchError:\n                self.index = backtrack_index\n        self.error("no or match")\n\n    def operator_and(self, matchers):\n        result = self.action()\n        for matcher in matchers:\n            result = matcher(self)\n        return result\n\n    def operator_star(self, matcher):\n        results = []\n        while True:\n            backtrack_index = self.index\n            try:\n                results.append(matcher(self))\n            except MatchError:\n                self.index = backtrack_index\n                return self.action(lambda self: [x.eval(self.runtime) for x in results])\n\n    def operator_not(self, matcher):\n        backtrack_index = self.index\n        try:\n            matcher(self)\n        except MatchError:\n            return self.action()\n        finally:\n            self.index = backtrack_index\n        self.error("not matched")\n\n    def action(self, fn=lambda self: None):\n        return SemanticAction(self.scope, fn)\n\n    def with_scope(self, matcher):\n        current_scope = self.scope\n        self.scope = {}\n        try:\n            return matcher(self)\n        finally:\n            self.scope = current_scope\n\n    def bind(self, name, semantic_action):\n        self.scope[name] = semantic_action\n        return semantic_action\n\n    def match_list(self, matcher):\n        if self.index < len(self.items):\n            items, index = self.items, self.index\n            try:\n                self.items = self.items[self.index]\n                self.index = 0\n                result = matcher(self)\n                index += 1\n            finally:\n                self.items, self.index = items, index\n            return result\n        self.error("no list found")\n\n    def match_call_rule(self, rules):\n        name = self.items[self.index]\n        if name in rules:\n            matcher = rules[name]\n            self.index += 1\n            return matcher(self)\n        else:\n            self.error(f"Unknown rule {name}.")\n\n    def match(self, fn, description):\n        if self.index < len(self.items):\n            item = self.items[self.index]\n            if fn(item):\n                self.index += 1\n                return self.action(lambda self: item)\n        self.error(f"expected {description}")\n\n    def error(self, name):\n        if not self.latest_error or self.index > self.latest_error[2]:\n            self.latest_error = (name, self.items, self.index)\n        raise MatchError(*self.latest_error)\n\nclass MatchError(Exception):\n\n    def __init__(self, name, items, index):\n        Exception.__init__(self, name)\n        self.items = items\n        self.index = index\n\nclass SemanticAction:\n\n    def __init__(self, scope, fn):\n        self.scope = scope\n        self.fn = fn\n\n    def eval(self, runtime):\n        self.runtime = runtime\n        return self.fn(self)\n\n    def bind(self, name, value, continuation):\n        self.runtime = self.runtime.bind(name, value)\n        return continuation()\n\n    def lookup(self, name):\n        if name in self.scope:\n            return self.scope[name].eval(self.runtime)\n        else:\n            return self.runtime.lookup(name)\n\nclass Runtime:\n\n    def __init__(self, extra={}):\n        self.vars = extra\n\n    def bind(self, name, value):\n        return Runtime(dict(self.vars, **{name: value}))\n\n    def lookup(self, name):\n        if name in self.vars:\n            return self.vars[name]\n        else:\n            return getattr(self, name)\n\n    def append(self, list, thing):\n        list.append(thing)\n\n    def join(self, items, delimiter=""):\n        return delimiter.join(\n            self.join(item, delimiter) if isinstance(item, list) else str(item)\n            for item in items\n        )\n\n    def indent(self, text, prefix="    "):\n        return "".join(prefix+line for line in text.splitlines(True))\n\n    def splice(self, depth, item):\n        if depth == 0:\n            return [item]\n        else:\n            return self.concat([self.splice(depth-1, subitem) for subitem in item])\n\n    def concat(self, lists):\n        return [x for xs in lists for x in xs]\n\ndef run_simulation(actors, extra={}, messages=[], debug=False):\n    import sys\n    def debug_log(text):\n        if debug:\n            sys.stderr.write(f"{text}\\n")\n    def read(path):\n        if path == "-":\n            return sys.stdin.read()\n        with open(path) as f:\n            return f.read()\n    if not messages:\n        messages.append(["Args"]+sys.argv[1:])\n    iteration = 0\n    while messages:\n        debug_log(f"Iteration {iteration}")\n        for index, message in enumerate(messages):\n            debug_log(f"  Message {index:2d} = {message}")\n        debug_log("")\n        next_messages = []\n        x = {\n            "put": next_messages.append,\n            "spawn": actors.append,\n            "write": sys.stdout.write,\n            "repr": repr,\n            "read": read,\n            "len": len,\n            "repr": repr,\n            "int": int,\n        }\n        for key, value in extra.items():\n            x[key] = value\n        runtime = Runtime(x)\n        processed = False\n        for message in messages:\n            for actor in actors:\n                try:\n                    actor.run(Stream(message)).eval(runtime)\n                except MatchError:\n                    pass\n                else:\n                    processed = True\n                    break\n            else:\n                next_messages.append(message)\n        if not processed:\n            sys.exit("No message processed.")\n        messages = next_messages\n        iteration += 1\n    debug_log("Simulation done!")\n'
+SUPPORT = 'class Stream:\n\n    def __init__(self, items):\n        self.items = items\n        self.index = 0\n        self.latest_error = None\n        self.scope = None\n\n    def operator_or(self, matchers):\n        for matcher in matchers:\n            backtrack_index = self.index\n            try:\n                return matcher(self)\n            except MatchError:\n                self.index = backtrack_index\n        self.error("no or match")\n\n    def operator_and(self, matchers):\n        result = self.action()\n        for matcher in matchers:\n            result = matcher(self)\n        return result\n\n    def operator_star(self, matcher):\n        results = []\n        while True:\n            backtrack_index = self.index\n            try:\n                results.append(matcher(self))\n            except MatchError:\n                self.index = backtrack_index\n                return self.action(lambda self: [x.eval(self.runtime) for x in results])\n\n    def operator_not(self, matcher):\n        backtrack_index = self.index\n        try:\n            matcher(self)\n        except MatchError:\n            return self.action()\n        finally:\n            self.index = backtrack_index\n        self.error("not matched")\n\n    def action(self, fn=lambda self: None):\n        return SemanticAction(self.scope, fn)\n\n    def with_scope(self, matcher):\n        current_scope = self.scope\n        self.scope = {}\n        try:\n            return matcher(self)\n        finally:\n            self.scope = current_scope\n\n    def bind(self, name, semantic_action):\n        self.scope[name] = semantic_action\n        return semantic_action\n\n    def match_list(self, matcher):\n        if self.index < len(self.items):\n            items, index = self.items, self.index\n            try:\n                self.items = self.items[self.index]\n                self.index = 0\n                result = matcher(self)\n                index += 1\n            finally:\n                self.items, self.index = items, index\n            return result\n        self.error("no list found")\n\n    def match_call_rule(self, rules):\n        name = self.items[self.index]\n        if name in rules:\n            matcher = rules[name]\n            self.index += 1\n            return matcher(self)\n        else:\n            self.error(f"Unknown rule {name}.")\n\n    def match(self, fn, description):\n        if self.index < len(self.items):\n            item = self.items[self.index]\n            if fn(item):\n                self.index += 1\n                return self.action(lambda self: item)\n        self.error(f"expected {description}")\n\n    def error(self, name):\n        if not self.latest_error or self.index > self.latest_error[2]:\n            self.latest_error = (name, self.items, self.index)\n        raise MatchError(*self.latest_error)\n\nclass MatchError(Exception):\n\n    def __init__(self, name, items, index):\n        Exception.__init__(self, name)\n        self.items = items\n        self.index = index\n\nclass SemanticAction:\n\n    def __init__(self, scope, fn):\n        self.scope = scope\n        self.fn = fn\n\n    def eval(self, runtime):\n        self.runtime = runtime\n        return self.fn(self)\n\n    def bind(self, name, value, continuation):\n        self.runtime = self.runtime.bind(name, value)\n        return continuation()\n\n    def lookup(self, name):\n        if name in self.scope:\n            return self.scope[name].eval(self.runtime)\n        else:\n            return self.runtime.lookup(name)\n\nclass Runtime:\n\n    def __init__(self, extra={}):\n        self.vars = extra\n\n    def bind(self, name, value):\n        return Runtime(dict(self.vars, **{name: value}))\n\n    def lookup(self, name):\n        if name in self.vars:\n            return self.vars[name]\n        else:\n            return getattr(self, name)\n\n    def append(self, list, thing):\n        list.append(thing)\n\n    def join(self, items, delimiter=""):\n        return delimiter.join(\n            self.join(item, delimiter) if isinstance(item, list) else str(item)\n            for item in items\n        )\n\n    def indent(self, text, prefix="    "):\n        return "".join(prefix+line for line in text.splitlines(True))\n\n    def splice(self, depth, item):\n        if depth == 0:\n            return [item]\n        else:\n            return self.concat([self.splice(depth-1, subitem) for subitem in item])\n\n    def concat(self, lists):\n        return [x for xs in lists for x in xs]\n\nclass Counter:\n\n    def __init__(self):\n        self.number = 0\n\n    def __call__(self):\n        result = self.number\n        self.number += 1\n        return result\n\ndef run_simulation(actors, extra={}, messages=[], debug=False):\n    import sys\n    def debug_log(text):\n        if debug:\n            sys.stderr.write(f"{text}\\n")\n    def read(path):\n        if path == "-":\n            return sys.stdin.read()\n        with open(path) as f:\n            return f.read()\n    if not messages:\n        messages.append(["Args"]+sys.argv[1:])\n    iteration = 0\n    while messages:\n        debug_log(f"Iteration {iteration}")\n        for index, message in enumerate(messages):\n            debug_log(f"  Message {index:2d} = {message}")\n        debug_log("")\n        next_messages = []\n        x = {\n            "put": next_messages.append,\n            "spawn": actors.append,\n            "write": sys.stdout.write,\n            "repr": repr,\n            "read": read,\n            "len": len,\n            "repr": repr,\n            "int": int,\n            "Counter": Counter,\n        }\n        for key, value in extra.items():\n            x[key] = value\n        runtime = Runtime(x)\n        processed = False\n        for message in messages:\n            for actor in actors:\n                try:\n                    actor.run(Stream(message)).eval(runtime)\n                except MatchError:\n                    pass\n                else:\n                    processed = True\n                    break\n            else:\n                next_messages.append(message)\n        if not processed:\n            sys.exit("No message processed.")\n        messages = next_messages\n        iteration += 1\n    debug_log("Simulation done!")\n'
 class Stream:
 
     def __init__(self, items):
@@ -154,6 +154,16 @@ class Runtime:
     def concat(self, lists):
         return [x for xs in lists for x in xs]
 
+class Counter:
+
+    def __init__(self):
+        self.number = 0
+
+    def __call__(self):
+        result = self.number
+        self.number += 1
+        return result
+
 def run_simulation(actors, extra={}, messages=[], debug=False):
     import sys
     def debug_log(text):
@@ -182,6 +192,7 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             "len": len,
             "repr": repr,
             "int": int,
+            "Counter": Counter,
         }
         for key, value in extra.items():
             x[key] = value
@@ -208,8 +219,7 @@ class Cli:
         self._state = {'n': n}
         self._rules = {
             'run': self._matcher_15,
-            'arg': self._matcher_48,
-            'part': self._matcher_52,
+            'arg': self._matcher_40,
         }
     def run(self, stream):
         return self._rules['run'](stream)
@@ -248,9 +258,9 @@ class Cli:
     def _matcher_11(self, stream):
         return stream.operator_not(self._matcher_10)
     def _matcher_12(self, stream):
-        return stream.action(lambda self: self.bind('parts', self.lookup('concat')([
+        return stream.action(lambda self: self.bind('next', self.lookup('Counter')(
         
-        ]), lambda: self.bind('', self.lookup('xs'), lambda: self.lookup('spawn')(
+        ), lambda: self.bind('', self.lookup('xs'), lambda: self.lookup('spawn')(
             self.lookup('SequenceWriter')(
                 0
             )
@@ -272,73 +282,65 @@ class Cli:
     def _matcher_16(self, stream):
         return stream.match(lambda item: item == '--support', "'--support'")
     def _matcher_17(self, stream):
-        return self._rules['part'](stream)
-    def _matcher_18(self, stream):
-        return stream.bind('p', self._matcher_17(stream))
-    def _matcher_19(self, stream):
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('concat')([
                 self.lookup('splice')(0, 'Part'),
-                self.lookup('splice')(0, self.lookup('p')),
+                self.lookup('splice')(0, self.lookup('next')(
+                
+                )),
                 self.lookup('splice')(0, self.lookup('SUPPORT'))
             ])
         ))
-    def _matcher_20(self, stream):
+    def _matcher_18(self, stream):
         return stream.operator_and([
             self._matcher_16,
-            self._matcher_18,
-            self._matcher_19
+            self._matcher_17
         ])
-    def _matcher_21(self, stream):
-        return stream.with_scope(self._matcher_20)
-    def _matcher_22(self, stream):
+    def _matcher_19(self, stream):
+        return stream.with_scope(self._matcher_18)
+    def _matcher_20(self, stream):
         return stream.match(lambda item: item == '--copy', "'--copy'")
-    def _matcher_23(self, stream):
+    def _matcher_21(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_24(self, stream):
-        return stream.bind('path', self._matcher_23(stream))
-    def _matcher_25(self, stream):
-        return self._rules['part'](stream)
-    def _matcher_26(self, stream):
-        return stream.bind('p', self._matcher_25(stream))
-    def _matcher_27(self, stream):
+    def _matcher_22(self, stream):
+        return stream.bind('path', self._matcher_21(stream))
+    def _matcher_23(self, stream):
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('concat')([
                 self.lookup('splice')(0, 'Part'),
-                self.lookup('splice')(0, self.lookup('p')),
+                self.lookup('splice')(0, self.lookup('next')(
+                
+                )),
                 self.lookup('splice')(0, self.lookup('read')(
                     self.lookup('path')
                 ))
             ])
         ))
-    def _matcher_28(self, stream):
+    def _matcher_24(self, stream):
         return stream.operator_and([
+            self._matcher_20,
             self._matcher_22,
-            self._matcher_24,
-            self._matcher_26,
-            self._matcher_27
+            self._matcher_23
         ])
-    def _matcher_29(self, stream):
-        return stream.with_scope(self._matcher_28)
-    def _matcher_30(self, stream):
+    def _matcher_25(self, stream):
+        return stream.with_scope(self._matcher_24)
+    def _matcher_26(self, stream):
         return stream.match(lambda item: item == '--embed', "'--embed'")
+    def _matcher_27(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_28(self, stream):
+        return stream.bind('name', self._matcher_27(stream))
+    def _matcher_29(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_30(self, stream):
+        return stream.bind('path', self._matcher_29(stream))
     def _matcher_31(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_32(self, stream):
-        return stream.bind('name', self._matcher_31(stream))
-    def _matcher_33(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_34(self, stream):
-        return stream.bind('path', self._matcher_33(stream))
-    def _matcher_35(self, stream):
-        return self._rules['part'](stream)
-    def _matcher_36(self, stream):
-        return stream.bind('p', self._matcher_35(stream))
-    def _matcher_37(self, stream):
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('concat')([
                 self.lookup('splice')(0, 'Part'),
-                self.lookup('splice')(0, self.lookup('p')),
+                self.lookup('splice')(0, self.lookup('next')(
+                
+                )),
                 self.lookup('splice')(0, self.lookup('join')([
                     self.lookup('name'),
                     ' = ',
@@ -351,10 +353,35 @@ class Cli:
                 ]))
             ])
         ))
+    def _matcher_32(self, stream):
+        return stream.operator_and([
+            self._matcher_26,
+            self._matcher_28,
+            self._matcher_30,
+            self._matcher_31
+        ])
+    def _matcher_33(self, stream):
+        return stream.with_scope(self._matcher_32)
+    def _matcher_34(self, stream):
+        return stream.match(lambda item: item == '--compile', "'--compile'")
+    def _matcher_35(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_36(self, stream):
+        return stream.bind('path', self._matcher_35(stream))
+    def _matcher_37(self, stream):
+        return stream.action(lambda self: self.lookup('put')(
+            self.lookup('concat')([
+                self.lookup('splice')(0, 'SourceCode'),
+                self.lookup('splice')(0, self.lookup('next')(
+                
+                )),
+                self.lookup('splice')(0, self.lookup('read')(
+                    self.lookup('path')
+                ))
+            ])
+        ))
     def _matcher_38(self, stream):
         return stream.operator_and([
-            self._matcher_30,
-            self._matcher_32,
             self._matcher_34,
             self._matcher_36,
             self._matcher_37
@@ -362,57 +389,11 @@ class Cli:
     def _matcher_39(self, stream):
         return stream.with_scope(self._matcher_38)
     def _matcher_40(self, stream):
-        return stream.match(lambda item: item == '--compile', "'--compile'")
-    def _matcher_41(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_42(self, stream):
-        return stream.bind('path', self._matcher_41(stream))
-    def _matcher_43(self, stream):
-        return self._rules['part'](stream)
-    def _matcher_44(self, stream):
-        return stream.bind('p', self._matcher_43(stream))
-    def _matcher_45(self, stream):
-        return stream.action(lambda self: self.lookup('put')(
-            self.lookup('concat')([
-                self.lookup('splice')(0, 'SourceCode'),
-                self.lookup('splice')(0, self.lookup('p')),
-                self.lookup('splice')(0, self.lookup('read')(
-                    self.lookup('path')
-                ))
-            ])
-        ))
-    def _matcher_46(self, stream):
-        return stream.operator_and([
-            self._matcher_40,
-            self._matcher_42,
-            self._matcher_44,
-            self._matcher_45
-        ])
-    def _matcher_47(self, stream):
-        return stream.with_scope(self._matcher_46)
-    def _matcher_48(self, stream):
         return stream.operator_or([
-            self._matcher_21,
-            self._matcher_29,
-            self._matcher_39,
-            self._matcher_47
-        ])
-    def _matcher_49(self, stream):
-        return stream.action(lambda self: self.bind('id', self.lookup('len')(
-            self.lookup('parts')
-        ), lambda: self.bind('', self.lookup('append')(
-            self.lookup('parts'),
-            0
-        ), lambda: self.lookup('id'))))
-    def _matcher_50(self, stream):
-        return stream.operator_and([
-            self._matcher_49
-        ])
-    def _matcher_51(self, stream):
-        return stream.with_scope(self._matcher_50)
-    def _matcher_52(self, stream):
-        return stream.operator_or([
-            self._matcher_51
+            self._matcher_19,
+            self._matcher_25,
+            self._matcher_33,
+            self._matcher_39
         ])
 class SequenceWriter:
     def __init__(self, n=None):
@@ -2118,9 +2099,9 @@ class CodeGenerator:
     def _matcher_34(self, stream):
         return stream.bind('ys', self._matcher_33(stream))
     def _matcher_35(self, stream):
-        return stream.action(lambda self: self.bind('ids', self.lookup('concat')([
+        return stream.action(lambda self: self.bind('nextid', self.lookup('Counter')(
         
-        ]), lambda: self.bind('matchers', self.lookup('concat')([
+        ), lambda: self.bind('matchers', self.lookup('concat')([
         
         ]), lambda: self.bind('rules', self.lookup('concat')([
         
@@ -2783,13 +2764,10 @@ class CodeGenerator:
     def _matcher_218(self, stream):
         return stream.action(lambda self: self.bind('id', self.lookup('join')([
             '_matcher_',
-            self.lookup('len')(
-                self.lookup('ids')
+            self.lookup('nextid')(
+            
             )
         ]), lambda: self.bind('', self.lookup('append')(
-            self.lookup('ids'),
-            self.lookup('id')
-        ), lambda: self.bind('', self.lookup('append')(
             self.lookup('matchers'),
             self.lookup('join')([
                 'def ',
@@ -2806,7 +2784,7 @@ class CodeGenerator:
         ), lambda: self.lookup('join')([
             'self.',
             self.lookup('id')
-        ])))))
+        ]))))
     def _matcher_219(self, stream):
         return stream.operator_and([
             self._matcher_218

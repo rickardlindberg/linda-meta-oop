@@ -153,6 +153,16 @@ class Runtime:
     def concat(self, lists):
         return [x for xs in lists for x in xs]
 
+class Counter:
+
+    def __init__(self):
+        self.number = 0
+
+    def __call__(self):
+        result = self.number
+        self.number += 1
+        return result
+
 def run_simulation(actors, extra={}, messages=[], debug=False):
     import sys
     def debug_log(text):
@@ -181,6 +191,7 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             "len": len,
             "repr": repr,
             "int": int,
+            "Counter": Counter,
         }
         for key, value in extra.items():
             x[key] = value

@@ -1,18 +1,14 @@
 Cli {
   run =
     | "Args"         !. -> put(["Args" "--compile" "-"])
-    | "Args" arg*:xs !. -> []:parts
+    | "Args" arg*:xs !. -> Counter():next
                         -> xs
                         -> spawn(SequenceWriter(0))
   arg =
-    | "--support"             part:p -> put(["Part" p SUPPORT])
-    | "--copy" .:path         part:p -> put(["Part" p read(path)])
-    | "--embed" .:name .:path part:p -> put(["Part" p {name " = " repr(read(path)) "\n"}])
-    | "--compile" .:path      part:p -> put(["SourceCode" p read(path)])
-  part =
-    | -> len(parts):id
-      -> append(parts 0)
-      -> id
+    | "--support"             -> put(["Part" next() SUPPORT])
+    | "--copy" .:path         -> put(["Part" next() read(path)])
+    | "--embed" .:name .:path -> put(["Part" next() {name " = " repr(read(path)) "\n"}])
+    | "--compile" .:path      -> put(["SourceCode" next() read(path)])
 }
 
 SequenceWriter {
