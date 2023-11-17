@@ -1,5 +1,6 @@
 Parser {
-  run = "SourceCode" .:p [file:x]             -> put(["Ast" p x])
+  run =
+    | "SourceCode" .:p [file:x]               -> put(["Ast" p x])
   file =
     | (space actor)*:xs space !.              -> xs
   actor =
