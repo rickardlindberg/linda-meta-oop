@@ -4,6 +4,7 @@ if __name__ == "__main__":
             Cli(),
             Parser(),
             CodeGenerator(),
+            StdoutWriter(),
         ],
         {
             "SUPPORT": SUPPORT,

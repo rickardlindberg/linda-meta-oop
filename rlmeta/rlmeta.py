@@ -425,8 +425,11 @@ class SequenceWriter:
     def _matcher_6(self, stream):
         return stream.operator_not(self._matcher_5)
     def _matcher_7(self, stream):
-        return stream.action(lambda self: self.bind('', self.lookup('write')(
-            self.lookup('x')
+        return stream.action(lambda self: self.bind('', self.lookup('put')(
+            self.lookup('concat')([
+                self.lookup('splice')(0, 'Write'),
+                self.lookup('splice')(0, self.lookup('x'))
+            ])
         ), lambda: self.lookup('spawn')(
             self.lookup('SequenceWriter')(
                 self.lookup('add')(
@@ -448,6 +451,41 @@ class SequenceWriter:
     def _matcher_10(self, stream):
         return stream.operator_or([
             self._matcher_9
+        ])
+class StdoutWriter:
+    def __init__(self):
+        self._state = {}
+        self._rules = {
+            'run': self._matcher_8,
+        }
+    def run(self, stream):
+        return self._rules['run'](stream)
+    def _matcher_0(self, stream):
+        return stream.match(lambda item: item == 'Write', "'Write'")
+    def _matcher_1(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_2(self, stream):
+        return stream.bind('x', self._matcher_1(stream))
+    def _matcher_3(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_4(self, stream):
+        return stream.operator_not(self._matcher_3)
+    def _matcher_5(self, stream):
+        return stream.action(lambda self: self.lookup('write')(
+            self.lookup('x')
+        ))
+    def _matcher_6(self, stream):
+        return stream.operator_and([
+            self._matcher_0,
+            self._matcher_2,
+            self._matcher_4,
+            self._matcher_5
+        ])
+    def _matcher_7(self, stream):
+        return stream.with_scope(self._matcher_6)
+    def _matcher_8(self, stream):
+        return stream.operator_or([
+            self._matcher_7
         ])
 class Parser:
     def __init__(self):
@@ -2930,6 +2968,7 @@ if __name__ == "__main__":
             Cli(),
             Parser(),
             CodeGenerator(),
+            StdoutWriter(),
         ],
         {
             "SUPPORT": SUPPORT,
