@@ -197,18 +197,24 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             x[key] = value
         runtime = Runtime(x)
         processed = False
+        errors = []
         for message in messages:
             for actor in actors:
                 try:
                     actor.run(Stream(message)).eval(runtime)
-                except MatchError:
-                    pass
+                except MatchError as e:
+                    errors.append((actor, e))
                 else:
                     processed = True
                     break
             else:
                 next_messages.append(message)
         if not processed:
+            for actor, error in errors:
+                sys.stderr.write(f"{actor.__class__.__name__} {actor._state}\n")
+                sys.stderr.write(f"  {error} at {error.index}\n")
+                sys.stderr.write(f"  {error.items}\n")
+                sys.stderr.write("\n")
             sys.exit("No message processed.")
         messages = next_messages
         iteration += 1

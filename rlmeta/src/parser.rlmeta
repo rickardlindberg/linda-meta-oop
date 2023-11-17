@@ -4,7 +4,9 @@ Parser {
   file =
     | (space actor)*:xs space !.              -> xs
   actor =
-    | name:x space '{' rule*:ys space '}'     -> ["Actor" x ~ys]
+    | name:x field*:ys space '{' rule*:zs space '}'     -> ["Actor" x ys ~zs]
+  field =
+    | space '#' name:x                        -> ["Field" x]
   rule =
     | name:x space '=' choice:y               -> ["Rule" x y]
   choice =

@@ -11,7 +11,7 @@ Cli {
     | "--compile" .:x     -> put(["SourceCode" next() read(x)])
 }
 
-SequenceWriter {
+SequenceWriter #n {
   run = "Part" #n:n .:x !. -> write(x)
                            -> spawn(SequenceWriter(add(n 1)))
 }

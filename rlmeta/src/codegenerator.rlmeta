@@ -2,13 +2,15 @@ CodeGenerator {
   run           = "Ast" .:p [asts:x]     -> put(["Part" p x])
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
-  Actor         = .:x ast*:ys            -> Counter():nextid                                    ->
+  Actor         = .:x [ast*:ys !.] ast*:zs  -> Counter():nextid                                    ->
                                             []:matchers                                         ->
                                             []:rules                                            ->
-                                            { ys
+                                            []:param                                            ->
+                                            []:init                                            ->
+                                            { ys zs
                                               "class " x ":\n" indent({
-                                                "def __init__(self, n=None):\n" indent({
-                                                  "self._state = {'n': n}\n"
+                                                "def __init__(self" {param} "):\n" indent({
+                                                  "self._state = {"init"}\n"
                                                   "self._rules = {\n" indent({ rules }) "}\n"
                                                  })
                                                 "def run(self, stream):\n" indent({
@@ -17,6 +19,7 @@ CodeGenerator {
                                                 matchers
                                               })
                                             }
+  Field         = .:x                    -> append(param {", " x "=None"}) -> append(init { repr(x) ": " x ",\n" }) -> ""
   Rule          = .:x ast:y              -> append(rules {repr(x) ": " y ",\n"}) -> ""
   Or            = matcher:m astList:x    -> { "stream.operator_or([" x "])"              }:body -> m
   Scope         = matcher:m ast:x        -> { "stream.with_scope(" x ")"                 }:body -> m
