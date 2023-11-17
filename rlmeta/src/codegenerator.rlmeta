@@ -2,10 +2,10 @@ CodeGenerator {
   run           = "Ast" .:p [asts:x]     -> put(["Part" p x])
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
-  Actor         = .:x [ast*:ys !.] ast*:zs  -> Counter():nextid                                    ->
-                                            []:matchers                                         ->
-                                            []:rules                                            ->
-                                            []:param                                            ->
+  Actor         = .:x [asts:ys] ast*:zs  -> Counter():nextid                                   ->
+                                            []:matchers                                        ->
+                                            []:rules                                           ->
+                                            []:param                                           ->
                                             []:init                                            ->
                                             { ys zs
                                               "class " x ":\n" indent({
@@ -19,8 +19,11 @@ CodeGenerator {
                                                 matchers
                                               })
                                             }
-  Field         = .:x                    -> append(param {", " x "=None"}) -> append(init { repr(x) ": " x ",\n" }) -> ""
-  Rule          = .:x ast:y              -> append(rules {repr(x) ": " y ",\n"}) -> ""
+  Field         = .:x                    -> append(param {", " x "=None"})
+                                         -> append(init { repr(x) ": " x ",\n" })
+                                         -> ""
+  Rule          = .:x ast:y              -> append(rules {repr(x) ": " y ",\n"})
+                                         -> ""
   Or            = matcher:m astList:x    -> { "stream.operator_or([" x "])"              }:body -> m
   Scope         = matcher:m ast:x        -> { "stream.with_scope(" x ")"                 }:body -> m
   And           = matcher:m astList:x    -> { "stream.operator_and([" x "])"             }:body -> m

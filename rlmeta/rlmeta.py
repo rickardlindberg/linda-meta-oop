@@ -2050,35 +2050,35 @@ class CodeGenerator:
             'run': self._matcher_10,
             'asts': self._matcher_19,
             'ast': self._matcher_29,
-            'Actor': self._matcher_45,
-            'Field': self._matcher_51,
-            'Rule': self._matcher_59,
-            'Or': self._matcher_67,
-            'Scope': self._matcher_75,
-            'And': self._matcher_83,
-            'Bind': self._matcher_93,
-            'Star': self._matcher_101,
-            'Not': self._matcher_109,
-            'MatchCallRule': self._matcher_115,
-            'MatchRule': self._matcher_123,
-            'MatchObject': self._matcher_131,
-            'MatchList': self._matcher_139,
-            'Action': self._matcher_147,
-            'Any': self._matcher_151,
-            'State': self._matcher_157,
-            'Eq': self._matcher_163,
-            'Range': self._matcher_171,
-            'Set': self._matcher_181,
-            'String': self._matcher_185,
-            'Number': self._matcher_189,
-            'List': self._matcher_195,
-            'ListItem': self._matcher_203,
-            'Format': self._matcher_209,
-            'Call': self._matcher_217,
-            'Lookup': self._matcher_223,
-            'astList': self._matcher_230,
-            'matcher': self._matcher_234,
-            'repr': self._matcher_240,
+            'Actor': self._matcher_42,
+            'Field': self._matcher_48,
+            'Rule': self._matcher_56,
+            'Or': self._matcher_64,
+            'Scope': self._matcher_72,
+            'And': self._matcher_80,
+            'Bind': self._matcher_90,
+            'Star': self._matcher_98,
+            'Not': self._matcher_106,
+            'MatchCallRule': self._matcher_112,
+            'MatchRule': self._matcher_120,
+            'MatchObject': self._matcher_128,
+            'MatchList': self._matcher_136,
+            'Action': self._matcher_144,
+            'Any': self._matcher_148,
+            'State': self._matcher_154,
+            'Eq': self._matcher_160,
+            'Range': self._matcher_168,
+            'Set': self._matcher_178,
+            'String': self._matcher_182,
+            'Number': self._matcher_186,
+            'List': self._matcher_192,
+            'ListItem': self._matcher_200,
+            'Format': self._matcher_206,
+            'Call': self._matcher_214,
+            'Lookup': self._matcher_220,
+            'astList': self._matcher_227,
+            'matcher': self._matcher_231,
+            'repr': self._matcher_237,
         }
     def run(self, stream):
         return self._rules['run'](stream)
@@ -2178,29 +2178,22 @@ class CodeGenerator:
     def _matcher_31(self, stream):
         return stream.bind('x', self._matcher_30(stream))
     def _matcher_32(self, stream):
-        return self._rules['ast'](stream)
+        return self._rules['asts'](stream)
     def _matcher_33(self, stream):
-        return stream.operator_star(self._matcher_32)
+        return stream.bind('ys', self._matcher_32(stream))
     def _matcher_34(self, stream):
-        return stream.bind('ys', self._matcher_33(stream))
-    def _matcher_35(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_36(self, stream):
-        return stream.operator_not(self._matcher_35)
-    def _matcher_37(self, stream):
         return stream.operator_and([
-            self._matcher_34,
-            self._matcher_36
+            self._matcher_33
         ])
-    def _matcher_38(self, stream):
-        return stream.match_list(self._matcher_37)
-    def _matcher_39(self, stream):
+    def _matcher_35(self, stream):
+        return stream.match_list(self._matcher_34)
+    def _matcher_36(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_40(self, stream):
-        return stream.operator_star(self._matcher_39)
-    def _matcher_41(self, stream):
-        return stream.bind('zs', self._matcher_40(stream))
-    def _matcher_42(self, stream):
+    def _matcher_37(self, stream):
+        return stream.operator_star(self._matcher_36)
+    def _matcher_38(self, stream):
+        return stream.bind('zs', self._matcher_37(stream))
+    def _matcher_39(self, stream):
         return stream.action(lambda self: self.bind('nextid', self.lookup('Counter')(
         
         ), lambda: self.bind('matchers', self.lookup('concat')([
@@ -2248,24 +2241,24 @@ class CodeGenerator:
                 ])
             )
         ])))))))
-    def _matcher_43(self, stream):
+    def _matcher_40(self, stream):
         return stream.operator_and([
             self._matcher_31,
+            self._matcher_35,
             self._matcher_38,
-            self._matcher_41,
-            self._matcher_42
+            self._matcher_39
         ])
-    def _matcher_44(self, stream):
-        return stream.with_scope(self._matcher_43)
-    def _matcher_45(self, stream):
+    def _matcher_41(self, stream):
+        return stream.with_scope(self._matcher_40)
+    def _matcher_42(self, stream):
         return stream.operator_or([
-            self._matcher_44
+            self._matcher_41
         ])
-    def _matcher_46(self, stream):
+    def _matcher_43(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_47(self, stream):
-        return stream.bind('x', self._matcher_46(stream))
-    def _matcher_48(self, stream):
+    def _matcher_44(self, stream):
+        return stream.bind('x', self._matcher_43(stream))
+    def _matcher_45(self, stream):
         return stream.action(lambda self: self.bind('', self.lookup('append')(
             self.lookup('param'),
             self.lookup('join')([
@@ -2284,26 +2277,26 @@ class CodeGenerator:
                 ',\n'
             ])
         ), lambda: '')))
-    def _matcher_49(self, stream):
+    def _matcher_46(self, stream):
         return stream.operator_and([
-            self._matcher_47,
-            self._matcher_48
+            self._matcher_44,
+            self._matcher_45
         ])
-    def _matcher_50(self, stream):
-        return stream.with_scope(self._matcher_49)
-    def _matcher_51(self, stream):
+    def _matcher_47(self, stream):
+        return stream.with_scope(self._matcher_46)
+    def _matcher_48(self, stream):
         return stream.operator_or([
-            self._matcher_50
+            self._matcher_47
         ])
-    def _matcher_52(self, stream):
+    def _matcher_49(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_53(self, stream):
-        return stream.bind('x', self._matcher_52(stream))
-    def _matcher_54(self, stream):
+    def _matcher_50(self, stream):
+        return stream.bind('x', self._matcher_49(stream))
+    def _matcher_51(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_55(self, stream):
-        return stream.bind('y', self._matcher_54(stream))
-    def _matcher_56(self, stream):
+    def _matcher_52(self, stream):
+        return stream.bind('y', self._matcher_51(stream))
+    def _matcher_53(self, stream):
         return stream.action(lambda self: self.bind('', self.lookup('append')(
             self.lookup('rules'),
             self.lookup('join')([
@@ -2315,109 +2308,109 @@ class CodeGenerator:
                 ',\n'
             ])
         ), lambda: ''))
-    def _matcher_57(self, stream):
+    def _matcher_54(self, stream):
         return stream.operator_and([
-            self._matcher_53,
-            self._matcher_55,
-            self._matcher_56
+            self._matcher_50,
+            self._matcher_52,
+            self._matcher_53
         ])
-    def _matcher_58(self, stream):
-        return stream.with_scope(self._matcher_57)
-    def _matcher_59(self, stream):
+    def _matcher_55(self, stream):
+        return stream.with_scope(self._matcher_54)
+    def _matcher_56(self, stream):
         return stream.operator_or([
-            self._matcher_58
+            self._matcher_55
         ])
-    def _matcher_60(self, stream):
+    def _matcher_57(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_61(self, stream):
-        return stream.bind('m', self._matcher_60(stream))
-    def _matcher_62(self, stream):
+    def _matcher_58(self, stream):
+        return stream.bind('m', self._matcher_57(stream))
+    def _matcher_59(self, stream):
         return self._rules['astList'](stream)
-    def _matcher_63(self, stream):
-        return stream.bind('x', self._matcher_62(stream))
-    def _matcher_64(self, stream):
+    def _matcher_60(self, stream):
+        return stream.bind('x', self._matcher_59(stream))
+    def _matcher_61(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.operator_or([',
             self.lookup('x'),
             '])'
         ]), lambda: self.lookup('m')))
-    def _matcher_65(self, stream):
+    def _matcher_62(self, stream):
         return stream.operator_and([
-            self._matcher_61,
-            self._matcher_63,
-            self._matcher_64
+            self._matcher_58,
+            self._matcher_60,
+            self._matcher_61
         ])
-    def _matcher_66(self, stream):
-        return stream.with_scope(self._matcher_65)
-    def _matcher_67(self, stream):
+    def _matcher_63(self, stream):
+        return stream.with_scope(self._matcher_62)
+    def _matcher_64(self, stream):
         return stream.operator_or([
-            self._matcher_66
+            self._matcher_63
         ])
-    def _matcher_68(self, stream):
+    def _matcher_65(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_69(self, stream):
-        return stream.bind('m', self._matcher_68(stream))
-    def _matcher_70(self, stream):
+    def _matcher_66(self, stream):
+        return stream.bind('m', self._matcher_65(stream))
+    def _matcher_67(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_71(self, stream):
-        return stream.bind('x', self._matcher_70(stream))
-    def _matcher_72(self, stream):
+    def _matcher_68(self, stream):
+        return stream.bind('x', self._matcher_67(stream))
+    def _matcher_69(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.with_scope(',
             self.lookup('x'),
             ')'
         ]), lambda: self.lookup('m')))
-    def _matcher_73(self, stream):
+    def _matcher_70(self, stream):
         return stream.operator_and([
-            self._matcher_69,
-            self._matcher_71,
-            self._matcher_72
+            self._matcher_66,
+            self._matcher_68,
+            self._matcher_69
         ])
-    def _matcher_74(self, stream):
-        return stream.with_scope(self._matcher_73)
-    def _matcher_75(self, stream):
+    def _matcher_71(self, stream):
+        return stream.with_scope(self._matcher_70)
+    def _matcher_72(self, stream):
         return stream.operator_or([
-            self._matcher_74
+            self._matcher_71
         ])
-    def _matcher_76(self, stream):
+    def _matcher_73(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_77(self, stream):
-        return stream.bind('m', self._matcher_76(stream))
-    def _matcher_78(self, stream):
+    def _matcher_74(self, stream):
+        return stream.bind('m', self._matcher_73(stream))
+    def _matcher_75(self, stream):
         return self._rules['astList'](stream)
-    def _matcher_79(self, stream):
-        return stream.bind('x', self._matcher_78(stream))
-    def _matcher_80(self, stream):
+    def _matcher_76(self, stream):
+        return stream.bind('x', self._matcher_75(stream))
+    def _matcher_77(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.operator_and([',
             self.lookup('x'),
             '])'
         ]), lambda: self.lookup('m')))
-    def _matcher_81(self, stream):
+    def _matcher_78(self, stream):
         return stream.operator_and([
-            self._matcher_77,
-            self._matcher_79,
-            self._matcher_80
+            self._matcher_74,
+            self._matcher_76,
+            self._matcher_77
         ])
-    def _matcher_82(self, stream):
-        return stream.with_scope(self._matcher_81)
-    def _matcher_83(self, stream):
+    def _matcher_79(self, stream):
+        return stream.with_scope(self._matcher_78)
+    def _matcher_80(self, stream):
         return stream.operator_or([
-            self._matcher_82
+            self._matcher_79
         ])
-    def _matcher_84(self, stream):
+    def _matcher_81(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_85(self, stream):
-        return stream.bind('m', self._matcher_84(stream))
-    def _matcher_86(self, stream):
+    def _matcher_82(self, stream):
+        return stream.bind('m', self._matcher_81(stream))
+    def _matcher_83(self, stream):
         return self._rules['repr'](stream)
-    def _matcher_87(self, stream):
-        return stream.bind('x', self._matcher_86(stream))
-    def _matcher_88(self, stream):
+    def _matcher_84(self, stream):
+        return stream.bind('x', self._matcher_83(stream))
+    def _matcher_85(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_89(self, stream):
-        return stream.bind('y', self._matcher_88(stream))
-    def _matcher_90(self, stream):
+    def _matcher_86(self, stream):
+        return stream.bind('y', self._matcher_85(stream))
+    def _matcher_87(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.bind(',
             self.lookup('x'),
@@ -2425,235 +2418,235 @@ class CodeGenerator:
             self.lookup('y'),
             '(stream))'
         ]), lambda: self.lookup('m')))
-    def _matcher_91(self, stream):
+    def _matcher_88(self, stream):
         return stream.operator_and([
-            self._matcher_85,
-            self._matcher_87,
-            self._matcher_89,
-            self._matcher_90
+            self._matcher_82,
+            self._matcher_84,
+            self._matcher_86,
+            self._matcher_87
         ])
-    def _matcher_92(self, stream):
-        return stream.with_scope(self._matcher_91)
-    def _matcher_93(self, stream):
+    def _matcher_89(self, stream):
+        return stream.with_scope(self._matcher_88)
+    def _matcher_90(self, stream):
         return stream.operator_or([
-            self._matcher_92
+            self._matcher_89
         ])
-    def _matcher_94(self, stream):
+    def _matcher_91(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_95(self, stream):
-        return stream.bind('m', self._matcher_94(stream))
-    def _matcher_96(self, stream):
+    def _matcher_92(self, stream):
+        return stream.bind('m', self._matcher_91(stream))
+    def _matcher_93(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_97(self, stream):
-        return stream.bind('x', self._matcher_96(stream))
-    def _matcher_98(self, stream):
+    def _matcher_94(self, stream):
+        return stream.bind('x', self._matcher_93(stream))
+    def _matcher_95(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.operator_star(',
             self.lookup('x'),
             ')'
         ]), lambda: self.lookup('m')))
-    def _matcher_99(self, stream):
+    def _matcher_96(self, stream):
         return stream.operator_and([
-            self._matcher_95,
-            self._matcher_97,
-            self._matcher_98
+            self._matcher_92,
+            self._matcher_94,
+            self._matcher_95
         ])
-    def _matcher_100(self, stream):
-        return stream.with_scope(self._matcher_99)
-    def _matcher_101(self, stream):
+    def _matcher_97(self, stream):
+        return stream.with_scope(self._matcher_96)
+    def _matcher_98(self, stream):
         return stream.operator_or([
-            self._matcher_100
+            self._matcher_97
         ])
-    def _matcher_102(self, stream):
+    def _matcher_99(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_103(self, stream):
-        return stream.bind('m', self._matcher_102(stream))
-    def _matcher_104(self, stream):
+    def _matcher_100(self, stream):
+        return stream.bind('m', self._matcher_99(stream))
+    def _matcher_101(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_105(self, stream):
-        return stream.bind('x', self._matcher_104(stream))
-    def _matcher_106(self, stream):
+    def _matcher_102(self, stream):
+        return stream.bind('x', self._matcher_101(stream))
+    def _matcher_103(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.operator_not(',
             self.lookup('x'),
             ')'
         ]), lambda: self.lookup('m')))
-    def _matcher_107(self, stream):
+    def _matcher_104(self, stream):
         return stream.operator_and([
-            self._matcher_103,
-            self._matcher_105,
-            self._matcher_106
+            self._matcher_100,
+            self._matcher_102,
+            self._matcher_103
         ])
-    def _matcher_108(self, stream):
-        return stream.with_scope(self._matcher_107)
-    def _matcher_109(self, stream):
+    def _matcher_105(self, stream):
+        return stream.with_scope(self._matcher_104)
+    def _matcher_106(self, stream):
         return stream.operator_or([
-            self._matcher_108
+            self._matcher_105
         ])
-    def _matcher_110(self, stream):
+    def _matcher_107(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_111(self, stream):
-        return stream.bind('m', self._matcher_110(stream))
-    def _matcher_112(self, stream):
+    def _matcher_108(self, stream):
+        return stream.bind('m', self._matcher_107(stream))
+    def _matcher_109(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.match_call_rule(self._rules)'
         ]), lambda: self.lookup('m')))
-    def _matcher_113(self, stream):
+    def _matcher_110(self, stream):
         return stream.operator_and([
-            self._matcher_111,
-            self._matcher_112
+            self._matcher_108,
+            self._matcher_109
         ])
-    def _matcher_114(self, stream):
-        return stream.with_scope(self._matcher_113)
-    def _matcher_115(self, stream):
+    def _matcher_111(self, stream):
+        return stream.with_scope(self._matcher_110)
+    def _matcher_112(self, stream):
         return stream.operator_or([
-            self._matcher_114
+            self._matcher_111
         ])
-    def _matcher_116(self, stream):
+    def _matcher_113(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_117(self, stream):
-        return stream.bind('m', self._matcher_116(stream))
-    def _matcher_118(self, stream):
+    def _matcher_114(self, stream):
+        return stream.bind('m', self._matcher_113(stream))
+    def _matcher_115(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_119(self, stream):
-        return stream.bind('x', self._matcher_118(stream))
-    def _matcher_120(self, stream):
+    def _matcher_116(self, stream):
+        return stream.bind('x', self._matcher_115(stream))
+    def _matcher_117(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             "self._rules['",
             self.lookup('x'),
             "'](stream)"
         ]), lambda: self.lookup('m')))
-    def _matcher_121(self, stream):
+    def _matcher_118(self, stream):
         return stream.operator_and([
-            self._matcher_117,
-            self._matcher_119,
-            self._matcher_120
+            self._matcher_114,
+            self._matcher_116,
+            self._matcher_117
         ])
-    def _matcher_122(self, stream):
-        return stream.with_scope(self._matcher_121)
-    def _matcher_123(self, stream):
+    def _matcher_119(self, stream):
+        return stream.with_scope(self._matcher_118)
+    def _matcher_120(self, stream):
         return stream.operator_or([
-            self._matcher_122
+            self._matcher_119
         ])
-    def _matcher_124(self, stream):
+    def _matcher_121(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_125(self, stream):
-        return stream.bind('m', self._matcher_124(stream))
-    def _matcher_126(self, stream):
+    def _matcher_122(self, stream):
+        return stream.bind('m', self._matcher_121(stream))
+    def _matcher_123(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_127(self, stream):
-        return stream.bind('x', self._matcher_126(stream))
-    def _matcher_128(self, stream):
+    def _matcher_124(self, stream):
+        return stream.bind('x', self._matcher_123(stream))
+    def _matcher_125(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.match(lambda item: ',
             self.lookup('x'),
             ')'
         ]), lambda: self.lookup('m')))
-    def _matcher_129(self, stream):
+    def _matcher_126(self, stream):
         return stream.operator_and([
-            self._matcher_125,
-            self._matcher_127,
-            self._matcher_128
+            self._matcher_122,
+            self._matcher_124,
+            self._matcher_125
         ])
-    def _matcher_130(self, stream):
-        return stream.with_scope(self._matcher_129)
-    def _matcher_131(self, stream):
+    def _matcher_127(self, stream):
+        return stream.with_scope(self._matcher_126)
+    def _matcher_128(self, stream):
         return stream.operator_or([
-            self._matcher_130
+            self._matcher_127
         ])
-    def _matcher_132(self, stream):
+    def _matcher_129(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_133(self, stream):
-        return stream.bind('m', self._matcher_132(stream))
-    def _matcher_134(self, stream):
+    def _matcher_130(self, stream):
+        return stream.bind('m', self._matcher_129(stream))
+    def _matcher_131(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_135(self, stream):
-        return stream.bind('x', self._matcher_134(stream))
-    def _matcher_136(self, stream):
+    def _matcher_132(self, stream):
+        return stream.bind('x', self._matcher_131(stream))
+    def _matcher_133(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.match_list(',
             self.lookup('x'),
             ')'
         ]), lambda: self.lookup('m')))
-    def _matcher_137(self, stream):
+    def _matcher_134(self, stream):
         return stream.operator_and([
-            self._matcher_133,
-            self._matcher_135,
-            self._matcher_136
+            self._matcher_130,
+            self._matcher_132,
+            self._matcher_133
         ])
-    def _matcher_138(self, stream):
-        return stream.with_scope(self._matcher_137)
-    def _matcher_139(self, stream):
+    def _matcher_135(self, stream):
+        return stream.with_scope(self._matcher_134)
+    def _matcher_136(self, stream):
         return stream.operator_or([
-            self._matcher_138
+            self._matcher_135
         ])
-    def _matcher_140(self, stream):
+    def _matcher_137(self, stream):
         return self._rules['matcher'](stream)
-    def _matcher_141(self, stream):
-        return stream.bind('m', self._matcher_140(stream))
-    def _matcher_142(self, stream):
+    def _matcher_138(self, stream):
+        return stream.bind('m', self._matcher_137(stream))
+    def _matcher_139(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_143(self, stream):
-        return stream.bind('x', self._matcher_142(stream))
-    def _matcher_144(self, stream):
+    def _matcher_140(self, stream):
+        return stream.bind('x', self._matcher_139(stream))
+    def _matcher_141(self, stream):
         return stream.action(lambda self: self.bind('body', self.lookup('join')([
             'stream.action(lambda self: ',
             self.lookup('x'),
             ')'
         ]), lambda: self.lookup('m')))
-    def _matcher_145(self, stream):
+    def _matcher_142(self, stream):
         return stream.operator_and([
-            self._matcher_141,
-            self._matcher_143,
-            self._matcher_144
+            self._matcher_138,
+            self._matcher_140,
+            self._matcher_141
         ])
-    def _matcher_146(self, stream):
-        return stream.with_scope(self._matcher_145)
-    def _matcher_147(self, stream):
+    def _matcher_143(self, stream):
+        return stream.with_scope(self._matcher_142)
+    def _matcher_144(self, stream):
         return stream.operator_or([
-            self._matcher_146
+            self._matcher_143
         ])
-    def _matcher_148(self, stream):
+    def _matcher_145(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             'True',
             ", 'any'"
         ]))
-    def _matcher_149(self, stream):
+    def _matcher_146(self, stream):
         return stream.operator_and([
-            self._matcher_148
+            self._matcher_145
         ])
-    def _matcher_150(self, stream):
-        return stream.with_scope(self._matcher_149)
-    def _matcher_151(self, stream):
+    def _matcher_147(self, stream):
+        return stream.with_scope(self._matcher_146)
+    def _matcher_148(self, stream):
         return stream.operator_or([
-            self._matcher_150
+            self._matcher_147
         ])
-    def _matcher_152(self, stream):
+    def _matcher_149(self, stream):
         return self._rules['repr'](stream)
-    def _matcher_153(self, stream):
-        return stream.bind('x', self._matcher_152(stream))
-    def _matcher_154(self, stream):
+    def _matcher_150(self, stream):
+        return stream.bind('x', self._matcher_149(stream))
+    def _matcher_151(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             'item == self._state[',
             self.lookup('x'),
             "], 'state'"
         ]))
-    def _matcher_155(self, stream):
+    def _matcher_152(self, stream):
         return stream.operator_and([
-            self._matcher_153,
-            self._matcher_154
+            self._matcher_150,
+            self._matcher_151
         ])
-    def _matcher_156(self, stream):
-        return stream.with_scope(self._matcher_155)
-    def _matcher_157(self, stream):
+    def _matcher_153(self, stream):
+        return stream.with_scope(self._matcher_152)
+    def _matcher_154(self, stream):
         return stream.operator_or([
-            self._matcher_156
+            self._matcher_153
         ])
-    def _matcher_158(self, stream):
+    def _matcher_155(self, stream):
         return self._rules['repr'](stream)
-    def _matcher_159(self, stream):
-        return stream.bind('x', self._matcher_158(stream))
-    def _matcher_160(self, stream):
+    def _matcher_156(self, stream):
+        return stream.bind('x', self._matcher_155(stream))
+    def _matcher_157(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             'item == ',
             self.lookup('x'),
@@ -2662,26 +2655,26 @@ class CodeGenerator:
                 self.lookup('x')
             )
         ]))
-    def _matcher_161(self, stream):
+    def _matcher_158(self, stream):
         return stream.operator_and([
-            self._matcher_159,
-            self._matcher_160
+            self._matcher_156,
+            self._matcher_157
         ])
-    def _matcher_162(self, stream):
-        return stream.with_scope(self._matcher_161)
-    def _matcher_163(self, stream):
+    def _matcher_159(self, stream):
+        return stream.with_scope(self._matcher_158)
+    def _matcher_160(self, stream):
         return stream.operator_or([
-            self._matcher_162
+            self._matcher_159
         ])
+    def _matcher_161(self, stream):
+        return self._rules['repr'](stream)
+    def _matcher_162(self, stream):
+        return stream.bind('x', self._matcher_161(stream))
+    def _matcher_163(self, stream):
+        return self._rules['repr'](stream)
     def _matcher_164(self, stream):
-        return self._rules['repr'](stream)
+        return stream.bind('y', self._matcher_163(stream))
     def _matcher_165(self, stream):
-        return stream.bind('x', self._matcher_164(stream))
-    def _matcher_166(self, stream):
-        return self._rules['repr'](stream)
-    def _matcher_167(self, stream):
-        return stream.bind('y', self._matcher_166(stream))
-    def _matcher_168(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             self.lookup('x'),
             ' <= item <= ',
@@ -2692,31 +2685,31 @@ class CodeGenerator:
             self.lookup('y'),
             '"'
         ]))
-    def _matcher_169(self, stream):
+    def _matcher_166(self, stream):
         return stream.operator_and([
-            self._matcher_165,
-            self._matcher_167,
-            self._matcher_168
+            self._matcher_162,
+            self._matcher_164,
+            self._matcher_165
         ])
-    def _matcher_170(self, stream):
-        return stream.with_scope(self._matcher_169)
-    def _matcher_171(self, stream):
+    def _matcher_167(self, stream):
+        return stream.with_scope(self._matcher_166)
+    def _matcher_168(self, stream):
         return stream.operator_or([
-            self._matcher_170
+            self._matcher_167
         ])
-    def _matcher_172(self, stream):
+    def _matcher_169(self, stream):
         return self._rules['repr'](stream)
+    def _matcher_170(self, stream):
+        return stream.bind('x', self._matcher_169(stream))
+    def _matcher_171(self, stream):
+        return self._rules['ast'](stream)
+    def _matcher_172(self, stream):
+        return stream.bind('y', self._matcher_171(stream))
     def _matcher_173(self, stream):
-        return stream.bind('x', self._matcher_172(stream))
+        return self._rules['ast'](stream)
     def _matcher_174(self, stream):
-        return self._rules['ast'](stream)
+        return stream.bind('z', self._matcher_173(stream))
     def _matcher_175(self, stream):
-        return stream.bind('y', self._matcher_174(stream))
-    def _matcher_176(self, stream):
-        return self._rules['ast'](stream)
-    def _matcher_177(self, stream):
-        return stream.bind('z', self._matcher_176(stream))
-    def _matcher_178(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             'self.bind(',
             self.lookup('x'),
@@ -2726,73 +2719,73 @@ class CodeGenerator:
             self.lookup('z'),
             ')'
         ]))
+    def _matcher_176(self, stream):
+        return stream.operator_and([
+            self._matcher_170,
+            self._matcher_172,
+            self._matcher_174,
+            self._matcher_175
+        ])
+    def _matcher_177(self, stream):
+        return stream.with_scope(self._matcher_176)
+    def _matcher_178(self, stream):
+        return stream.operator_or([
+            self._matcher_177
+        ])
     def _matcher_179(self, stream):
-        return stream.operator_and([
-            self._matcher_173,
-            self._matcher_175,
-            self._matcher_177,
-            self._matcher_178
-        ])
+        return self._rules['repr'](stream)
     def _matcher_180(self, stream):
-        return stream.with_scope(self._matcher_179)
+        return stream.operator_and([
+            self._matcher_179
+        ])
     def _matcher_181(self, stream):
-        return stream.operator_or([
-            self._matcher_180
-        ])
+        return stream.with_scope(self._matcher_180)
     def _matcher_182(self, stream):
-        return self._rules['repr'](stream)
+        return stream.operator_or([
+            self._matcher_181
+        ])
     def _matcher_183(self, stream):
-        return stream.operator_and([
-            self._matcher_182
-        ])
-    def _matcher_184(self, stream):
-        return stream.with_scope(self._matcher_183)
-    def _matcher_185(self, stream):
-        return stream.operator_or([
-            self._matcher_184
-        ])
-    def _matcher_186(self, stream):
         return self._rules['repr'](stream)
-    def _matcher_187(self, stream):
+    def _matcher_184(self, stream):
         return stream.operator_and([
-            self._matcher_186
+            self._matcher_183
         ])
-    def _matcher_188(self, stream):
-        return stream.with_scope(self._matcher_187)
-    def _matcher_189(self, stream):
+    def _matcher_185(self, stream):
+        return stream.with_scope(self._matcher_184)
+    def _matcher_186(self, stream):
         return stream.operator_or([
-            self._matcher_188
+            self._matcher_185
         ])
-    def _matcher_190(self, stream):
+    def _matcher_187(self, stream):
         return self._rules['astList'](stream)
-    def _matcher_191(self, stream):
-        return stream.bind('x', self._matcher_190(stream))
-    def _matcher_192(self, stream):
+    def _matcher_188(self, stream):
+        return stream.bind('x', self._matcher_187(stream))
+    def _matcher_189(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             "self.lookup('concat')([",
             self.lookup('x'),
             '])'
         ]))
-    def _matcher_193(self, stream):
+    def _matcher_190(self, stream):
         return stream.operator_and([
-            self._matcher_191,
-            self._matcher_192
+            self._matcher_188,
+            self._matcher_189
         ])
-    def _matcher_194(self, stream):
-        return stream.with_scope(self._matcher_193)
-    def _matcher_195(self, stream):
+    def _matcher_191(self, stream):
+        return stream.with_scope(self._matcher_190)
+    def _matcher_192(self, stream):
         return stream.operator_or([
-            self._matcher_194
+            self._matcher_191
         ])
-    def _matcher_196(self, stream):
+    def _matcher_193(self, stream):
         return self._rules['repr'](stream)
-    def _matcher_197(self, stream):
-        return stream.bind('x', self._matcher_196(stream))
-    def _matcher_198(self, stream):
+    def _matcher_194(self, stream):
+        return stream.bind('x', self._matcher_193(stream))
+    def _matcher_195(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_199(self, stream):
-        return stream.bind('y', self._matcher_198(stream))
-    def _matcher_200(self, stream):
+    def _matcher_196(self, stream):
+        return stream.bind('y', self._matcher_195(stream))
+    def _matcher_197(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             "self.lookup('splice')(",
             self.lookup('x'),
@@ -2800,94 +2793,94 @@ class CodeGenerator:
             self.lookup('y'),
             ')'
         ]))
-    def _matcher_201(self, stream):
+    def _matcher_198(self, stream):
         return stream.operator_and([
-            self._matcher_197,
-            self._matcher_199,
-            self._matcher_200
+            self._matcher_194,
+            self._matcher_196,
+            self._matcher_197
         ])
-    def _matcher_202(self, stream):
-        return stream.with_scope(self._matcher_201)
-    def _matcher_203(self, stream):
+    def _matcher_199(self, stream):
+        return stream.with_scope(self._matcher_198)
+    def _matcher_200(self, stream):
         return stream.operator_or([
-            self._matcher_202
+            self._matcher_199
         ])
-    def _matcher_204(self, stream):
+    def _matcher_201(self, stream):
         return self._rules['astList'](stream)
-    def _matcher_205(self, stream):
-        return stream.bind('x', self._matcher_204(stream))
-    def _matcher_206(self, stream):
+    def _matcher_202(self, stream):
+        return stream.bind('x', self._matcher_201(stream))
+    def _matcher_203(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             "self.lookup('join')([",
             self.lookup('x'),
             '])'
         ]))
-    def _matcher_207(self, stream):
+    def _matcher_204(self, stream):
         return stream.operator_and([
-            self._matcher_205,
-            self._matcher_206
+            self._matcher_202,
+            self._matcher_203
         ])
-    def _matcher_208(self, stream):
-        return stream.with_scope(self._matcher_207)
-    def _matcher_209(self, stream):
+    def _matcher_205(self, stream):
+        return stream.with_scope(self._matcher_204)
+    def _matcher_206(self, stream):
         return stream.operator_or([
-            self._matcher_208
+            self._matcher_205
         ])
-    def _matcher_210(self, stream):
+    def _matcher_207(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_211(self, stream):
-        return stream.bind('x', self._matcher_210(stream))
-    def _matcher_212(self, stream):
+    def _matcher_208(self, stream):
+        return stream.bind('x', self._matcher_207(stream))
+    def _matcher_209(self, stream):
         return self._rules['astList'](stream)
-    def _matcher_213(self, stream):
-        return stream.bind('y', self._matcher_212(stream))
-    def _matcher_214(self, stream):
+    def _matcher_210(self, stream):
+        return stream.bind('y', self._matcher_209(stream))
+    def _matcher_211(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             self.lookup('x'),
             '(',
             self.lookup('y'),
             ')'
         ]))
-    def _matcher_215(self, stream):
+    def _matcher_212(self, stream):
         return stream.operator_and([
-            self._matcher_211,
-            self._matcher_213,
-            self._matcher_214
+            self._matcher_208,
+            self._matcher_210,
+            self._matcher_211
         ])
-    def _matcher_216(self, stream):
-        return stream.with_scope(self._matcher_215)
-    def _matcher_217(self, stream):
+    def _matcher_213(self, stream):
+        return stream.with_scope(self._matcher_212)
+    def _matcher_214(self, stream):
         return stream.operator_or([
-            self._matcher_216
+            self._matcher_213
         ])
-    def _matcher_218(self, stream):
+    def _matcher_215(self, stream):
         return self._rules['repr'](stream)
-    def _matcher_219(self, stream):
-        return stream.bind('x', self._matcher_218(stream))
-    def _matcher_220(self, stream):
+    def _matcher_216(self, stream):
+        return stream.bind('x', self._matcher_215(stream))
+    def _matcher_217(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             'self.lookup(',
             self.lookup('x'),
             ')'
         ]))
-    def _matcher_221(self, stream):
+    def _matcher_218(self, stream):
         return stream.operator_and([
-            self._matcher_219,
-            self._matcher_220
+            self._matcher_216,
+            self._matcher_217
         ])
-    def _matcher_222(self, stream):
-        return stream.with_scope(self._matcher_221)
-    def _matcher_223(self, stream):
+    def _matcher_219(self, stream):
+        return stream.with_scope(self._matcher_218)
+    def _matcher_220(self, stream):
         return stream.operator_or([
-            self._matcher_222
+            self._matcher_219
         ])
-    def _matcher_224(self, stream):
+    def _matcher_221(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_225(self, stream):
-        return stream.operator_star(self._matcher_224)
-    def _matcher_226(self, stream):
-        return stream.bind('xs', self._matcher_225(stream))
-    def _matcher_227(self, stream):
+    def _matcher_222(self, stream):
+        return stream.operator_star(self._matcher_221)
+    def _matcher_223(self, stream):
+        return stream.bind('xs', self._matcher_222(stream))
+    def _matcher_224(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             '\n',
             self.lookup('indent')(
@@ -2898,18 +2891,18 @@ class CodeGenerator:
             ),
             '\n'
         ]))
-    def _matcher_228(self, stream):
+    def _matcher_225(self, stream):
         return stream.operator_and([
-            self._matcher_226,
-            self._matcher_227
+            self._matcher_223,
+            self._matcher_224
         ])
-    def _matcher_229(self, stream):
-        return stream.with_scope(self._matcher_228)
-    def _matcher_230(self, stream):
+    def _matcher_226(self, stream):
+        return stream.with_scope(self._matcher_225)
+    def _matcher_227(self, stream):
         return stream.operator_or([
-            self._matcher_229
+            self._matcher_226
         ])
-    def _matcher_231(self, stream):
+    def _matcher_228(self, stream):
         return stream.action(lambda self: self.bind('id', self.lookup('join')([
             '_matcher_',
             self.lookup('nextid')(
@@ -2933,34 +2926,34 @@ class CodeGenerator:
             'self.',
             self.lookup('id')
         ]))))
-    def _matcher_232(self, stream):
+    def _matcher_229(self, stream):
         return stream.operator_and([
-            self._matcher_231
+            self._matcher_228
         ])
-    def _matcher_233(self, stream):
-        return stream.with_scope(self._matcher_232)
-    def _matcher_234(self, stream):
+    def _matcher_230(self, stream):
+        return stream.with_scope(self._matcher_229)
+    def _matcher_231(self, stream):
         return stream.operator_or([
-            self._matcher_233
+            self._matcher_230
         ])
-    def _matcher_235(self, stream):
+    def _matcher_232(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_236(self, stream):
-        return stream.bind('x', self._matcher_235(stream))
-    def _matcher_237(self, stream):
+    def _matcher_233(self, stream):
+        return stream.bind('x', self._matcher_232(stream))
+    def _matcher_234(self, stream):
         return stream.action(lambda self: self.lookup('repr')(
             self.lookup('x')
         ))
-    def _matcher_238(self, stream):
+    def _matcher_235(self, stream):
         return stream.operator_and([
-            self._matcher_236,
-            self._matcher_237
+            self._matcher_233,
+            self._matcher_234
         ])
-    def _matcher_239(self, stream):
-        return stream.with_scope(self._matcher_238)
-    def _matcher_240(self, stream):
+    def _matcher_236(self, stream):
+        return stream.with_scope(self._matcher_235)
+    def _matcher_237(self, stream):
         return stream.operator_or([
-            self._matcher_239
+            self._matcher_236
         ])
 if __name__ == "__main__":
     run_simulation(
