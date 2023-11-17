@@ -12,8 +12,8 @@ Cli {
 }
 
 SequenceWriter #n {
-  run = "Part" #n:n .:x !. -> put(["Write" x])
-                           -> spawn(SequenceWriter(add(n 1)))
+  run = "Part" #n .:x !. -> put(["Write" x])
+                         -> spawn(SequenceWriter(add(n 1)))
 }
 
 StdoutWriter {

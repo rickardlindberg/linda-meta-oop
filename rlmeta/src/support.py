@@ -120,15 +120,18 @@ class SemanticAction:
 
 class Runtime:
 
-    def __init__(self, extra={}):
+    def __init__(self, actor, extra={}):
         self.vars = extra
+        self.actor = actor
 
     def bind(self, name, value):
-        return Runtime(dict(self.vars, **{name: value}))
+        return Runtime(self.actor, dict(self.vars, **{name: value}))
 
     def lookup(self, name):
         if name in self.vars:
             return self.vars[name]
+        elif name in self.actor._state:
+            return self.actor._state[name]
         else:
             return getattr(self, name)
 
@@ -195,13 +198,12 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
         }
         for key, value in extra.items():
             x[key] = value
-        runtime = Runtime(x)
         processed = False
         errors = []
         for message in messages:
             for actor in actors:
                 try:
-                    actor.run(Stream(message)).eval(runtime)
+                    actor.run(Stream(message)).eval(Runtime(actor, x))
                 except MatchError as e:
                     errors.append((actor, e))
                 else:
