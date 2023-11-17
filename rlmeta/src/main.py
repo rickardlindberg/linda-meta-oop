@@ -8,7 +8,8 @@ if __name__ == "__main__":
         ],
         {
             "SUPPORT": SUPPORT,
-            "SequenceWriter": SequenceWriter,
+            "PartCollector": PartCollector,
             "add": lambda x, y: x+y,
+            "sub": lambda x, y: x-y,
         }
     )

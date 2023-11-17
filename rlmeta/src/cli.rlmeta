@@ -3,7 +3,7 @@ Cli {
     | "Args"         !.   -> put(["Args" "--compile" "-"])
     | "Args" arg*:xs !.   -> Counter():next
                           -> xs
-                          -> spawn(SequenceWriter(0))
+                          -> spawn(PartCollector(0 sub(next() 1) []))
   arg =
     | "--support"         -> put(["Part"       next() SUPPORT])
     | "--copy"    .:x     -> put(["Part"       next() read(x)])
@@ -11,9 +11,11 @@ Cli {
     | "--compile" .:x     -> put(["SourceCode" next() read(x)])
 }
 
-SequenceWriter #n {
-  run = "Part" #n .:x !. -> put(["Write" x])
-                         -> spawn(SequenceWriter(add(n 1)))
+PartCollector #n #last #parts {
+  run =
+    | next #last .:x !. -> put(["Write" {parts x}])
+    | next .     .:x !. -> spawn(PartCollector(add(n 1) last add(parts [x])))
+  next = "Part" !(!(#n))
 }
 
 StdoutWriter {

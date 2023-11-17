@@ -269,8 +269,17 @@ class Cli:
         return stream.action(lambda self: self.bind('next', self.lookup('Counter')(
         
         ), lambda: self.bind('', self.lookup('xs'), lambda: self.lookup('spawn')(
-            self.lookup('SequenceWriter')(
-                0
+            self.lookup('PartCollector')(
+                0,
+                self.lookup('sub')(
+                    self.lookup('next')(
+                    
+                    ),
+                    1
+                ),
+                self.lookup('concat')([
+                
+                ])
             )
         ))))
     def _matcher_13(self, stream):
@@ -403,19 +412,22 @@ class Cli:
             self._matcher_33,
             self._matcher_39
         ])
-class SequenceWriter:
-    def __init__(self, n=None):
+class PartCollector:
+    def __init__(self, n=None, last=None, parts=None):
         self._state = {'n': n,
+        'last': last,
+        'parts': parts,
         }
         self._rules = {
-            'run': self._matcher_9,
+            'run': self._matcher_18,
+            'next': self._matcher_31,
         }
     def run(self, stream):
         return self._rules['run'](stream)
     def _matcher_0(self, stream):
-        return stream.match(lambda item: item == 'Part', "'Part'")
+        return self._rules['next'](stream)
     def _matcher_1(self, stream):
-        return stream.match(lambda item: item == self._state['n'], 'state')
+        return stream.match(lambda item: item == self._state['last'], 'state')
     def _matcher_2(self, stream):
         return stream.match(lambda item: True, 'any')
     def _matcher_3(self, stream):
@@ -425,19 +437,15 @@ class SequenceWriter:
     def _matcher_5(self, stream):
         return stream.operator_not(self._matcher_4)
     def _matcher_6(self, stream):
-        return stream.action(lambda self: self.bind('', self.lookup('put')(
+        return stream.action(lambda self: self.lookup('put')(
             self.lookup('concat')([
                 self.lookup('splice')(0, 'Write'),
-                self.lookup('splice')(0, self.lookup('x'))
+                self.lookup('splice')(0, self.lookup('join')([
+                    self.lookup('parts'),
+                    self.lookup('x')
+                ]))
             ])
-        ), lambda: self.lookup('spawn')(
-            self.lookup('SequenceWriter')(
-                self.lookup('add')(
-                    self.lookup('n'),
-                    1
-                )
-            )
-        )))
+        ))
     def _matcher_7(self, stream):
         return stream.operator_and([
             self._matcher_0,
@@ -449,8 +457,86 @@ class SequenceWriter:
     def _matcher_8(self, stream):
         return stream.with_scope(self._matcher_7)
     def _matcher_9(self, stream):
+        return self._rules['next'](stream)
+    def _matcher_10(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_11(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_12(self, stream):
+        return stream.bind('x', self._matcher_11(stream))
+    def _matcher_13(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_14(self, stream):
+        return stream.operator_not(self._matcher_13)
+    def _matcher_15(self, stream):
+        return stream.action(lambda self: self.lookup('spawn')(
+            self.lookup('PartCollector')(
+                self.lookup('add')(
+                    self.lookup('n'),
+                    1
+                ),
+                self.lookup('last'),
+                self.lookup('add')(
+                    self.lookup('parts'),
+                    self.lookup('concat')([
+                        self.lookup('splice')(0, self.lookup('x'))
+                    ])
+                )
+            )
+        ))
+    def _matcher_16(self, stream):
+        return stream.operator_and([
+            self._matcher_9,
+            self._matcher_10,
+            self._matcher_12,
+            self._matcher_14,
+            self._matcher_15
+        ])
+    def _matcher_17(self, stream):
+        return stream.with_scope(self._matcher_16)
+    def _matcher_18(self, stream):
         return stream.operator_or([
-            self._matcher_8
+            self._matcher_8,
+            self._matcher_17
+        ])
+    def _matcher_19(self, stream):
+        return stream.match(lambda item: item == 'Part', "'Part'")
+    def _matcher_20(self, stream):
+        return stream.match(lambda item: item == self._state['n'], 'state')
+    def _matcher_21(self, stream):
+        return stream.operator_and([
+            self._matcher_20
+        ])
+    def _matcher_22(self, stream):
+        return stream.with_scope(self._matcher_21)
+    def _matcher_23(self, stream):
+        return stream.operator_or([
+            self._matcher_22
+        ])
+    def _matcher_24(self, stream):
+        return stream.operator_not(self._matcher_23)
+    def _matcher_25(self, stream):
+        return stream.operator_and([
+            self._matcher_24
+        ])
+    def _matcher_26(self, stream):
+        return stream.with_scope(self._matcher_25)
+    def _matcher_27(self, stream):
+        return stream.operator_or([
+            self._matcher_26
+        ])
+    def _matcher_28(self, stream):
+        return stream.operator_not(self._matcher_27)
+    def _matcher_29(self, stream):
+        return stream.operator_and([
+            self._matcher_19,
+            self._matcher_28
+        ])
+    def _matcher_30(self, stream):
+        return stream.with_scope(self._matcher_29)
+    def _matcher_31(self, stream):
+        return stream.operator_or([
+            self._matcher_30
         ])
 class StdoutWriter:
     def __init__(self):
@@ -2965,7 +3051,8 @@ if __name__ == "__main__":
         ],
         {
             "SUPPORT": SUPPORT,
-            "SequenceWriter": SequenceWriter,
+            "PartCollector": PartCollector,
             "add": lambda x, y: x+y,
+            "sub": lambda x, y: x-y,
         }
     )
