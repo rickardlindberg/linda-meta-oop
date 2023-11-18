@@ -1,4 +1,4 @@
-SUPPORT = 'class Stream:\n\n    def __init__(self, items):\n        self.items = items\n        self.index = 0\n        self.latest_error = None\n        self.scope = None\n\n    def operator_or(self, matchers):\n        for matcher in matchers:\n            backtrack_index = self.index\n            try:\n                return matcher(self)\n            except MatchError:\n                self.index = backtrack_index\n        self.error("no or match")\n\n    def operator_and(self, matchers):\n        result = self.action()\n        for matcher in matchers:\n            result = matcher(self)\n        return result\n\n    def operator_star(self, matcher):\n        results = []\n        while True:\n            backtrack_index = self.index\n            try:\n                results.append(matcher(self))\n            except MatchError:\n                self.index = backtrack_index\n                return self.action(lambda self: [x.eval(self.runtime) for x in results])\n\n    def operator_not(self, matcher):\n        backtrack_index = self.index\n        try:\n            matcher(self)\n        except MatchError:\n            return self.action()\n        finally:\n            self.index = backtrack_index\n        self.error("not matched")\n\n    def action(self, fn=lambda self: None):\n        return SemanticAction(self.scope, fn)\n\n    def with_scope(self, matcher):\n        current_scope = self.scope\n        self.scope = {}\n        try:\n            return matcher(self)\n        finally:\n            self.scope = current_scope\n\n    def bind(self, name, semantic_action):\n        self.scope[name] = semantic_action\n        return semantic_action\n\n    def match_list(self, matcher):\n        if self.index < len(self.items):\n            items, index = self.items, self.index\n            try:\n                self.items = self.items[self.index]\n                self.index = 0\n                result = matcher(self)\n                index += 1\n            finally:\n                self.items, self.index = items, index\n            return result\n        self.error("no list found")\n\n    def match_call_rule(self, rules):\n        name = self.items[self.index]\n        if name in rules:\n            matcher = rules[name]\n            self.index += 1\n            return matcher(self)\n        else:\n            self.error(f"Unknown rule {name}.")\n\n    def match(self, fn, description):\n        if self.index < len(self.items):\n            item = self.items[self.index]\n            if fn(item):\n                self.index += 1\n                return self.action(lambda self: item)\n        self.error(f"expected {description}")\n\n    def error(self, name):\n        if not self.latest_error or self.index > self.latest_error[2]:\n            self.latest_error = (name, self.items, self.index)\n        raise MatchError(*self.latest_error)\n\nclass MatchError(Exception):\n\n    def __init__(self, name, items, index):\n        Exception.__init__(self, name)\n        self.items = items\n        self.index = index\n\nclass SemanticAction:\n\n    def __init__(self, scope, fn):\n        self.scope = scope\n        self.fn = fn\n\n    def eval(self, runtime):\n        self.runtime = runtime\n        return self.fn(self)\n\n    def bind(self, name, value, continuation):\n        self.runtime = self.runtime.bind(name, value)\n        return continuation()\n\n    def lookup(self, name):\n        if name in self.scope:\n            return self.scope[name].eval(self.runtime)\n        else:\n            return self.runtime.lookup(name)\n\nclass Runtime:\n\n    def __init__(self, actor, extra={}):\n        self.vars = extra\n        self.actor = actor\n\n    def bind(self, name, value):\n        return Runtime(self.actor, dict(self.vars, **{name: value}))\n\n    def lookup(self, name):\n        if name in self.vars:\n            return self.vars[name]\n        elif name in self.actor._state:\n            return self.actor._state[name]\n        else:\n            return getattr(self, name)\n\n    def increment(self, number):\n        return number + 1\n\n    def decrement(self, number):\n        return number - 1\n\n    def collector(self):\n        class collector(list):\n            def __call__(self, item):\n                self.append(item)\n        return collector()\n\n    def join(self, items, delimiter=""):\n        return delimiter.join(\n            self.join(item, delimiter) if isinstance(item, list) else str(item)\n            for item in items\n        )\n\n    def indent(self, text, prefix="    "):\n        return "".join(prefix+line for line in text.splitlines(True))\n\n    def splice(self, depth, item):\n        if depth == 0:\n            return [item]\n        else:\n            return self.concat([self.splice(depth-1, subitem) for subitem in item])\n\n    def concat(self, lists):\n        return [x for xs in lists for x in xs]\n\nclass Counter:\n\n    def __init__(self):\n        self.number = 0\n\n    def __call__(self):\n        result = self.number\n        self.number += 1\n        return result\n\ndef run_simulation(actors, extra={}, messages=[], debug=False):\n    import sys\n    def debug_log(text):\n        if debug:\n            sys.stderr.write(f"{text}\\n")\n    def read(path):\n        if path == "-":\n            return sys.stdin.read()\n        with open(path) as f:\n            return f.read()\n    if not messages:\n        messages.append(["Args"]+sys.argv[1:])\n    iteration = 0\n    while messages:\n        debug_log(f"Iteration {iteration}")\n        for index, message in enumerate(messages):\n            debug_log(f"  Message {index:2d} = {message}")\n        debug_log("")\n        next_messages = []\n        x = {\n            "put": next_messages.append,\n            "spawn": actors.append,\n            "write": sys.stdout.write,\n            "repr": repr,\n            "read": read,\n            "len": len,\n            "repr": repr,\n            "int": int,\n            "Counter": Counter,\n        }\n        for key, value in extra.items():\n            x[key] = value\n        processed = False\n        errors = []\n        for message in messages:\n            for actor in list(actors):\n                try:\n                    actor.run(Stream(message)).eval(Runtime(actor, x).bind(\n                        "kill",\n                        lambda: actors.remove(actor)\n                    ))\n                except MatchError as e:\n                    errors.append((actor, e))\n                else:\n                    processed = True\n                    break\n            else:\n                next_messages.append(message)\n        if not processed:\n            for actor, error in errors:\n                sys.stderr.write(f"{actor.__class__.__name__} {actor._state}\\n")\n                sys.stderr.write(f"  {error} at {error.index}\\n")\n                sys.stderr.write(f"  {error.items}\\n")\n                sys.stderr.write("\\n")\n            sys.exit("No message processed.")\n        messages = next_messages\n        iteration += 1\n    debug_log("Actors:")\n    for actor in actors:\n        debug_log(f"  - {actor.__class__.__name__} {actor._state}")\n    debug_log("Simulation done!")\n'
+SUPPORT = 'class Stream:\n\n    def __init__(self, items):\n        self.items = items\n        self.index = 0\n        self.latest_error = None\n        self.scope = None\n\n    def operator_or(self, matchers):\n        for matcher in matchers:\n            backtrack_index = self.index\n            try:\n                return matcher(self)\n            except MatchError:\n                self.index = backtrack_index\n        self.error("no or match")\n\n    def operator_and(self, matchers):\n        result = self.action()\n        for matcher in matchers:\n            result = matcher(self)\n        return result\n\n    def operator_star(self, matcher):\n        results = []\n        while True:\n            backtrack_index = self.index\n            try:\n                results.append(matcher(self))\n            except MatchError:\n                self.index = backtrack_index\n                return self.action(lambda self: [x.eval(self.runtime) for x in results])\n\n    def operator_not(self, matcher):\n        backtrack_index = self.index\n        try:\n            matcher(self)\n        except MatchError:\n            return self.action()\n        finally:\n            self.index = backtrack_index\n        self.error("not matched")\n\n    def action(self, fn=lambda self: None):\n        return SemanticAction(self.scope, fn)\n\n    def with_scope(self, matcher):\n        current_scope = self.scope\n        self.scope = {}\n        try:\n            return matcher(self)\n        finally:\n            self.scope = current_scope\n\n    def bind(self, name, semantic_action):\n        self.scope[name] = semantic_action\n        return semantic_action\n\n    def match_list(self, matcher):\n        if self.index < len(self.items):\n            items, index = self.items, self.index\n            try:\n                self.items = self.items[self.index]\n                self.index = 0\n                result = matcher(self)\n                index += 1\n            finally:\n                self.items, self.index = items, index\n            return result\n        self.error("no list found")\n\n    def match_call_rule(self, rules):\n        name = self.items[self.index]\n        if name in rules:\n            matcher = rules[name]\n            self.index += 1\n            return matcher(self)\n        else:\n            self.error(f"Unknown rule {name}.")\n\n    def match(self, fn, description):\n        if self.index < len(self.items):\n            item = self.items[self.index]\n            if fn(item):\n                self.index += 1\n                return self.action(lambda self: item)\n        self.error(f"expected {description}")\n\n    def error(self, name):\n        if not self.latest_error or self.index > self.latest_error[2]:\n            self.latest_error = (name, self.items, self.index)\n        raise MatchError(*self.latest_error)\n\nclass MatchError(Exception):\n\n    def __init__(self, name, items, index):\n        Exception.__init__(self, name)\n        self.items = items\n        self.index = index\n\nclass SemanticAction:\n\n    def __init__(self, scope, fn):\n        self.scope = scope\n        self.fn = fn\n\n    def eval(self, runtime):\n        self.runtime = runtime\n        return self.fn(self)\n\n    def bind(self, name, value, continuation):\n        self.runtime = self.runtime.bind(name, value)\n        return continuation()\n\n    def lookup(self, name):\n        if name in self.scope:\n            return self.scope[name].eval(self.runtime)\n        else:\n            return self.runtime.lookup(name)\n\nclass Runtime:\n\n    def __init__(self, actor, extra={}):\n        self.vars = extra\n        self.actor = actor\n\n    def bind(self, name, value):\n        return Runtime(self.actor, dict(self.vars, **{name: value}))\n\n    def lookup(self, name):\n        if name in self.vars:\n            return self.vars[name]\n        elif name in self.actor._state:\n            return self.actor._state[name]\n        else:\n            return getattr(self, name)\n\n    def increment(self, number):\n        return number + 1\n\n    def decrement(self, number):\n        return number - 1\n\n    def collector(self):\n        class collector(list):\n            def __call__(self, item):\n                self.append(item)\n        return collector()\n\n    def join(self, items, delimiter=""):\n        return delimiter.join(\n            self.join(item, delimiter) if isinstance(item, list) else str(item)\n            for item in items\n        )\n\n    def indent(self, text, prefix="    "):\n        return "".join(prefix+line for line in text.splitlines(True))\n\n    def splice(self, depth, item):\n        if depth == 0:\n            return [item]\n        else:\n            return self.concat([self.splice(depth-1, subitem) for subitem in item])\n\n    def concat(self, lists):\n        return [x for xs in lists for x in xs]\n\nclass Counter:\n\n    def __init__(self):\n        self.number = 0\n\n    def __call__(self):\n        result = self.number\n        self.number += 1\n        return result\n\nimport sys\n\ndef read(path):\n    if path == "-":\n        return sys.stdin.read()\n    with open(path) as f:\n        return f.read()\n\ndef run_simulation(actors, extra={}, messages=[], debug=False):\n    def debug_log(text):\n        if debug:\n            sys.stderr.write(f"{text}\\n")\n    if not messages:\n        messages.append(["Args"]+sys.argv[1:])\n    iteration = 0\n    while messages:\n        debug_log(f"Iteration {iteration}")\n        for index, message in enumerate(messages):\n            debug_log(f"  Message {index:2d} = {message}")\n        debug_log("")\n        next_messages = []\n        x = {\n            "put": next_messages.append,\n            "spawn": actors.append,\n            "write": sys.stdout.write,\n            "repr": repr,\n            "read": read,\n            "len": len,\n            "repr": repr,\n            "int": int,\n            "Counter": Counter,\n            "exit": sys.exit,\n        }\n        for key, value in extra.items():\n            x[key] = value\n        processed = False\n        errors = []\n        for message in messages:\n            for actor in list(actors):\n                try:\n                    actor.run(Stream(message)).eval(Runtime(actor, x).bind(\n                        "kill",\n                        lambda: actors.remove(actor)\n                    ))\n                except MatchError as e:\n                    errors.append((actor, e))\n                else:\n                    processed = True\n                    break\n            else:\n                next_messages.append(message)\n        if not processed:\n            for actor, error in errors:\n                sys.stderr.write(f"{actor.__class__.__name__} {actor._state}\\n")\n                sys.stderr.write(f"  {error} at {error.index}\\n")\n                sys.stderr.write(f"  {error.items}\\n")\n                sys.stderr.write("\\n")\n            sys.exit("No message processed.")\n        messages = next_messages\n        iteration += 1\n    debug_log("Actors:")\n    for actor in actors:\n        debug_log(f"  - {actor.__class__.__name__} {actor._state}")\n    debug_log("Simulation done!")\n\nimport multiprocessing\nimport uuid\n\ndef message_server(actors, init_messages, extra):\n    def spawn(actor):\n        server, client = multiprocessing.Pipe()\n        clients.append(server)\n        p = multiprocessing.Process(target=actor_client, args=(actor, client, extra))\n        p.start()\n        client.close()\n    def put(message):\n        messages[uuid.uuid4().int] = message\n    def response(request):\n        fns = {\n            "get_message_ids": lambda: list(messages.keys()),\n            "get_message": lambda message_id: messages.get(message_id, None),\n            "pop_message": lambda message_id: messages.pop(message_id, None) is not None,\n            "spawn": spawn,\n            "put": put,\n            "exit": sys.exit,\n        }\n        response = fns[request[0]](*request[1:])\n        sys.stderr.write(f"{request} ->\\n")\n        sys.stderr.write(f"  {response}\\n")\n        return response\n    messages = {}\n    for message in init_messages:\n        put(message)\n    clients = []\n    for actor in actors:\n        spawn(actor)\n    while True:\n        for client in multiprocessing.connection.wait(clients):\n            try:\n                request = client.recv()\n            except EOFError:\n                clients.remove(client)\n            else:\n                client.send(response(request))\n    sys.stderr.write(f"Done!\\n")\n\ndef actor_client(actor, server, extra):\n    def put(message):\n        server.send(["put", message])\n        server.recv()\n    def spawn(actor):\n        server.send(["spawn", actor])\n        server.recv()\n    def exit():\n        server.send(["exit"])\n        server.recv()\n    conditions = [1]\n    while conditions:\n        server.send(["get_message_ids"])\n        message_ids = server.recv()\n        for message_id in message_ids:\n            server.send(["get_message", message_id])\n            message = server.recv()\n            if message:\n                try:\n                    action = actor.run(Stream(message))\n                except MatchError:\n                    pass\n                else:\n                    server.send(["pop_message", message_id])\n                    message_popped = server.recv()\n                    if message_popped:\n                        x = {\n                            "put": put,\n                            "spawn": spawn,\n                            "exit": exit,\n                            "write": sys.stdout.write,\n                            "repr": repr,\n                            "read": read,\n                            "len": len,\n                            "repr": repr,\n                            "int": int,\n                            "Counter": Counter,\n                        }\n                        for key, value in extra.items():\n                            x[key] = value\n                        action.eval(Runtime(actor, x).bind(\n                            "kill",\n                            lambda: conditions.pop()\n                        ))\n'
 class Stream:
 
     def __init__(self, items):
@@ -176,16 +176,18 @@ class Counter:
         self.number += 1
         return result
 
+import sys
+
+def read(path):
+    if path == "-":
+        return sys.stdin.read()
+    with open(path) as f:
+        return f.read()
+
 def run_simulation(actors, extra={}, messages=[], debug=False):
-    import sys
     def debug_log(text):
         if debug:
             sys.stderr.write(f"{text}\n")
-    def read(path):
-        if path == "-":
-            return sys.stdin.read()
-        with open(path) as f:
-            return f.read()
     if not messages:
         messages.append(["Args"]+sys.argv[1:])
     iteration = 0
@@ -205,6 +207,7 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             "repr": repr,
             "int": int,
             "Counter": Counter,
+            "exit": sys.exit,
         }
         for key, value in extra.items():
             x[key] = value
@@ -237,6 +240,92 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
     for actor in actors:
         debug_log(f"  - {actor.__class__.__name__} {actor._state}")
     debug_log("Simulation done!")
+
+import multiprocessing
+import uuid
+
+def message_server(actors, init_messages, extra):
+    def spawn(actor):
+        server, client = multiprocessing.Pipe()
+        clients.append(server)
+        p = multiprocessing.Process(target=actor_client, args=(actor, client, extra))
+        p.start()
+        client.close()
+    def put(message):
+        messages[uuid.uuid4().int] = message
+    def response(request):
+        fns = {
+            "get_message_ids": lambda: list(messages.keys()),
+            "get_message": lambda message_id: messages.get(message_id, None),
+            "pop_message": lambda message_id: messages.pop(message_id, None) is not None,
+            "spawn": spawn,
+            "put": put,
+            "exit": sys.exit,
+        }
+        response = fns[request[0]](*request[1:])
+        sys.stderr.write(f"{request} ->\n")
+        sys.stderr.write(f"  {response}\n")
+        return response
+    messages = {}
+    for message in init_messages:
+        put(message)
+    clients = []
+    for actor in actors:
+        spawn(actor)
+    while True:
+        for client in multiprocessing.connection.wait(clients):
+            try:
+                request = client.recv()
+            except EOFError:
+                clients.remove(client)
+            else:
+                client.send(response(request))
+    sys.stderr.write(f"Done!\n")
+
+def actor_client(actor, server, extra):
+    def put(message):
+        server.send(["put", message])
+        server.recv()
+    def spawn(actor):
+        server.send(["spawn", actor])
+        server.recv()
+    def exit():
+        server.send(["exit"])
+        server.recv()
+    conditions = [1]
+    while conditions:
+        server.send(["get_message_ids"])
+        message_ids = server.recv()
+        for message_id in message_ids:
+            server.send(["get_message", message_id])
+            message = server.recv()
+            if message:
+                try:
+                    action = actor.run(Stream(message))
+                except MatchError:
+                    pass
+                else:
+                    server.send(["pop_message", message_id])
+                    message_popped = server.recv()
+                    if message_popped:
+                        x = {
+                            "put": put,
+                            "spawn": spawn,
+                            "exit": exit,
+                            "write": sys.stdout.write,
+                            "repr": repr,
+                            "read": read,
+                            "len": len,
+                            "repr": repr,
+                            "int": int,
+                            "Counter": Counter,
+                        }
+                        for key, value in extra.items():
+                            x[key] = value
+                        action.eval(Runtime(actor, x).bind(
+                            "kill",
+                            lambda: conditions.pop()
+                        ))
 class Cli:
     def __init__(self):
         self._state = {}
@@ -428,6 +517,45 @@ class Cli:
             self._matcher_25,
             self._matcher_33,
             self._matcher_39
+        ])
+class StdoutWriter:
+    def __init__(self):
+        self._state = {}
+        self._rules = {
+            'run': self._matcher_8,
+        }
+    def run(self, stream):
+        return self._rules['run'](stream)
+    def _matcher_0(self, stream):
+        return stream.match(lambda item: item == 'Write', "'Write'")
+    def _matcher_1(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_2(self, stream):
+        return stream.bind('x', self._matcher_1(stream))
+    def _matcher_3(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_4(self, stream):
+        return stream.operator_not(self._matcher_3)
+    def _matcher_5(self, stream):
+        return stream.action(lambda self: self.bind('', self.lookup('write')(
+            self.lookup('join')([
+                self.lookup('x')
+            ])
+        ), lambda: self.lookup('exit')(
+        
+        )))
+    def _matcher_6(self, stream):
+        return stream.operator_and([
+            self._matcher_0,
+            self._matcher_2,
+            self._matcher_4,
+            self._matcher_5
+        ])
+    def _matcher_7(self, stream):
+        return stream.with_scope(self._matcher_6)
+    def _matcher_8(self, stream):
+        return stream.operator_or([
+            self._matcher_7
         ])
 class Parser:
     def __init__(self):
@@ -3005,43 +3133,6 @@ class PartCollector:
         return stream.operator_or([
             self._matcher_20,
             self._matcher_26
-        ])
-class StdoutWriter:
-    def __init__(self):
-        self._state = {}
-        self._rules = {
-            'run': self._matcher_8,
-        }
-    def run(self, stream):
-        return self._rules['run'](stream)
-    def _matcher_0(self, stream):
-        return stream.match(lambda item: item == 'Write', "'Write'")
-    def _matcher_1(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_2(self, stream):
-        return stream.bind('x', self._matcher_1(stream))
-    def _matcher_3(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_4(self, stream):
-        return stream.operator_not(self._matcher_3)
-    def _matcher_5(self, stream):
-        return stream.action(lambda self: self.lookup('write')(
-            self.lookup('join')([
-                self.lookup('x')
-            ])
-        ))
-    def _matcher_6(self, stream):
-        return stream.operator_and([
-            self._matcher_0,
-            self._matcher_2,
-            self._matcher_4,
-            self._matcher_5
-        ])
-    def _matcher_7(self, stream):
-        return stream.with_scope(self._matcher_6)
-    def _matcher_8(self, stream):
-        return stream.operator_or([
-            self._matcher_7
         ])
 if __name__ == "__main__":
     run_simulation(

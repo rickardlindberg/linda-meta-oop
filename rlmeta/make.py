@@ -43,7 +43,7 @@ def test(rlmeta):
     log("Test: Call unknown rule foo")
     assert test_grammar(
         rlmeta,
-        b"Grammar { run = % | .:x -> print(x) }",
+        b"Grammar { run = % | .:x -> print(x) -> exit() }",
         b"run_simulation(actors=[Grammar()], messages=[['foo']], extra={'print': print})"
     ) == b"foo\n"
 

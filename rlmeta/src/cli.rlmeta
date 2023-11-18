@@ -10,3 +10,7 @@ Cli {
     | "--embed"   .:x .:y -> put(["Part"       next() {x " = " repr(read(y)) "\n"}])
     | "--compile" .:x     -> put(["SourceCode" next() read(x)])
 }
+
+StdoutWriter {
+  run = "Write" .:x !. -> write({ x }) -> exit()
+}

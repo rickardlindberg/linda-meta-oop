@@ -175,18 +175,22 @@ class Counter:
         self.number += 1
         return result
 
+import sys
+
+def read(path):
+    if path == "-":
+        return sys.stdin.read()
+    with open(path) as f:
+        return f.read()
+
 def run_simulation(actors, extra={}, messages=[], debug=False):
-    import sys
     def debug_log(text):
         if debug:
             sys.stderr.write(f"{text}\n")
-    def read(path):
-        if path == "-":
-            return sys.stdin.read()
-        with open(path) as f:
-            return f.read()
     if not messages:
         messages.append(["Args"]+sys.argv[1:])
+    message_server(actors, messages, extra)
+    return
     iteration = 0
     while messages:
         debug_log(f"Iteration {iteration}")
@@ -204,6 +208,7 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             "repr": repr,
             "int": int,
             "Counter": Counter,
+            "exit": sys.exit,
         }
         for key, value in extra.items():
             x[key] = value
@@ -236,3 +241,91 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
     for actor in actors:
         debug_log(f"  - {actor.__class__.__name__} {actor._state}")
     debug_log("Simulation done!")
+
+import multiprocessing
+import uuid
+
+def message_server(actors, init_messages, extra):
+    def spawn(actor):
+        server, client = multiprocessing.Pipe()
+        clients.append(server)
+        p = multiprocessing.Process(target=actor_client, args=(actor, client, extra), daemon=True)
+        p.start()
+        client.close()
+    def put(message):
+        messages[uuid.uuid4().int] = message
+    def exit():
+        #sys.stderr.write(f"Done!\n")
+        sys.exit()
+    def response(request):
+        fns = {
+            "get_message_ids": lambda: list(messages.keys()),
+            "get_message": lambda message_id: messages.get(message_id, None),
+            "pop_message": lambda message_id: messages.pop(message_id, None) is not None,
+            "spawn": spawn,
+            "put": put,
+            "exit": exit,
+        }
+        response = fns[request[0]](*request[1:])
+        #sys.stderr.write(f"{request} ->\n")
+        #sys.stderr.write(f"  {response}\n")
+        return response
+    messages = {}
+    for message in init_messages:
+        put(message)
+    clients = []
+    for actor in actors:
+        spawn(actor)
+    while True:
+        for client in multiprocessing.connection.wait(clients):
+            try:
+                request = client.recv()
+            except EOFError:
+                clients.remove(client)
+            else:
+                client.send(response(request))
+
+def actor_client(actor, server, extra):
+    def put(message):
+        server.send(["put", message])
+        server.recv()
+    def spawn(actor):
+        server.send(["spawn", actor])
+        server.recv()
+    def exit():
+        server.send(["exit"])
+        server.recv()
+    conditions = [1]
+    while conditions:
+        server.send(["get_message_ids"])
+        message_ids = server.recv()
+        for message_id in message_ids:
+            server.send(["get_message", message_id])
+            message = server.recv()
+            if message:
+                try:
+                    action = actor.run(Stream(message))
+                except MatchError:
+                    pass
+                else:
+                    server.send(["pop_message", message_id])
+                    message_popped = server.recv()
+                    if message_popped:
+                        x = {
+                            "put": put,
+                            "spawn": spawn,
+                            "exit": exit,
+                            "write": sys.stdout.write,
+                            "repr": repr,
+                            "read": read,
+                            "len": len,
+                            "repr": repr,
+                            "int": int,
+                            "Counter": Counter,
+                        }
+                        for key, value in extra.items():
+                            x[key] = value
+                        action.eval(Runtime(actor, x).bind(
+                            "kill",
+                            lambda: conditions.pop()
+                        ))
