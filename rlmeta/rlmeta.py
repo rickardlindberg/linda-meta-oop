@@ -413,7 +413,7 @@ class Cli:
             self._matcher_39
         ])
 class PartCollector:
-    def __init__(self, n=None, last=None, parts=None):
+    def __init__(self, n, last, parts):
         self._state = {'n': n,
         'last': last,
         'parts': parts,
@@ -2349,8 +2349,7 @@ class CodeGenerator:
             self.lookup('param'),
             self.lookup('join')([
                 ', ',
-                self.lookup('x'),
-                '=None'
+                self.lookup('x')
             ])
         ), lambda: self.bind('', self.lookup('append')(
             self.lookup('init'),

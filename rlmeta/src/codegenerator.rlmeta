@@ -19,7 +19,7 @@ CodeGenerator {
                                                 matchers
                                               })
                                             }
-  Field         = .:x                    -> append(param {", " x "=None"})
+  Field         = .:x                    -> append(param {", " x})
                                          -> append(init { repr(x) ": " x ",\n" })
                                          -> ""
   Rule          = .:x ast:y              -> append(rules {repr(x) ": " y ",\n"})
