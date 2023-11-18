@@ -3,6 +3,7 @@ if __name__ == "__main__":
         [
             Cli(),
             Parser(),
+            Optimizer(),
             CodeGenerator(),
             StdoutWriter(),
         ],

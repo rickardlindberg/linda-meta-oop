@@ -1,0 +1,3 @@
+Optimizer {
+  run           = "Ast" .:p [.*:xs]     -> put(["Optimized" p xs])
+}

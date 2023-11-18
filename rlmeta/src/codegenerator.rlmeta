@@ -1,5 +1,5 @@
 CodeGenerator {
-  run           = "Ast" .:p [asts:x]     -> put(["Part" p x])
+  run           = "Optimized" .:p [asts:x]     -> put(["Part" p x])
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
   Actor         = .:x [asts:ys] ast*:zs  -> Counter():nextid                                   ->
