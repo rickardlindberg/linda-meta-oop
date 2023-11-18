@@ -2953,15 +2953,13 @@ class PartCollector:
         return stream.bind('x', self._matcher_16(stream))
     def _matcher_18(self, stream):
         return stream.action(lambda self: self.lookup('put')(
-            self.lookup('add')(
-                self.lookup('doneMsg'),
-                self.lookup('concat')([
-                    self.lookup('splice')(0, self.lookup('join')([
-                        self.lookup('parts'),
-                        self.lookup('x')
-                    ]))
-                ])
-            )
+            self.lookup('concat')([
+                self.lookup('splice')(1, self.lookup('doneMsg')),
+                self.lookup('splice')(0, self.lookup('join')([
+                    self.lookup('parts'),
+                    self.lookup('x')
+                ]))
+            ])
         ))
     def _matcher_19(self, stream):
         return stream.operator_and([
@@ -2985,12 +2983,10 @@ class PartCollector:
                     1
                 ),
                 self.lookup('last'),
-                self.lookup('add')(
-                    self.lookup('parts'),
-                    self.lookup('concat')([
-                        self.lookup('splice')(0, self.lookup('x'))
-                    ])
-                ),
+                self.lookup('concat')([
+                    self.lookup('splice')(1, self.lookup('parts')),
+                    self.lookup('splice')(0, self.lookup('x'))
+                ]),
                 self.lookup('doneMsg')
             )
         ))
