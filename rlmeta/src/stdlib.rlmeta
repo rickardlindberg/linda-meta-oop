@@ -1,12 +1,10 @@
 PartCollector #n #last #parts #doneMsg {
   run =
-    | "Part" nextPart:x !. -> x
-                           -> kill()
-  nextPart =
-    | isNext #last .:x -> put(add(doneMsg [{parts x}]))
-    | isNext .     .:x -> spawn(PartCollector(add(n 1) last add(parts [x]) doneMsg))
-  isNext =
-    | !(!(#n))
+    | "Part" !(!(#n)) process:x !. -> x
+                                   -> kill()
+  process =
+    | #last .:x -> put(add(doneMsg [{parts x}]))
+    | .     .:x -> spawn(PartCollector(add(n 1) last add(parts [x]) doneMsg))
 }
 
 StdoutWriter {

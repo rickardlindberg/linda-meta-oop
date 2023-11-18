@@ -2896,31 +2896,29 @@ class PartCollector:
         'doneMsg': doneMsg,
         }
         self._rules = {
-            'run': self._matcher_8,
-            'nextPart': self._matcher_23,
-            'isNext': self._matcher_35,
+            'run': self._matcher_17,
+            'process': self._matcher_30,
         }
     def run(self, stream):
         return self._rules['run'](stream)
     def _matcher_0(self, stream):
         return stream.match(lambda item: item == 'Part', "'Part'")
     def _matcher_1(self, stream):
-        return self._rules['nextPart'](stream)
+        return stream.match(lambda item: item == self._state['n'], 'state')
     def _matcher_2(self, stream):
-        return stream.bind('x', self._matcher_1(stream))
+        return stream.operator_and([
+            self._matcher_1
+        ])
     def _matcher_3(self, stream):
-        return stream.match(lambda item: True, 'any')
+        return stream.with_scope(self._matcher_2)
     def _matcher_4(self, stream):
-        return stream.operator_not(self._matcher_3)
+        return stream.operator_or([
+            self._matcher_3
+        ])
     def _matcher_5(self, stream):
-        return stream.action(lambda self: self.bind('', self.lookup('x'), lambda: self.lookup('kill')(
-        
-        )))
+        return stream.operator_not(self._matcher_4)
     def _matcher_6(self, stream):
         return stream.operator_and([
-            self._matcher_0,
-            self._matcher_2,
-            self._matcher_4,
             self._matcher_5
         ])
     def _matcher_7(self, stream):
@@ -2930,14 +2928,40 @@ class PartCollector:
             self._matcher_7
         ])
     def _matcher_9(self, stream):
-        return self._rules['isNext'](stream)
+        return stream.operator_not(self._matcher_8)
     def _matcher_10(self, stream):
-        return stream.match(lambda item: item == self._state['last'], 'state')
+        return self._rules['process'](stream)
     def _matcher_11(self, stream):
-        return stream.match(lambda item: True, 'any')
+        return stream.bind('x', self._matcher_10(stream))
     def _matcher_12(self, stream):
-        return stream.bind('x', self._matcher_11(stream))
+        return stream.match(lambda item: True, 'any')
     def _matcher_13(self, stream):
+        return stream.operator_not(self._matcher_12)
+    def _matcher_14(self, stream):
+        return stream.action(lambda self: self.bind('', self.lookup('x'), lambda: self.lookup('kill')(
+        
+        )))
+    def _matcher_15(self, stream):
+        return stream.operator_and([
+            self._matcher_0,
+            self._matcher_9,
+            self._matcher_11,
+            self._matcher_13,
+            self._matcher_14
+        ])
+    def _matcher_16(self, stream):
+        return stream.with_scope(self._matcher_15)
+    def _matcher_17(self, stream):
+        return stream.operator_or([
+            self._matcher_16
+        ])
+    def _matcher_18(self, stream):
+        return stream.match(lambda item: item == self._state['last'], 'state')
+    def _matcher_19(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_20(self, stream):
+        return stream.bind('x', self._matcher_19(stream))
+    def _matcher_21(self, stream):
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('add')(
                 self.lookup('doneMsg'),
@@ -2949,24 +2973,21 @@ class PartCollector:
                 ])
             )
         ))
-    def _matcher_14(self, stream):
+    def _matcher_22(self, stream):
         return stream.operator_and([
-            self._matcher_9,
-            self._matcher_10,
-            self._matcher_12,
-            self._matcher_13
+            self._matcher_18,
+            self._matcher_20,
+            self._matcher_21
         ])
-    def _matcher_15(self, stream):
-        return stream.with_scope(self._matcher_14)
-    def _matcher_16(self, stream):
-        return self._rules['isNext'](stream)
-    def _matcher_17(self, stream):
+    def _matcher_23(self, stream):
+        return stream.with_scope(self._matcher_22)
+    def _matcher_24(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_18(self, stream):
+    def _matcher_25(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_19(self, stream):
-        return stream.bind('x', self._matcher_18(stream))
-    def _matcher_20(self, stream):
+    def _matcher_26(self, stream):
+        return stream.bind('x', self._matcher_25(stream))
+    def _matcher_27(self, stream):
         return stream.action(lambda self: self.lookup('spawn')(
             self.lookup('PartCollector')(
                 self.lookup('add')(
@@ -2983,55 +3004,18 @@ class PartCollector:
                 self.lookup('doneMsg')
             )
         ))
-    def _matcher_21(self, stream):
-        return stream.operator_and([
-            self._matcher_16,
-            self._matcher_17,
-            self._matcher_19,
-            self._matcher_20
-        ])
-    def _matcher_22(self, stream):
-        return stream.with_scope(self._matcher_21)
-    def _matcher_23(self, stream):
-        return stream.operator_or([
-            self._matcher_15,
-            self._matcher_22
-        ])
-    def _matcher_24(self, stream):
-        return stream.match(lambda item: item == self._state['n'], 'state')
-    def _matcher_25(self, stream):
-        return stream.operator_and([
-            self._matcher_24
-        ])
-    def _matcher_26(self, stream):
-        return stream.with_scope(self._matcher_25)
-    def _matcher_27(self, stream):
-        return stream.operator_or([
-            self._matcher_26
-        ])
     def _matcher_28(self, stream):
-        return stream.operator_not(self._matcher_27)
+        return stream.operator_and([
+            self._matcher_24,
+            self._matcher_26,
+            self._matcher_27
+        ])
     def _matcher_29(self, stream):
-        return stream.operator_and([
-            self._matcher_28
-        ])
+        return stream.with_scope(self._matcher_28)
     def _matcher_30(self, stream):
-        return stream.with_scope(self._matcher_29)
-    def _matcher_31(self, stream):
         return stream.operator_or([
-            self._matcher_30
-        ])
-    def _matcher_32(self, stream):
-        return stream.operator_not(self._matcher_31)
-    def _matcher_33(self, stream):
-        return stream.operator_and([
-            self._matcher_32
-        ])
-    def _matcher_34(self, stream):
-        return stream.with_scope(self._matcher_33)
-    def _matcher_35(self, stream):
-        return stream.operator_or([
-            self._matcher_34
+            self._matcher_23,
+            self._matcher_29
         ])
 class StdoutWriter:
     def __init__(self):
