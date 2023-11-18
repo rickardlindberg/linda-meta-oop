@@ -232,7 +232,7 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             else:
                 next_messages.append(message)
         if not processed:
-            for actor, error in errors:
+            for actor, error in sorted(errors, key=lambda x: x[1].index):
                 sys.stderr.write(f"{actor.__class__.__name__} {trunc(actor._state, 60)}\n")
                 sys.stderr.write(f"  {error} at {error.index}\n")
                 sys.stderr.write(f"  {trunc(error.items, 60)}\n")
