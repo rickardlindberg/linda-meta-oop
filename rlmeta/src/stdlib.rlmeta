@@ -12,4 +12,3 @@ PartCollector #n #last #parts #doneMsg {
 StdoutWriter {
   run = "Write" .:x !. -> write(x)
 }
-
