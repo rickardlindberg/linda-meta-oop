@@ -5,27 +5,31 @@ Optimizer {
   Actor     = .:x .:y opts:zs     -> ["Actor" x y ~zs]
   Rule      = .:x     opt:y       -> ["Rule" x y]
   Or        =
-    | opt:y !.     -> y
-    | opts:xs      -> ["Or" ~xs]
+    | opt:y !.                    -> y
+    | opts:xs                     -> ["Or" ~xs]
   Scope     =
-    | !bind opt
-    |       opt:x                 -> ["Scope" x]
+    | !bindOrLookup opt
+    |               opt:x         -> ["Scope" x]
   Star      = opt:x               -> ["Star" x]
   And       =
-    | opt:x !.     -> x
-    | andInner*:xs -> ["And" ~~xs]
+    | opt:x !.                    -> x
+    | andInner*:xs                -> ["And" ~~xs]
   andInner =
-    | ["And" opts:xs] -> xs
-    | opt:x           -> [x]
-
-  bind =
-    | ["Bind"                    ]
-    | ["And"       atLeastOneBind]
-    | ["Or"        atLeastOneBind]
-    | ["Star"      atLeastOneBind]
-    | ["Not"       atLeastOneBind]
-    | ["MatchList" atLeastOneBind]
-  atLeastOneBind =
-    | bind
-    | . atLeastOneBind
+    | ["And" opts:xs]             -> xs
+    | opt:x                       -> [x]
+  bindOrLookup =
+    | ["Bind"]
+    | ["Lookup"]
+    | ["And"        atLeastOneBindOrLookup]
+    | ["Or"         atLeastOneBindOrLookup]
+    | ["Star"       atLeastOneBindOrLookup]
+    | ["Not"        atLeastOneBindOrLookup]
+    | ["MatchList"  atLeastOneBindOrLookup]
+    | ["Action"     atLeastOneBindOrLookup]
+    | ["Set"        atLeastOneBindOrLookup]
+    | ["List"       atLeastOneBindOrLookup]
+    | ["Format"     atLeastOneBindOrLookup]
+    | ["Call"       atLeastOneBindOrLookup]
+    | ["ListItem" . atLeastOneBindOrLookup]
+  atLeastOneBindOrLookup = bindOrLookup | . atLeastOneBindOrLookup
 }
