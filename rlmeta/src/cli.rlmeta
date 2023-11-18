@@ -3,7 +3,7 @@ Cli {
     | "Args"         !.   -> put(["Args" "--compile" "-"])
     | "Args" arg*:xs !.   -> Counter():next
                           -> xs
-                          -> spawn(PartCollector(0 sub(next() 1) [] ["Write"]))
+                          -> spawn(PartCollector(0 decrement(next()) [] ["Write"]))
   arg =
     | "--support"         -> put(["Part"       next() SUPPORT])
     | "--copy"    .:x     -> put(["Part"       next() read(x)])

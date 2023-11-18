@@ -138,6 +138,12 @@ class Runtime:
     def append(self, list, thing):
         list.append(thing)
 
+    def increment(self, number):
+        return number + 1
+
+    def decrement(self, number):
+        return number - 1
+
     def join(self, items, delimiter=""):
         return delimiter.join(
             self.join(item, delimiter) if isinstance(item, list) else str(item)
