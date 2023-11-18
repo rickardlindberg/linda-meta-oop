@@ -135,14 +135,17 @@ class Runtime:
         else:
             return getattr(self, name)
 
-    def append(self, list, thing):
-        list.append(thing)
-
     def increment(self, number):
         return number + 1
 
     def decrement(self, number):
         return number - 1
+
+    def collector(self):
+        class collector(list):
+            def __call__(self, item):
+                self.append(item)
+        return collector()
 
     def join(self, items, delimiter=""):
         return delimiter.join(

@@ -3,10 +3,10 @@ CodeGenerator {
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
   Actor         = .:x [asts:ys] ast*:zs  -> Counter():nextid                                   ->
-                                            []:matchers                                        ->
-                                            []:rules                                           ->
-                                            []:param                                           ->
-                                            []:init                                            ->
+                                            collector():matchers                               ->
+                                            collector():rules                                  ->
+                                            collector():param                                  ->
+                                            collector():init                                   ->
                                             { ys zs
                                               "class " x ":\n" indent({
                                                 "def __init__(self" {param} "):\n" indent({
@@ -19,10 +19,10 @@ CodeGenerator {
                                                 matchers
                                               })
                                             }
-  Field         = .:x                    -> append(param {", " x})
-                                         -> append(init { repr(x) ": " x ",\n" })
+  Field         = .:x                    -> param({", " x})
+                                         -> init({ repr(x) ": " x ",\n" })
                                          -> ""
-  Rule          = .:x ast:y              -> append(rules {repr(x) ": " y ",\n"})
+  Rule          = .:x ast:y              -> rules({repr(x) ": " y ",\n"})
                                          -> ""
   Or            = matcher:m astList:x    -> { "stream.operator_or([" x "])"              }:body -> m
   Scope         = matcher:m ast:x        -> { "stream.with_scope(" x ")"                 }:body -> m
@@ -49,7 +49,7 @@ CodeGenerator {
   Lookup        = repr:x                 -> { "self.lookup(" x ")"                       }
   astList       = ast*:xs                -> { "\n" indent(join(xs ",\n")) "\n"           }
   matcher       =                        -> { "_matcher_" nextid()                       }:id ->
-                                            append(matchers { "def " id "(self, stream):\n" indent({
+                                            matchers({ "def " id "(self, stream):\n" indent({
                                                 "return " body "\n"
                                               })
                                             })                                                ->
