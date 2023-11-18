@@ -185,13 +185,21 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             return sys.stdin.read()
         with open(path) as f:
             return f.read()
+    def trunc(thing, n):
+        x = repr(thing)
+        if len(x) > n:
+            return f"{x[:n]} ..."
+        else:
+            return x
     if not messages:
         messages.append(["Args"]+sys.argv[1:])
     iteration = 0
     while messages:
         debug_log(f"Iteration {iteration}")
+        for index, actor in enumerate(actors):
+            debug_log(f"  Actor   {actor.__class__.__name__} {trunc(actor._state, 60)}")
         for index, message in enumerate(messages):
-            debug_log(f"  Message {index:2d} = {message}")
+            debug_log(f"  Message {trunc(message, 60)}")
         debug_log("")
         next_messages = []
         x = {
@@ -232,7 +240,4 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             sys.exit("No message processed.")
         messages = next_messages
         iteration += 1
-    debug_log("Actors:")
-    for actor in actors:
-        debug_log(f"  - {actor.__class__.__name__} {actor._state}")
     debug_log("Simulation done!")
