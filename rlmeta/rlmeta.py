@@ -1766,20 +1766,16 @@ class Optimizer:
         self._rules = {
             'run': self._matcher_8,
             'optimizeAsts': self._matcher_16,
-            'optimizeAst': self._matcher_22,
-            'Actor': self._matcher_31,
-            'Rule': self._matcher_38,
-            'Or': self._matcher_51,
-            'Scope': self._matcher_56,
-            'And': self._matcher_69,
-            'Bind': self._matcher_76,
-            'Star': self._matcher_81,
-            'Not': self._matcher_86,
-            'MatchCallRule': self._matcher_88,
-            'MatchRule': self._matcher_93,
-            'MatchObject': self._matcher_98,
-            'MatchList': self._matcher_103,
-            'Action': self._matcher_108,
+            'optimizeAst': self._matcher_25,
+            'Actor': self._matcher_34,
+            'Rule': self._matcher_41,
+            'Or': self._matcher_54,
+            'Scope': self._matcher_59,
+            'And': self._matcher_72,
+            'Bind': self._matcher_79,
+            'Star': self._matcher_84,
+            'Not': self._matcher_89,
+            'MatchList': self._matcher_94,
         }
     def run(self, stream):
         return self._rules['run'](stream)
@@ -1850,271 +1846,226 @@ class Optimizer:
     def _matcher_23(self, stream):
         return stream.match(lambda item: True, 'any')
     def _matcher_24(self, stream):
-        return stream.bind('x', self._matcher_23(stream))
+        return stream.with_scope(self._matcher_23)
     def _matcher_25(self, stream):
-        return stream.match(lambda item: True, 'any')
+        return stream.operator_or([
+            self._matcher_22,
+            self._matcher_24
+        ])
     def _matcher_26(self, stream):
-        return stream.bind('y', self._matcher_25(stream))
+        return stream.match(lambda item: True, 'any')
     def _matcher_27(self, stream):
-        return self._rules['optimizeAsts'](stream)
+        return stream.bind('x', self._matcher_26(stream))
     def _matcher_28(self, stream):
-        return stream.bind('zs', self._matcher_27(stream))
+        return stream.match(lambda item: True, 'any')
     def _matcher_29(self, stream):
+        return stream.bind('y', self._matcher_28(stream))
+    def _matcher_30(self, stream):
+        return self._rules['optimizeAsts'](stream)
+    def _matcher_31(self, stream):
+        return stream.bind('zs', self._matcher_30(stream))
+    def _matcher_32(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'Actor'),
             self.lookup('splice')(0, self.lookup('x')),
             self.lookup('splice')(0, self.lookup('y')),
             self.lookup('splice')(1, self.lookup('zs'))
         ]))
-    def _matcher_30(self, stream):
-        return stream.operator_and([
-            self._matcher_24,
-            self._matcher_26,
-            self._matcher_28,
-            self._matcher_29
-        ])
-    def _matcher_31(self, stream):
-        return stream.with_scope(self._matcher_30)
-    def _matcher_32(self, stream):
-        return stream.match(lambda item: True, 'any')
     def _matcher_33(self, stream):
-        return stream.bind('x', self._matcher_32(stream))
+        return stream.operator_and([
+            self._matcher_27,
+            self._matcher_29,
+            self._matcher_31,
+            self._matcher_32
+        ])
     def _matcher_34(self, stream):
-        return self._rules['optimizeAst'](stream)
+        return stream.with_scope(self._matcher_33)
     def _matcher_35(self, stream):
-        return stream.bind('y', self._matcher_34(stream))
+        return stream.match(lambda item: True, 'any')
     def _matcher_36(self, stream):
+        return stream.bind('x', self._matcher_35(stream))
+    def _matcher_37(self, stream):
+        return self._rules['optimizeAst'](stream)
+    def _matcher_38(self, stream):
+        return stream.bind('y', self._matcher_37(stream))
+    def _matcher_39(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'Rule'),
             self.lookup('splice')(0, self.lookup('x')),
             self.lookup('splice')(0, self.lookup('y'))
         ]))
-    def _matcher_37(self, stream):
-        return stream.operator_and([
-            self._matcher_33,
-            self._matcher_35,
-            self._matcher_36
-        ])
-    def _matcher_38(self, stream):
-        return stream.with_scope(self._matcher_37)
-    def _matcher_39(self, stream):
-        return self._rules['optimizeAst'](stream)
     def _matcher_40(self, stream):
-        return stream.bind('y', self._matcher_39(stream))
-    def _matcher_41(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_42(self, stream):
-        return stream.operator_not(self._matcher_41)
-    def _matcher_43(self, stream):
-        return stream.action(lambda self: self.lookup('y'))
-    def _matcher_44(self, stream):
         return stream.operator_and([
-            self._matcher_40,
-            self._matcher_42,
-            self._matcher_43
+            self._matcher_36,
+            self._matcher_38,
+            self._matcher_39
         ])
+    def _matcher_41(self, stream):
+        return stream.with_scope(self._matcher_40)
+    def _matcher_42(self, stream):
+        return self._rules['optimizeAst'](stream)
+    def _matcher_43(self, stream):
+        return stream.bind('y', self._matcher_42(stream))
+    def _matcher_44(self, stream):
+        return stream.match(lambda item: True, 'any')
     def _matcher_45(self, stream):
-        return stream.with_scope(self._matcher_44)
+        return stream.operator_not(self._matcher_44)
     def _matcher_46(self, stream):
-        return self._rules['optimizeAsts'](stream)
+        return stream.action(lambda self: self.lookup('y'))
     def _matcher_47(self, stream):
-        return stream.bind('xs', self._matcher_46(stream))
+        return stream.operator_and([
+            self._matcher_43,
+            self._matcher_45,
+            self._matcher_46
+        ])
     def _matcher_48(self, stream):
+        return stream.with_scope(self._matcher_47)
+    def _matcher_49(self, stream):
+        return self._rules['optimizeAsts'](stream)
+    def _matcher_50(self, stream):
+        return stream.bind('xs', self._matcher_49(stream))
+    def _matcher_51(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'Or'),
             self.lookup('splice')(1, self.lookup('xs'))
         ]))
-    def _matcher_49(self, stream):
-        return stream.operator_and([
-            self._matcher_47,
-            self._matcher_48
-        ])
-    def _matcher_50(self, stream):
-        return stream.with_scope(self._matcher_49)
-    def _matcher_51(self, stream):
-        return stream.operator_or([
-            self._matcher_45,
-            self._matcher_50
-        ])
     def _matcher_52(self, stream):
-        return self._rules['optimizeAst'](stream)
+        return stream.operator_and([
+            self._matcher_50,
+            self._matcher_51
+        ])
     def _matcher_53(self, stream):
-        return stream.bind('x', self._matcher_52(stream))
+        return stream.with_scope(self._matcher_52)
     def _matcher_54(self, stream):
+        return stream.operator_or([
+            self._matcher_48,
+            self._matcher_53
+        ])
+    def _matcher_55(self, stream):
+        return self._rules['optimizeAst'](stream)
+    def _matcher_56(self, stream):
+        return stream.bind('x', self._matcher_55(stream))
+    def _matcher_57(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'Scope'),
             self.lookup('splice')(0, self.lookup('x'))
         ]))
-    def _matcher_55(self, stream):
-        return stream.operator_and([
-            self._matcher_53,
-            self._matcher_54
-        ])
-    def _matcher_56(self, stream):
-        return stream.with_scope(self._matcher_55)
-    def _matcher_57(self, stream):
-        return self._rules['optimizeAst'](stream)
     def _matcher_58(self, stream):
-        return stream.bind('y', self._matcher_57(stream))
-    def _matcher_59(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_60(self, stream):
-        return stream.operator_not(self._matcher_59)
-    def _matcher_61(self, stream):
-        return stream.action(lambda self: self.lookup('y'))
-    def _matcher_62(self, stream):
         return stream.operator_and([
-            self._matcher_58,
-            self._matcher_60,
-            self._matcher_61
+            self._matcher_56,
+            self._matcher_57
         ])
+    def _matcher_59(self, stream):
+        return stream.with_scope(self._matcher_58)
+    def _matcher_60(self, stream):
+        return self._rules['optimizeAst'](stream)
+    def _matcher_61(self, stream):
+        return stream.bind('y', self._matcher_60(stream))
+    def _matcher_62(self, stream):
+        return stream.match(lambda item: True, 'any')
     def _matcher_63(self, stream):
-        return stream.with_scope(self._matcher_62)
+        return stream.operator_not(self._matcher_62)
     def _matcher_64(self, stream):
-        return self._rules['optimizeAsts'](stream)
+        return stream.action(lambda self: self.lookup('y'))
     def _matcher_65(self, stream):
-        return stream.bind('xs', self._matcher_64(stream))
+        return stream.operator_and([
+            self._matcher_61,
+            self._matcher_63,
+            self._matcher_64
+        ])
     def _matcher_66(self, stream):
+        return stream.with_scope(self._matcher_65)
+    def _matcher_67(self, stream):
+        return self._rules['optimizeAsts'](stream)
+    def _matcher_68(self, stream):
+        return stream.bind('xs', self._matcher_67(stream))
+    def _matcher_69(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'And'),
             self.lookup('splice')(1, self.lookup('xs'))
         ]))
-    def _matcher_67(self, stream):
-        return stream.operator_and([
-            self._matcher_65,
-            self._matcher_66
-        ])
-    def _matcher_68(self, stream):
-        return stream.with_scope(self._matcher_67)
-    def _matcher_69(self, stream):
-        return stream.operator_or([
-            self._matcher_63,
-            self._matcher_68
-        ])
     def _matcher_70(self, stream):
-        return stream.match(lambda item: True, 'any')
+        return stream.operator_and([
+            self._matcher_68,
+            self._matcher_69
+        ])
     def _matcher_71(self, stream):
-        return stream.bind('x', self._matcher_70(stream))
+        return stream.with_scope(self._matcher_70)
     def _matcher_72(self, stream):
-        return self._rules['optimizeAst'](stream)
+        return stream.operator_or([
+            self._matcher_66,
+            self._matcher_71
+        ])
     def _matcher_73(self, stream):
-        return stream.bind('y', self._matcher_72(stream))
+        return stream.match(lambda item: True, 'any')
     def _matcher_74(self, stream):
+        return stream.bind('x', self._matcher_73(stream))
+    def _matcher_75(self, stream):
+        return self._rules['optimizeAst'](stream)
+    def _matcher_76(self, stream):
+        return stream.bind('y', self._matcher_75(stream))
+    def _matcher_77(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'Bind'),
             self.lookup('splice')(0, self.lookup('x')),
             self.lookup('splice')(0, self.lookup('y'))
         ]))
-    def _matcher_75(self, stream):
-        return stream.operator_and([
-            self._matcher_71,
-            self._matcher_73,
-            self._matcher_74
-        ])
-    def _matcher_76(self, stream):
-        return stream.with_scope(self._matcher_75)
-    def _matcher_77(self, stream):
-        return self._rules['optimizeAst'](stream)
     def _matcher_78(self, stream):
-        return stream.bind('x', self._matcher_77(stream))
+        return stream.operator_and([
+            self._matcher_74,
+            self._matcher_76,
+            self._matcher_77
+        ])
     def _matcher_79(self, stream):
+        return stream.with_scope(self._matcher_78)
+    def _matcher_80(self, stream):
+        return self._rules['optimizeAst'](stream)
+    def _matcher_81(self, stream):
+        return stream.bind('x', self._matcher_80(stream))
+    def _matcher_82(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'Star'),
             self.lookup('splice')(0, self.lookup('x'))
         ]))
-    def _matcher_80(self, stream):
-        return stream.operator_and([
-            self._matcher_78,
-            self._matcher_79
-        ])
-    def _matcher_81(self, stream):
-        return stream.with_scope(self._matcher_80)
-    def _matcher_82(self, stream):
-        return self._rules['optimizeAst'](stream)
     def _matcher_83(self, stream):
-        return stream.bind('x', self._matcher_82(stream))
+        return stream.operator_and([
+            self._matcher_81,
+            self._matcher_82
+        ])
     def _matcher_84(self, stream):
+        return stream.with_scope(self._matcher_83)
+    def _matcher_85(self, stream):
+        return self._rules['optimizeAst'](stream)
+    def _matcher_86(self, stream):
+        return stream.bind('x', self._matcher_85(stream))
+    def _matcher_87(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'Not'),
             self.lookup('splice')(0, self.lookup('x'))
         ]))
-    def _matcher_85(self, stream):
-        return stream.operator_and([
-            self._matcher_83,
-            self._matcher_84
-        ])
-    def _matcher_86(self, stream):
-        return stream.with_scope(self._matcher_85)
-    def _matcher_87(self, stream):
-        return stream.action(lambda self: self.lookup('concat')([
-            self.lookup('splice')(0, 'MatchCallRule')
-        ]))
     def _matcher_88(self, stream):
-        return stream.with_scope(self._matcher_87)
+        return stream.operator_and([
+            self._matcher_86,
+            self._matcher_87
+        ])
     def _matcher_89(self, stream):
-        return stream.match(lambda item: True, 'any')
+        return stream.with_scope(self._matcher_88)
     def _matcher_90(self, stream):
-        return stream.bind('x', self._matcher_89(stream))
-    def _matcher_91(self, stream):
-        return stream.action(lambda self: self.lookup('concat')([
-            self.lookup('splice')(0, 'MatchRule'),
-            self.lookup('splice')(0, self.lookup('x'))
-        ]))
-    def _matcher_92(self, stream):
-        return stream.operator_and([
-            self._matcher_90,
-            self._matcher_91
-        ])
-    def _matcher_93(self, stream):
-        return stream.with_scope(self._matcher_92)
-    def _matcher_94(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_95(self, stream):
-        return stream.bind('x', self._matcher_94(stream))
-    def _matcher_96(self, stream):
-        return stream.action(lambda self: self.lookup('concat')([
-            self.lookup('splice')(0, 'MatchObject'),
-            self.lookup('splice')(0, self.lookup('x'))
-        ]))
-    def _matcher_97(self, stream):
-        return stream.operator_and([
-            self._matcher_95,
-            self._matcher_96
-        ])
-    def _matcher_98(self, stream):
-        return stream.with_scope(self._matcher_97)
-    def _matcher_99(self, stream):
         return self._rules['optimizeAst'](stream)
-    def _matcher_100(self, stream):
-        return stream.bind('x', self._matcher_99(stream))
-    def _matcher_101(self, stream):
+    def _matcher_91(self, stream):
+        return stream.bind('x', self._matcher_90(stream))
+    def _matcher_92(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'MatchList'),
             self.lookup('splice')(0, self.lookup('x'))
         ]))
-    def _matcher_102(self, stream):
+    def _matcher_93(self, stream):
         return stream.operator_and([
-            self._matcher_100,
-            self._matcher_101
+            self._matcher_91,
+            self._matcher_92
         ])
-    def _matcher_103(self, stream):
-        return stream.with_scope(self._matcher_102)
-    def _matcher_104(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_105(self, stream):
-        return stream.bind('x', self._matcher_104(stream))
-    def _matcher_106(self, stream):
-        return stream.action(lambda self: self.lookup('concat')([
-            self.lookup('splice')(0, 'Action'),
-            self.lookup('splice')(0, self.lookup('x'))
-        ]))
-    def _matcher_107(self, stream):
-        return stream.operator_and([
-            self._matcher_105,
-            self._matcher_106
-        ])
-    def _matcher_108(self, stream):
-        return stream.with_scope(self._matcher_107)
+    def _matcher_94(self, stream):
+        return stream.with_scope(self._matcher_93)
 class CodeGenerator:
     def __init__(self):
         self._state = {}
