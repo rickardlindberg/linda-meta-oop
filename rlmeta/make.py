@@ -169,12 +169,11 @@ class RlmetaTests(unittest.TestCase):
                  ['Scope',
                   ['And',
                    ['MatchRule', 'space'],
-                   ['And',
-                    ['MatchObject', ['Eq', 'h']],
-                    ['MatchObject', ['Eq', 'e']],
-                    ['MatchObject', ['Eq', 'l']],
-                    ['MatchObject', ['Eq', 'l']],
-                    ['MatchObject', ['Eq', 'o']]]]]]]]]]
+                   ['MatchObject', ['Eq', 'h']],
+                   ['MatchObject', ['Eq', 'e']],
+                   ['MatchObject', ['Eq', 'l']],
+                   ['MatchObject', ['Eq', 'l']],
+                   ['MatchObject', ['Eq', 'o']]]]]]]]]
         )
 
 if __name__ == "__main__":

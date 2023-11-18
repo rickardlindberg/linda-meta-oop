@@ -1,18 +1,18 @@
 Optimizer {
-  run           = "Ast" .:p [optimizeAsts:xs] -> put(["Optimized" p xs])
-  optimizeAsts  = optimizeAst*:xs !.          -> xs
-  optimizeAst   = [%:x] -> x | .
-  Actor         = .:x .:y optimizeAsts:zs     -> ["Actor" x y ~zs]
-  Rule          = .:x optimizeAst:y           -> ["Rule" x y]
-  Or            =
-    | optimizeAst:y !. -> y
-    | optimizeAsts:xs -> ["Or" ~xs]
-  Scope         = optimizeAst:x               -> ["Scope" x]
-  And           =
-    | optimizeAst:y !. -> y
-    | optimizeAsts:xs -> ["And" ~xs]
-  Bind          = .:x optimizeAst:y           -> ["Bind" x y]
-  Star          =     optimizeAst:x           -> ["Star" x]
-  Not           =     optimizeAst:x           -> ["Not" x]
-  MatchList     =     optimizeAst:x           -> ["MatchList" x]
+  run       = "Ast" .:p [opts:xs] -> put(["Optimized" p xs])
+  opts      = opt*:xs !.          -> xs
+  opt       = [%:x] -> x | .
+  Actor     = .:x .:y opts:zs     -> ["Actor" x y ~zs]
+  Rule      = .:x     opt:y       -> ["Rule" x y]
+  Or        =
+    | opt:y !.     -> y
+    | opts:xs      -> ["Or" ~xs]
+  Scope     =
+    | opt:x                 -> ["Scope" x]
+  And       =
+    | opt:x !.     -> x
+    | andInner*:xs -> ["And" ~~xs]
+  andInner =
+    | ["And" opts:xs] -> xs
+    | opt:x           -> [x]
 }
