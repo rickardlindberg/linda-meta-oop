@@ -8,11 +8,24 @@ Optimizer {
     | opt:y !.     -> y
     | opts:xs      -> ["Or" ~xs]
   Scope     =
-    | opt:x                 -> ["Scope" x]
+    | !bind opt
+    |       opt:x                 -> ["Scope" x]
+  Star      = opt:x               -> ["Star" x]
   And       =
     | opt:x !.     -> x
     | andInner*:xs -> ["And" ~~xs]
   andInner =
     | ["And" opts:xs] -> xs
     | opt:x           -> [x]
+
+  bind =
+    | ["Bind"                    ]
+    | ["And"       atLeastOneBind]
+    | ["Or"        atLeastOneBind]
+    | ["Star"      atLeastOneBind]
+    | ["Not"       atLeastOneBind]
+    | ["MatchList" atLeastOneBind]
+  atLeastOneBind =
+    | bind
+    | . atLeastOneBind
 }

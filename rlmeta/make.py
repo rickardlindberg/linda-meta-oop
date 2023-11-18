@@ -129,7 +129,7 @@ class RlmetaTests(unittest.TestCase):
             fail=False
         )
 
-    def test_parse_optimize(self):
+    def test_parse_optimize_1(self):
         parsed_messages = self.run_simulation(
             [rlmeta_module.Parser()],
             [["SourceCode", 0, "Grammar { x = ^'hello' }"]]
@@ -166,14 +166,46 @@ class RlmetaTests(unittest.TestCase):
                 [],
                 ['Rule',
                  'x',
-                 ['Scope',
-                  ['And',
-                   ['MatchRule', 'space'],
-                   ['MatchObject', ['Eq', 'h']],
-                   ['MatchObject', ['Eq', 'e']],
-                   ['MatchObject', ['Eq', 'l']],
-                   ['MatchObject', ['Eq', 'l']],
-                   ['MatchObject', ['Eq', 'o']]]]]]]]]
+                 ['And',
+                  ['MatchRule', 'space'],
+                  ['MatchObject', ['Eq', 'h']],
+                  ['MatchObject', ['Eq', 'e']],
+                  ['MatchObject', ['Eq', 'l']],
+                  ['MatchObject', ['Eq', 'l']],
+                  ['MatchObject', ['Eq', 'o']]]]]]]]
+        )
+
+    def test_parse_optimize_2(self):
+        parsed_and_optimized = self.run_simulation(
+            [rlmeta_module.Parser(), rlmeta_module.Optimizer()],
+            [["SourceCode", 0, "Grammar { x = ('a' | 'b')* }"]]
+        )
+        self.assertEqual(parsed_and_optimized,
+            [['Optimized',
+              0,
+              [['Actor',
+                'Grammar',
+                [],
+                ['Rule',
+                 'x',
+                 ['Star',
+                  ['Or',
+                   ['MatchObject', ['Eq', 'a']],
+                   ['MatchObject', ['Eq', 'b']]]]]]]]]
+        )
+
+    def test_parse_optimize_3(self):
+        parsed_and_optimized = self.run_simulation(
+            [rlmeta_module.Parser(), rlmeta_module.Optimizer()],
+            [["SourceCode", 0, "Grammar { x = .:x }"]]
+        )
+        self.assertEqual(parsed_and_optimized,
+            [['Optimized',
+              0,
+              [['Actor',
+                'Grammar',
+                [],
+                ['Rule', 'x', ['Scope', ['Bind', 'x', ['MatchObject', ['Any']]]]]]]]]
         )
 
 if __name__ == "__main__":

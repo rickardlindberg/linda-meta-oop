@@ -4,7 +4,7 @@ class Stream:
         self.items = items
         self.index = 0
         self.latest_error = None
-        self.scope = None
+        self.scope = {}
 
     def operator_or(self, matchers):
         for matcher in matchers:
