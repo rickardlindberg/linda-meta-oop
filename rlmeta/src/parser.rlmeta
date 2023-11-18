@@ -24,7 +24,6 @@ Parser {
     | expr2:x space '?'                       -> ["Or" x ["And"]]
     | space '!' expr2:x                       -> ["Not" x]
     | space '%'                               -> ["MatchCallRule"]
-    | space '#' name:x                        -> ["MatchObject" ["State" x]]
     | expr2
   expr2 =
     | name:x !(space '=')                     -> ["MatchRule" x]
@@ -34,6 +33,7 @@ Parser {
     | space '(' choice:x space ')'            -> x
     | space number:x                          -> ["MatchObject" ["Eq" x]]
     | space string:x                          -> ["MatchObject" ["Eq" x]]
+    | space '#' name:x                        -> ["MatchObject" ["State" x]]
   matchChar =
     | innerChar:x                             -> ["MatchObject" ["Eq" x]]
   maybeAction =

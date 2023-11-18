@@ -433,7 +433,7 @@ class Parser:
             'choice': self._matcher_85,
             'sequence': self._matcher_94,
             'expr': self._matcher_120,
-            'expr1': self._matcher_162,
+            'expr1': self._matcher_154,
             'expr2': self._matcher_231,
             'matchChar': self._matcher_237,
             'maybeAction': self._matcher_246,
@@ -949,106 +949,76 @@ class Parser:
     def _matcher_150(self, stream):
         return stream.with_scope(self._matcher_149)
     def _matcher_151(self, stream):
-        return self._rules['space'](stream)
-    def _matcher_152(self, stream):
-        return stream.match(lambda item: item == '#', "'#'")
-    def _matcher_153(self, stream):
-        return stream.operator_and([
-            self._matcher_152
-        ])
-    def _matcher_154(self, stream):
-        return self._rules['name'](stream)
-    def _matcher_155(self, stream):
-        return stream.bind('x', self._matcher_154(stream))
-    def _matcher_156(self, stream):
-        return stream.action(lambda self: self.lookup('concat')([
-            self.lookup('splice')(0, 'MatchObject'),
-            self.lookup('splice')(0, self.lookup('concat')([
-                self.lookup('splice')(0, 'State'),
-                self.lookup('splice')(0, self.lookup('x'))
-            ]))
-        ]))
-    def _matcher_157(self, stream):
-        return stream.operator_and([
-            self._matcher_151,
-            self._matcher_153,
-            self._matcher_155,
-            self._matcher_156
-        ])
-    def _matcher_158(self, stream):
-        return stream.with_scope(self._matcher_157)
-    def _matcher_159(self, stream):
         return self._rules['expr2'](stream)
+    def _matcher_152(self, stream):
+        return stream.operator_and([
+            self._matcher_151
+        ])
+    def _matcher_153(self, stream):
+        return stream.with_scope(self._matcher_152)
+    def _matcher_154(self, stream):
+        return stream.operator_or([
+            self._matcher_128,
+            self._matcher_136,
+            self._matcher_144,
+            self._matcher_150,
+            self._matcher_153
+        ])
+    def _matcher_155(self, stream):
+        return self._rules['name'](stream)
+    def _matcher_156(self, stream):
+        return stream.bind('x', self._matcher_155(stream))
+    def _matcher_157(self, stream):
+        return self._rules['space'](stream)
+    def _matcher_158(self, stream):
+        return stream.match(lambda item: item == '=', "'='")
+    def _matcher_159(self, stream):
+        return stream.operator_and([
+            self._matcher_158
+        ])
     def _matcher_160(self, stream):
         return stream.operator_and([
+            self._matcher_157,
             self._matcher_159
         ])
     def _matcher_161(self, stream):
         return stream.with_scope(self._matcher_160)
     def _matcher_162(self, stream):
         return stream.operator_or([
-            self._matcher_128,
-            self._matcher_136,
-            self._matcher_144,
-            self._matcher_150,
-            self._matcher_158,
             self._matcher_161
         ])
     def _matcher_163(self, stream):
-        return self._rules['name'](stream)
+        return stream.operator_not(self._matcher_162)
     def _matcher_164(self, stream):
-        return stream.bind('x', self._matcher_163(stream))
-    def _matcher_165(self, stream):
-        return self._rules['space'](stream)
-    def _matcher_166(self, stream):
-        return stream.match(lambda item: item == '=', "'='")
-    def _matcher_167(self, stream):
-        return stream.operator_and([
-            self._matcher_166
-        ])
-    def _matcher_168(self, stream):
-        return stream.operator_and([
-            self._matcher_165,
-            self._matcher_167
-        ])
-    def _matcher_169(self, stream):
-        return stream.with_scope(self._matcher_168)
-    def _matcher_170(self, stream):
-        return stream.operator_or([
-            self._matcher_169
-        ])
-    def _matcher_171(self, stream):
-        return stream.operator_not(self._matcher_170)
-    def _matcher_172(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'MatchRule'),
             self.lookup('splice')(0, self.lookup('x'))
         ]))
-    def _matcher_173(self, stream):
+    def _matcher_165(self, stream):
         return stream.operator_and([
-            self._matcher_164,
-            self._matcher_171,
-            self._matcher_172
+            self._matcher_156,
+            self._matcher_163,
+            self._matcher_164
         ])
-    def _matcher_174(self, stream):
-        return stream.with_scope(self._matcher_173)
-    def _matcher_175(self, stream):
+    def _matcher_166(self, stream):
+        return stream.with_scope(self._matcher_165)
+    def _matcher_167(self, stream):
         return self._rules['space'](stream)
-    def _matcher_176(self, stream):
+    def _matcher_168(self, stream):
         return self._rules['char'](stream)
-    def _matcher_177(self, stream):
-        return stream.bind('x', self._matcher_176(stream))
-    def _matcher_178(self, stream):
+    def _matcher_169(self, stream):
+        return stream.bind('x', self._matcher_168(stream))
+    def _matcher_170(self, stream):
         return stream.match(lambda item: item == '-', "'-'")
-    def _matcher_179(self, stream):
+    def _matcher_171(self, stream):
         return stream.operator_and([
-            self._matcher_178
+            self._matcher_170
         ])
-    def _matcher_180(self, stream):
+    def _matcher_172(self, stream):
         return self._rules['char'](stream)
-    def _matcher_181(self, stream):
-        return stream.bind('y', self._matcher_180(stream))
-    def _matcher_182(self, stream):
+    def _matcher_173(self, stream):
+        return stream.bind('y', self._matcher_172(stream))
+    def _matcher_174(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'MatchObject'),
             self.lookup('splice')(0, self.lookup('concat')([
@@ -1057,133 +1027,133 @@ class Parser:
                 self.lookup('splice')(0, self.lookup('y'))
             ]))
         ]))
-    def _matcher_183(self, stream):
+    def _matcher_175(self, stream):
         return stream.operator_and([
-            self._matcher_175,
-            self._matcher_177,
-            self._matcher_179,
-            self._matcher_181,
-            self._matcher_182
+            self._matcher_167,
+            self._matcher_169,
+            self._matcher_171,
+            self._matcher_173,
+            self._matcher_174
         ])
-    def _matcher_184(self, stream):
-        return stream.with_scope(self._matcher_183)
-    def _matcher_185(self, stream):
+    def _matcher_176(self, stream):
+        return stream.with_scope(self._matcher_175)
+    def _matcher_177(self, stream):
         return self._rules['space'](stream)
-    def _matcher_186(self, stream):
+    def _matcher_178(self, stream):
         return stream.match(lambda item: item == "'", '"\'"')
-    def _matcher_187(self, stream):
+    def _matcher_179(self, stream):
         return stream.operator_and([
-            self._matcher_186
+            self._matcher_178
         ])
-    def _matcher_188(self, stream):
+    def _matcher_180(self, stream):
         return stream.match(lambda item: item == "'", '"\'"')
-    def _matcher_189(self, stream):
+    def _matcher_181(self, stream):
         return stream.operator_and([
-            self._matcher_188
+            self._matcher_180
         ])
-    def _matcher_190(self, stream):
-        return stream.operator_not(self._matcher_189)
-    def _matcher_191(self, stream):
+    def _matcher_182(self, stream):
+        return stream.operator_not(self._matcher_181)
+    def _matcher_183(self, stream):
         return self._rules['matchChar'](stream)
+    def _matcher_184(self, stream):
+        return stream.operator_and([
+            self._matcher_182,
+            self._matcher_183
+        ])
+    def _matcher_185(self, stream):
+        return stream.with_scope(self._matcher_184)
+    def _matcher_186(self, stream):
+        return stream.operator_or([
+            self._matcher_185
+        ])
+    def _matcher_187(self, stream):
+        return stream.operator_star(self._matcher_186)
+    def _matcher_188(self, stream):
+        return stream.bind('xs', self._matcher_187(stream))
+    def _matcher_189(self, stream):
+        return stream.match(lambda item: item == "'", '"\'"')
+    def _matcher_190(self, stream):
+        return stream.operator_and([
+            self._matcher_189
+        ])
+    def _matcher_191(self, stream):
+        return stream.action(lambda self: self.lookup('concat')([
+            self.lookup('splice')(0, 'And'),
+            self.lookup('splice')(1, self.lookup('xs'))
+        ]))
     def _matcher_192(self, stream):
         return stream.operator_and([
+            self._matcher_177,
+            self._matcher_179,
+            self._matcher_188,
             self._matcher_190,
             self._matcher_191
         ])
     def _matcher_193(self, stream):
         return stream.with_scope(self._matcher_192)
     def _matcher_194(self, stream):
-        return stream.operator_or([
-            self._matcher_193
-        ])
-    def _matcher_195(self, stream):
-        return stream.operator_star(self._matcher_194)
-    def _matcher_196(self, stream):
-        return stream.bind('xs', self._matcher_195(stream))
-    def _matcher_197(self, stream):
-        return stream.match(lambda item: item == "'", '"\'"')
-    def _matcher_198(self, stream):
-        return stream.operator_and([
-            self._matcher_197
-        ])
-    def _matcher_199(self, stream):
-        return stream.action(lambda self: self.lookup('concat')([
-            self.lookup('splice')(0, 'And'),
-            self.lookup('splice')(1, self.lookup('xs'))
-        ]))
-    def _matcher_200(self, stream):
-        return stream.operator_and([
-            self._matcher_185,
-            self._matcher_187,
-            self._matcher_196,
-            self._matcher_198,
-            self._matcher_199
-        ])
-    def _matcher_201(self, stream):
-        return stream.with_scope(self._matcher_200)
-    def _matcher_202(self, stream):
         return self._rules['space'](stream)
-    def _matcher_203(self, stream):
+    def _matcher_195(self, stream):
         return stream.match(lambda item: item == '.', "'.'")
-    def _matcher_204(self, stream):
+    def _matcher_196(self, stream):
         return stream.operator_and([
-            self._matcher_203
+            self._matcher_195
         ])
-    def _matcher_205(self, stream):
+    def _matcher_197(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'MatchObject'),
             self.lookup('splice')(0, self.lookup('concat')([
                 self.lookup('splice')(0, 'Any')
             ]))
         ]))
-    def _matcher_206(self, stream):
+    def _matcher_198(self, stream):
         return stream.operator_and([
+            self._matcher_194,
+            self._matcher_196,
+            self._matcher_197
+        ])
+    def _matcher_199(self, stream):
+        return stream.with_scope(self._matcher_198)
+    def _matcher_200(self, stream):
+        return self._rules['space'](stream)
+    def _matcher_201(self, stream):
+        return stream.match(lambda item: item == '(', "'('")
+    def _matcher_202(self, stream):
+        return stream.operator_and([
+            self._matcher_201
+        ])
+    def _matcher_203(self, stream):
+        return self._rules['choice'](stream)
+    def _matcher_204(self, stream):
+        return stream.bind('x', self._matcher_203(stream))
+    def _matcher_205(self, stream):
+        return self._rules['space'](stream)
+    def _matcher_206(self, stream):
+        return stream.match(lambda item: item == ')', "')'")
+    def _matcher_207(self, stream):
+        return stream.operator_and([
+            self._matcher_206
+        ])
+    def _matcher_208(self, stream):
+        return stream.action(lambda self: self.lookup('x'))
+    def _matcher_209(self, stream):
+        return stream.operator_and([
+            self._matcher_200,
             self._matcher_202,
             self._matcher_204,
-            self._matcher_205
+            self._matcher_205,
+            self._matcher_207,
+            self._matcher_208
         ])
-    def _matcher_207(self, stream):
-        return stream.with_scope(self._matcher_206)
-    def _matcher_208(self, stream):
-        return self._rules['space'](stream)
-    def _matcher_209(self, stream):
-        return stream.match(lambda item: item == '(', "'('")
     def _matcher_210(self, stream):
-        return stream.operator_and([
-            self._matcher_209
-        ])
+        return stream.with_scope(self._matcher_209)
     def _matcher_211(self, stream):
-        return self._rules['choice'](stream)
+        return self._rules['space'](stream)
     def _matcher_212(self, stream):
-        return stream.bind('x', self._matcher_211(stream))
-    def _matcher_213(self, stream):
-        return self._rules['space'](stream)
-    def _matcher_214(self, stream):
-        return stream.match(lambda item: item == ')', "')'")
-    def _matcher_215(self, stream):
-        return stream.operator_and([
-            self._matcher_214
-        ])
-    def _matcher_216(self, stream):
-        return stream.action(lambda self: self.lookup('x'))
-    def _matcher_217(self, stream):
-        return stream.operator_and([
-            self._matcher_208,
-            self._matcher_210,
-            self._matcher_212,
-            self._matcher_213,
-            self._matcher_215,
-            self._matcher_216
-        ])
-    def _matcher_218(self, stream):
-        return stream.with_scope(self._matcher_217)
-    def _matcher_219(self, stream):
-        return self._rules['space'](stream)
-    def _matcher_220(self, stream):
         return self._rules['number'](stream)
-    def _matcher_221(self, stream):
-        return stream.bind('x', self._matcher_220(stream))
-    def _matcher_222(self, stream):
+    def _matcher_213(self, stream):
+        return stream.bind('x', self._matcher_212(stream))
+    def _matcher_214(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'MatchObject'),
             self.lookup('splice')(0, self.lookup('concat')([
@@ -1191,30 +1161,59 @@ class Parser:
                 self.lookup('splice')(0, self.lookup('x'))
             ]))
         ]))
-    def _matcher_223(self, stream):
+    def _matcher_215(self, stream):
         return stream.operator_and([
-            self._matcher_219,
-            self._matcher_221,
-            self._matcher_222
+            self._matcher_211,
+            self._matcher_213,
+            self._matcher_214
         ])
-    def _matcher_224(self, stream):
-        return stream.with_scope(self._matcher_223)
-    def _matcher_225(self, stream):
+    def _matcher_216(self, stream):
+        return stream.with_scope(self._matcher_215)
+    def _matcher_217(self, stream):
         return self._rules['space'](stream)
-    def _matcher_226(self, stream):
+    def _matcher_218(self, stream):
         return self._rules['string'](stream)
+    def _matcher_219(self, stream):
+        return stream.bind('x', self._matcher_218(stream))
+    def _matcher_220(self, stream):
+        return stream.action(lambda self: self.lookup('concat')([
+            self.lookup('splice')(0, 'MatchObject'),
+            self.lookup('splice')(0, self.lookup('concat')([
+                self.lookup('splice')(0, 'Eq'),
+                self.lookup('splice')(0, self.lookup('x'))
+            ]))
+        ]))
+    def _matcher_221(self, stream):
+        return stream.operator_and([
+            self._matcher_217,
+            self._matcher_219,
+            self._matcher_220
+        ])
+    def _matcher_222(self, stream):
+        return stream.with_scope(self._matcher_221)
+    def _matcher_223(self, stream):
+        return self._rules['space'](stream)
+    def _matcher_224(self, stream):
+        return stream.match(lambda item: item == '#', "'#'")
+    def _matcher_225(self, stream):
+        return stream.operator_and([
+            self._matcher_224
+        ])
+    def _matcher_226(self, stream):
+        return self._rules['name'](stream)
     def _matcher_227(self, stream):
         return stream.bind('x', self._matcher_226(stream))
     def _matcher_228(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'MatchObject'),
             self.lookup('splice')(0, self.lookup('concat')([
-                self.lookup('splice')(0, 'Eq'),
+                self.lookup('splice')(0, 'State'),
                 self.lookup('splice')(0, self.lookup('x'))
             ]))
         ]))
     def _matcher_229(self, stream):
         return stream.operator_and([
+            self._matcher_223,
             self._matcher_225,
             self._matcher_227,
             self._matcher_228
@@ -1223,12 +1222,13 @@ class Parser:
         return stream.with_scope(self._matcher_229)
     def _matcher_231(self, stream):
         return stream.operator_or([
-            self._matcher_174,
-            self._matcher_184,
-            self._matcher_201,
-            self._matcher_207,
-            self._matcher_218,
-            self._matcher_224,
+            self._matcher_166,
+            self._matcher_176,
+            self._matcher_193,
+            self._matcher_199,
+            self._matcher_210,
+            self._matcher_216,
+            self._matcher_222,
             self._matcher_230
         ])
     def _matcher_232(self, stream):
@@ -2896,8 +2896,8 @@ class PartCollector:
         'doneMsg': doneMsg,
         }
         self._rules = {
-            'run': self._matcher_17,
-            'process': self._matcher_30,
+            'run': self._matcher_14,
+            'process': self._matcher_27,
         }
     def run(self, stream):
         return self._rules['run'](stream)
@@ -2906,62 +2906,52 @@ class PartCollector:
     def _matcher_1(self, stream):
         return stream.match(lambda item: item == self._state['n'], 'state')
     def _matcher_2(self, stream):
-        return stream.operator_and([
-            self._matcher_1
-        ])
+        return stream.operator_not(self._matcher_1)
     def _matcher_3(self, stream):
-        return stream.with_scope(self._matcher_2)
-    def _matcher_4(self, stream):
-        return stream.operator_or([
-            self._matcher_3
-        ])
-    def _matcher_5(self, stream):
-        return stream.operator_not(self._matcher_4)
-    def _matcher_6(self, stream):
         return stream.operator_and([
-            self._matcher_5
+            self._matcher_2
         ])
-    def _matcher_7(self, stream):
-        return stream.with_scope(self._matcher_6)
-    def _matcher_8(self, stream):
+    def _matcher_4(self, stream):
+        return stream.with_scope(self._matcher_3)
+    def _matcher_5(self, stream):
         return stream.operator_or([
-            self._matcher_7
+            self._matcher_4
         ])
-    def _matcher_9(self, stream):
-        return stream.operator_not(self._matcher_8)
-    def _matcher_10(self, stream):
+    def _matcher_6(self, stream):
+        return stream.operator_not(self._matcher_5)
+    def _matcher_7(self, stream):
         return self._rules['process'](stream)
-    def _matcher_11(self, stream):
-        return stream.bind('x', self._matcher_10(stream))
-    def _matcher_12(self, stream):
+    def _matcher_8(self, stream):
+        return stream.bind('x', self._matcher_7(stream))
+    def _matcher_9(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_13(self, stream):
-        return stream.operator_not(self._matcher_12)
-    def _matcher_14(self, stream):
+    def _matcher_10(self, stream):
+        return stream.operator_not(self._matcher_9)
+    def _matcher_11(self, stream):
         return stream.action(lambda self: self.bind('', self.lookup('x'), lambda: self.lookup('kill')(
         
         )))
-    def _matcher_15(self, stream):
+    def _matcher_12(self, stream):
         return stream.operator_and([
             self._matcher_0,
-            self._matcher_9,
-            self._matcher_11,
-            self._matcher_13,
-            self._matcher_14
+            self._matcher_6,
+            self._matcher_8,
+            self._matcher_10,
+            self._matcher_11
         ])
-    def _matcher_16(self, stream):
-        return stream.with_scope(self._matcher_15)
-    def _matcher_17(self, stream):
+    def _matcher_13(self, stream):
+        return stream.with_scope(self._matcher_12)
+    def _matcher_14(self, stream):
         return stream.operator_or([
-            self._matcher_16
+            self._matcher_13
         ])
-    def _matcher_18(self, stream):
+    def _matcher_15(self, stream):
         return stream.match(lambda item: item == self._state['last'], 'state')
-    def _matcher_19(self, stream):
+    def _matcher_16(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_20(self, stream):
-        return stream.bind('x', self._matcher_19(stream))
-    def _matcher_21(self, stream):
+    def _matcher_17(self, stream):
+        return stream.bind('x', self._matcher_16(stream))
+    def _matcher_18(self, stream):
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('add')(
                 self.lookup('doneMsg'),
@@ -2973,21 +2963,21 @@ class PartCollector:
                 ])
             )
         ))
-    def _matcher_22(self, stream):
+    def _matcher_19(self, stream):
         return stream.operator_and([
-            self._matcher_18,
-            self._matcher_20,
-            self._matcher_21
+            self._matcher_15,
+            self._matcher_17,
+            self._matcher_18
         ])
+    def _matcher_20(self, stream):
+        return stream.with_scope(self._matcher_19)
+    def _matcher_21(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_22(self, stream):
+        return stream.match(lambda item: True, 'any')
     def _matcher_23(self, stream):
-        return stream.with_scope(self._matcher_22)
+        return stream.bind('x', self._matcher_22(stream))
     def _matcher_24(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_25(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_26(self, stream):
-        return stream.bind('x', self._matcher_25(stream))
-    def _matcher_27(self, stream):
         return stream.action(lambda self: self.lookup('spawn')(
             self.lookup('PartCollector')(
                 self.lookup('add')(
@@ -3004,18 +2994,18 @@ class PartCollector:
                 self.lookup('doneMsg')
             )
         ))
-    def _matcher_28(self, stream):
+    def _matcher_25(self, stream):
         return stream.operator_and([
-            self._matcher_24,
-            self._matcher_26,
-            self._matcher_27
-        ])
-    def _matcher_29(self, stream):
-        return stream.with_scope(self._matcher_28)
-    def _matcher_30(self, stream):
-        return stream.operator_or([
+            self._matcher_21,
             self._matcher_23,
-            self._matcher_29
+            self._matcher_24
+        ])
+    def _matcher_26(self, stream):
+        return stream.with_scope(self._matcher_25)
+    def _matcher_27(self, stream):
+        return stream.operator_or([
+            self._matcher_20,
+            self._matcher_26
         ])
 class StdoutWriter:
     def __init__(self):
