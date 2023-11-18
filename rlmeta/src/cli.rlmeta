@@ -3,7 +3,7 @@ Cli {
     | "Args"         !.   -> put(["Args" "--compile" "-"])
     | "Args" arg*:xs !.   -> Counter():next
                           -> xs
-                          -> spawn(PartCollector(0 sub(next() 1) []))
+                          -> spawn(PartCollector(0 sub(next() 1) [] ["Write"]))
   arg =
     | "--support"         -> put(["Part"       next() SUPPORT])
     | "--copy"    .:x     -> put(["Part"       next() read(x)])
@@ -11,10 +11,10 @@ Cli {
     | "--compile" .:x     -> put(["SourceCode" next() read(x)])
 }
 
-PartCollector #n #last #parts {
+PartCollector #n #last #parts #doneMsg {
   run =
-    | next #last .:x !. -> put(["Write" {parts x}])
-    | next .     .:x !. -> spawn(PartCollector(add(n 1) last add(parts [x])))
+    | next #last .:x !. -> put(add(doneMsg [{parts x}]))
+    | next .     .:x !. -> spawn(PartCollector(add(n 1) last add(parts [x]) doneMsg))
   next = "Part" !(!(#n))
 }
 

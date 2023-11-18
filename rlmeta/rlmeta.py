@@ -279,6 +279,9 @@ class Cli:
                 ),
                 self.lookup('concat')([
                 
+                ]),
+                self.lookup('concat')([
+                    self.lookup('splice')(0, 'Write')
                 ])
             )
         ))))
@@ -413,10 +416,11 @@ class Cli:
             self._matcher_39
         ])
 class PartCollector:
-    def __init__(self, n, last, parts):
+    def __init__(self, n, last, parts, doneMsg):
         self._state = {'n': n,
         'last': last,
         'parts': parts,
+        'doneMsg': doneMsg,
         }
         self._rules = {
             'run': self._matcher_18,
@@ -438,13 +442,15 @@ class PartCollector:
         return stream.operator_not(self._matcher_4)
     def _matcher_6(self, stream):
         return stream.action(lambda self: self.lookup('put')(
-            self.lookup('concat')([
-                self.lookup('splice')(0, 'Write'),
-                self.lookup('splice')(0, self.lookup('join')([
-                    self.lookup('parts'),
-                    self.lookup('x')
-                ]))
-            ])
+            self.lookup('add')(
+                self.lookup('doneMsg'),
+                self.lookup('concat')([
+                    self.lookup('splice')(0, self.lookup('join')([
+                        self.lookup('parts'),
+                        self.lookup('x')
+                    ]))
+                ])
+            )
         ))
     def _matcher_7(self, stream):
         return stream.operator_and([
@@ -481,7 +487,8 @@ class PartCollector:
                     self.lookup('concat')([
                         self.lookup('splice')(0, self.lookup('x'))
                     ])
-                )
+                ),
+                self.lookup('doneMsg')
             )
         ))
     def _matcher_16(self, stream):
