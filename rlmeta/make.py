@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+import importlib
 import os
 import subprocess
 import sys
+import unittest
 
 def make_next_version():
     final_compiler = meta_compile_rlmeta()
@@ -47,6 +49,11 @@ def test(rlmeta):
         b"Grammar { run = % | .:x -> print(x) }",
         b"run_simulation(actors=[Grammar()], messages=[['foo']], extra={'print': print})"
     ) == b"foo\n"
+    log("Test: unittest")
+    global rlmeta_module
+    rlmeta_module = importlib.import_module(rlmeta[:-3])
+    if not unittest.main(exit=False).result.wasSuccessful():
+        sys.exit(1)
 
 def test_grammar(rlmeta, grammar, main_code):
     compiled = run_rlmeta(rlmeta, ["--support", "--compile", "-"], grammar)
@@ -112,6 +119,63 @@ def color(message, color):
         return f"\033[0;{color}m{message}\033[0m"
     else:
         return message
+
+class RlmetaTests(unittest.TestCase):
+
+    def run_simulation(self, actors, messages):
+        return rlmeta_module.run_simulation(
+            actors=actors,
+            messages=messages,
+            fail=False
+        )
+
+    def test_parse_optimize(self):
+        parsed_messages = self.run_simulation(
+            [rlmeta_module.Parser()],
+            [["SourceCode", 0, "Grammar { x = ^'hello' }"]]
+        )
+        self.assertEqual(parsed_messages,
+            [['Ast',
+              0,
+              [['Actor',
+                'Grammar',
+                [],
+                ['Rule',
+                 'x',
+                 ['Or',
+                  ['Scope',
+                   ['And',
+                    ['And',
+                     ['MatchRule', 'space'],
+                     ['And',
+                      ['MatchObject', ['Eq', 'h']],
+                      ['MatchObject', ['Eq', 'e']],
+                      ['MatchObject', ['Eq', 'l']],
+                      ['MatchObject', ['Eq', 'l']],
+                      ['MatchObject', ['Eq', 'o']]]]]]]]]]]]
+        )
+        optimized_messages = self.run_simulation(
+            [rlmeta_module.Optimizer()],
+            parsed_messages
+        )
+        self.assertEqual(optimized_messages,
+            [['Optimized',
+              0,
+              [['Actor',
+                'Grammar',
+                [],
+                ['Rule',
+                 'x',
+                 ['Scope',
+                  ['And',
+                   ['MatchRule', 'space'],
+                   ['And',
+                    ['MatchObject', ['Eq', 'h']],
+                    ['MatchObject', ['Eq', 'e']],
+                    ['MatchObject', ['Eq', 'l']],
+                    ['MatchObject', ['Eq', 'l']],
+                    ['MatchObject', ['Eq', 'o']]]]]]]]]]
+        )
 
 if __name__ == "__main__":
     cleanup()

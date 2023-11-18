@@ -175,7 +175,7 @@ class Counter:
         self.number += 1
         return result
 
-def run_simulation(actors, extra={}, messages=[], debug=False):
+def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
     import sys
     def debug_log(text):
         if debug:
@@ -232,12 +232,16 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             else:
                 next_messages.append(message)
         if not processed:
-            for actor, error in sorted(errors, key=lambda x: x[1].index):
-                sys.stderr.write(f"{actor.__class__.__name__} {trunc(actor._state, 60)}\n")
-                sys.stderr.write(f"  {error} at {error.index}\n")
-                sys.stderr.write(f"  {trunc(error.items, 60)}\n")
-                sys.stderr.write("\n")
-            sys.exit("No message processed.")
+            if fail:
+                for actor, error in sorted(errors, key=lambda x: x[1].index):
+                    sys.stderr.write(f"{actor.__class__.__name__} {trunc(actor._state, 60)}\n")
+                    sys.stderr.write(f"  {error} at {error.index}\n")
+                    sys.stderr.write(f"  {trunc(error.items, 60)}\n")
+                    sys.stderr.write("\n")
+                sys.exit("No message processed.")
+            else:
+                break
         messages = next_messages
         iteration += 1
     debug_log("Simulation done!")
+    return messages
