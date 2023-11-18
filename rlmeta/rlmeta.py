@@ -2959,9 +2959,9 @@ class PartCollector:
         return stream.action(lambda self: self.lookup('put')(
             self.lookup('concat')([
                 self.lookup('splice')(1, self.lookup('doneMsg')),
-                self.lookup('splice')(0, self.lookup('join')([
-                    self.lookup('parts'),
-                    self.lookup('x')
+                self.lookup('splice')(0, self.lookup('concat')([
+                    self.lookup('splice')(1, self.lookup('parts')),
+                    self.lookup('splice')(0, self.lookup('x'))
                 ]))
             ])
         ))
@@ -3026,7 +3026,9 @@ class StdoutWriter:
         return stream.operator_not(self._matcher_3)
     def _matcher_5(self, stream):
         return stream.action(lambda self: self.lookup('write')(
-            self.lookup('x')
+            self.lookup('join')([
+                self.lookup('x')
+            ])
         ))
     def _matcher_6(self, stream):
         return stream.operator_and([
