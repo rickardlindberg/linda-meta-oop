@@ -201,9 +201,12 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
         processed = False
         errors = []
         for message in messages:
-            for actor in actors:
+            for actor in list(actors):
                 try:
-                    actor.run(Stream(message)).eval(Runtime(actor, x))
+                    actor.run(Stream(message)).eval(Runtime(actor, x).bind(
+                        "kill",
+                        lambda: actors.remove(actor)
+                    ))
                 except MatchError as e:
                     errors.append((actor, e))
                 else:

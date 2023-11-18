@@ -13,9 +13,13 @@ Cli {
 
 PartCollector #n #last #parts #doneMsg {
   run =
-    | next #last .:x !. -> put(add(doneMsg [{parts x}]))
-    | next .     .:x !. -> spawn(PartCollector(add(n 1) last add(parts [x]) doneMsg))
-  next = "Part" !(!(#n))
+    | nextPart:x !.   -> x
+                      -> kill()
+  nextPart =
+    | nextN #last .:x -> put(add(doneMsg [{parts x}]))
+    | nextN .     .:x -> spawn(PartCollector(add(n 1) last add(parts [x]) doneMsg))
+  nextN =
+    | "Part" !(!(#n))
 }
 
 StdoutWriter {
