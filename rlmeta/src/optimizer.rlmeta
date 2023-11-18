@@ -8,7 +8,6 @@ Optimizer {
     | opt:y !.                    -> y
     | opts:xs                     -> ["Or" ~xs]
   Scope     =
-    | !bindOrLookup opt
     |               opt:x         -> ["Scope" x]
   Star      = opt:x               -> ["Star" x]
   And       =
@@ -17,19 +16,4 @@ Optimizer {
   andInner =
     | ["And" opts:xs]             -> xs
     | opt:x                       -> [x]
-  bindOrLookup =
-    | ["Bind"]
-    | ["Lookup"]
-    | ["And"        atLeastOneBindOrLookup]
-    | ["Or"         atLeastOneBindOrLookup]
-    | ["Star"       atLeastOneBindOrLookup]
-    | ["Not"        atLeastOneBindOrLookup]
-    | ["MatchList"  atLeastOneBindOrLookup]
-    | ["Action"     atLeastOneBindOrLookup]
-    | ["Set"        atLeastOneBindOrLookup]
-    | ["List"       atLeastOneBindOrLookup]
-    | ["Format"     atLeastOneBindOrLookup]
-    | ["Call"       atLeastOneBindOrLookup]
-    | ["ListItem" . atLeastOneBindOrLookup]
-  atLeastOneBindOrLookup = bindOrLookup | . atLeastOneBindOrLookup
 }
