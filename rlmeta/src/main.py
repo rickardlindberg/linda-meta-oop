@@ -11,5 +11,5 @@ if __name__ == "__main__":
             "PartCollector": PartCollector,
             "add": lambda x, y: x+y,
             "sub": lambda x, y: x-y,
-        }
+        },
     )

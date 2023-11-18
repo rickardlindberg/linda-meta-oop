@@ -223,4 +223,7 @@ def run_simulation(actors, extra={}, messages=[], debug=False):
             sys.exit("No message processed.")
         messages = next_messages
         iteration += 1
+    debug_log("Actors:")
+    for actor in actors:
+        debug_log(f"  - {actor.__class__.__name__} {actor._state}")
     debug_log("Simulation done!")
