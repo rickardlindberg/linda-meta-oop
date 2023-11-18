@@ -1,0 +1,15 @@
+PartCollector #n #last #parts #doneMsg {
+  run =
+    | nextPart:x !.   -> x
+                      -> kill()
+  nextPart =
+    | nextN #last .:x -> put(add(doneMsg [{parts x}]))
+    | nextN .     .:x -> spawn(PartCollector(add(n 1) last add(parts [x]) doneMsg))
+  nextN =
+    | "Part" !(!(#n))
+}
+
+StdoutWriter {
+  run = "Write" .:x !. -> write(x)
+}
+

@@ -31,6 +31,7 @@ def compile_rlmeta(rlmeta):
         "--compile", "src/cli.rlmeta",
         "--compile", "src/parser.rlmeta",
         "--compile", "src/codegenerator.rlmeta",
+        "--compile", "src/stdlib.rlmeta",
         "--copy", "src/main.py",
     ])
 
