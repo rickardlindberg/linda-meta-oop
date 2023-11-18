@@ -13,7 +13,7 @@ Optimizer {
   And       =
     | opt:x !.                    -> x
     | andInner*:xs                -> ["And" ~~xs]
-  andInner =
+  andInner  =
     | ["And" opts:xs]             -> xs
     | opt:x                       -> [x]
 }
