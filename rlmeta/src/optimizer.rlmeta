@@ -7,8 +7,7 @@ Optimizer {
   Or        =
     | opt:y !.                    -> y
     | opts:xs                     -> ["Or" ~xs]
-  Scope     =
-    |               opt:x         -> ["Scope" x]
+  Scope     = opt:x               -> ["Scope" x]
   Star      = opt:x               -> ["Star" x]
   And       =
     | opt:x !.                    -> x
