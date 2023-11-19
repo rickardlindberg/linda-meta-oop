@@ -34,8 +34,8 @@ object? Is that what should make them bigger?
 
 Molecules move at random inside cells. If they happen to bump into another
 molecule that it matches with, it does. Because the speed is so fast, this
-happens often enough. This is similar to how a process fetches matches a
-message in tuple-space.
+happens often enough. This is similar to how a process matches a message in
+tuple-space.
 
 ### Message Passing
 
