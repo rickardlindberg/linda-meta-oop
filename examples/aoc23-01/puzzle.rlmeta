@@ -1,0 +1,43 @@
+CLI {
+    run = "Args" .:input !. -> put(["File" read(input)])
+}
+
+Solver {
+    run = "File" [input:x] -> put(["Numbers" ~x])
+    input = line*:xs !. -> xs
+    line = char*:xs '\n' -> [~~xs]
+    char =
+        | '0'-'9':x -> [int(x)]
+        | !'\n' .   -> []
+}
+
+Solver2 {
+    run = "File" [input:x] -> put(["Lines" ~x])
+    input = line*:xs !. -> xs
+    line = (!'\n' .)*:xs '\n' -> [xs xs]
+}
+
+Lines {
+    run = "Lines" line*:xs !. -> put(["Numbers" ~xs])
+    line = [[nextDigit:x] [(. !(!nextDigit))* nextDigit:y]] -> [x y]
+    nextDigit =
+        | 'one'             -> 1
+        | 'two'             -> 2
+        | 'three'           -> 3
+        | 'four'            -> 4
+        | 'five'            -> 5
+        | 'six'             -> 6
+        | 'seven'           -> 7
+        | 'eight'           -> 8
+        | 'nine'            -> 9
+        | '1'-'9':x         -> x
+        | !'\n' . nextDigit
+}
+
+Numbers {
+    run = "Numbers" item*:xs !. -> put(["Result" sum(xs)])
+    item = [add:x] -> x
+    add =
+        | .:x (. !(!.))* .:y -> int({ x y })
+        | .:x                -> int({ x x })
+}
