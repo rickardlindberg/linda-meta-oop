@@ -1,0 +1,42 @@
+CLI {
+    run = "Args" .:input !. -> put(["File" read(input)])
+}
+
+GameParser {
+    run     = "File" [games:xs] !.                  -> put(["Games" ~xs])
+    games   = game*:xs !.                           -> xs
+    game    = 'Game ' number:x ': ' subsets:xs '\n' -> ["Game" x ~xs]
+    subsets = subset:x ('; ' subset)*:xs            -> [x ~xs]
+    subset  = hand:x (', ' hand)*:xs                -> ["Subset" x ~xs]
+    hand    = number:x ' ' color:y                  -> ["Cubes" x y]
+    color   =
+        | 'red'   -> "red"
+        | 'green' -> "green"
+        | 'blue'  -> "blue"
+    number  = '1'-'9':x '0'-'9'*:xs                 -> int({x xs})
+}
+
+GameMaxer {
+    run    = "Games" game*:xs !.         -> put(["MaxedGames" ~xs])
+    game   = ["Game" .:id subset*:xs !.] -> [0]:r
+                                         -> [0]:g
+                                         -> [0]:b
+                                         -> xs
+                                         -> ["Game" id max(r) max(g) max(b)]
+    subset = ["Subset" cubes*:xs !.]     -> xs
+    cubes  =
+        | ["Cubes" .:n "red"   !.] -> append(r n)
+        | ["Cubes" .:n "green" !.] -> append(g n)
+        | ["Cubes" .:n "blue"  !.] -> append(b n)
+}
+
+GameFilterer {
+    run = "MaxedGames" game*:xs -> put(["FilteredGames" ~~xs])
+    game =
+        | ["Game" .:id 0-12 0-13 0-14 !.] -> [id]
+        | ["Game" .    .    .    .    !.] -> []
+}
+
+FilterSummary {
+    run = "FilteredGames" .*:xs -> put(["Result" sum(xs)])
+}

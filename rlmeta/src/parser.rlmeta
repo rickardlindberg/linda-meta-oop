@@ -29,6 +29,7 @@ Parser {
   expr3 =
     | name:x !^'='                            -> ["MatchRule" x]
     | char:x '-' char:y                       -> ["MatchObject" ["Range" x y]]
+    | number:x '-' number:y                   -> ["MatchObject" ["Range" x y]]
     | '\'' (!'\'' matchChar)*:xs '\''         -> ["And" ~xs]
     | '.'                                     -> ["MatchObject" ["Any"]]
     | '(' ^choice:x ^')'                      -> x
