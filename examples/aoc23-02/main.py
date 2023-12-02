@@ -7,6 +7,7 @@ def run(actors, message):
             "add": operator.add,
             "sum": sum,
             "max": max,
+            "mul": operator.mul,
             "append": lambda items, item: items.append(item),
         },
         debug=True,
@@ -64,6 +65,16 @@ if __name__ == "__main__":
         [CLI(), GameParser(), GameMaxer(), GameFilterer(), FilterSummary()],
         ['Args', 'input1.txt'],
         [['Result', 2416]]
+    )
+    run_gives(
+        [CLI(), GameParser(), GameMaxer(), GamePower(), FilterSummary()],
+        ['Args', 'example1.txt'],
+        [['Result', 2286]]
+    )
+    run_gives(
+        [CLI(), GameParser(), GameMaxer(), GamePower(), FilterSummary()],
+        ['Args', 'input1.txt'],
+        [['Result', 63307]]
     )
     print()
     print("OK!")

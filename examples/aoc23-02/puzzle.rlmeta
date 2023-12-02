@@ -37,6 +37,12 @@ GameFilterer {
         | ["Game" .    .    .    .    !.] -> []
 }
 
+GamePower {
+    run = "MaxedGames" game*:xs -> put(["FilteredGames" ~xs])
+    game =
+        | ["Game" .:id .:r .:g .:b !.] -> mul(r mul(g b))
+}
+
 FilterSummary {
     run = "FilteredGames" .*:xs -> put(["Result" sum(xs)])
 }
