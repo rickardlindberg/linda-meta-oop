@@ -6,16 +6,11 @@ def doMap(mapSpec, number):
             return number - source + target
     return number
 
-def add(x, y):
-    import sys
-    sys.stderr.write(f"RL: {(x, y)}\n")
-    return x + y
-
 def run(actors, message):
     return run_simulation(
         actors=actors,
         extra={
-            "add": add,
+            "add": operator.add,
             "sub": operator.sub,
             "mul": operator.mul,
             "sum": sum,
