@@ -1,0 +1,31 @@
+CLI {
+    run = "Args" .:input !. -> put(["File" read(input)])
+}
+
+ScorecardParser {
+    run = "File" [card*:xs !.] !. -> put(["Scorecards" ~xs])
+    card =
+        'Card' ^number:x ':'
+        ^number*:xs
+        ^'|'
+        ^number*:ys
+        ^'\n' -> ["Card" x ["Winning" ~xs] ["Gotten" ~ys]]
+    number = '0'-'9':x '0'-'9'*:xs -> int({x xs})
+    space = ' '*
+}
+
+PointCounter {
+    run = "Scorecards" countCard*:xs -> put(["Result" sum(xs)])
+    countCard = ["Card" . ["Winning" .*:winning] ["Gotten" .*:gotten]]
+        -> points(winning gotten)
+}
+
+CardCounter {
+    run =
+        | "Scorecards" countCard*:cards -> put(["Count" 0 ~cards])
+        | "Count" .:totalCount !. -> put(["Result" totalCount])
+        | "Count" .:totalCount [.:count .:score] .*:xs
+            -> put(["Count" add(totalCount count) ~patch(xs score count)])
+    countCard = ["Card" . ["Winning" .*:winning] ["Gotten" .*:gotten]]
+        -> [1 countMatching(winning gotten)]
+}
