@@ -46,15 +46,31 @@ Seeder {
 }
 
 SeederRange {
+    run = "Seeds" seed*:xs !.
+        -> put(["SeedMinimizer" [] ~joinRanges(xs)])
+        -> spawn(ProcessOne())
+    seed = .:start .:len -> [start len]
+}
+
+ProcessOne {
     run =
-        | "Seeds" seed*:xs !. -> put(["SeedsTwo" ~xs])
-        | "SeedsTwo" seedsTwoInner*:xs !.
-            -> Counter():next
-            -> xs
-            -> spawn(PartCollector(0 sub(next() 1) [] ["Locations"]))
-    seed = .:start .:len -> [start ~range(len)]
-    seedsTwoInner = [.:x seedInner*:xs !.] -> x:x -> xs
-    seedInner = .:y -> put(["Seed" next() add(x y)])
+        | "SeedMinimizer" .:result emptySeed* seed:x .*:xs
+            -> kill()
+            -> spawn(Waiter(result [x ~xs]))
+        | "SeedMinimizer" .:result emptySeed* !seed
+            -> put(["Result" ~result])
+    emptySeed = [. 0]
+    seed = [.:start .:size]
+        -> put(["Seed" 0 start])
+        -> [add(start 1) sub(size 1)]
+}
+
+Waiter #result #left {
+    run =
+        "Location" .:id .:number
+            -> kill()
+            -> put(["SeedMinimizer" [min([number ~result])] ~left])
+            -> spawn(ProcessOne())
 }
 
 LocationMapper {

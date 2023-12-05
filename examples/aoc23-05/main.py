@@ -6,6 +6,9 @@ def doMap(mapSpec, number):
             return number - source + target
     return number
 
+def joinRanges(ranges):
+    return ranges
+
 def run(actors, message):
     return run_simulation(
         actors=actors,
@@ -22,6 +25,9 @@ def run(actors, message):
             "Mapper": Mapper,
             "LocationMinimizer": LocationMinimizer,
             "PartCollector": PartCollector,
+            "ProcessOne": ProcessOne,
+            "Waiter": Waiter,
+            "joinRanges": joinRanges,
         },
         debug=True,
         fail=False,
@@ -49,7 +55,12 @@ if __name__ == "__main__":
         [['Result', 600279879]]
     )
     run_gives(
-        [CLI(), AlmanacParser(), SeederRange(), LocationMapper(), LocationMinimizer()],
+        [CLI(), AlmanacParser(), SeederRange()],
         ["Args", "example1.txt"],
         [['Result', 46]]
     )
+    #run_gives(
+    #    [CLI(), AlmanacParser(), SeederRange()],
+    #    ["Args", "input1.txt"],
+    #    [['Result', 0]]
+    #)
