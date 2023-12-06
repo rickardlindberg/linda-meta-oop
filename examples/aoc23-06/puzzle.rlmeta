@@ -1,0 +1,26 @@
+CLI {
+    run = "Args" .:input !. -> put(["File" read(input)])
+}
+
+RecordParser {
+    run = "File" [races:xs] !. -> put(["Records" ~xs])
+    races =
+        'Time:' ^number*:xs ^'\n'
+        'Distance:' ^number*:ys ^'\n'
+        !. -> zip("Record" xs ys)
+    number = digit:x digit*:xs -> int({x xs})
+    digit = '0'-'9'
+    space = ' '*
+}
+
+MarginCalculator {
+    run = "Records" record*:xs !. -> put(["Margins" ~xs])
+    record = ["Record" .:time .:distance !.] -> margin(time distance)
+}
+
+MarginProduct {
+    run = "Margins" product:x !. -> put(["Result" x])
+    product =
+        | .:x !. -> x
+        | .:x product:y -> mul(x y)
+}
