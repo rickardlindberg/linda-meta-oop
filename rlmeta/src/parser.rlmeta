@@ -5,6 +5,7 @@ Parser {
     | ^actor*:xs space !.                     -> xs
   actor =
     | name:x ^field*:ys ^'{' ^rule*:zs ^'}'   -> ["Actor" x ys ~zs]
+    | 'def ' name:x restLine:y indented*:zs   -> ["Native" x {"def " x y zs}]
   field =
     | '#' name:x                              -> ["Field" x]
   rule =
@@ -56,6 +57,8 @@ Parser {
     | '~'*:ys hostExpr:x                      -> ["ListItem" len(ys) x]
   var =
     | name:x !^'='                            -> ["Lookup" x]
+  restLine  = (!'\n' .)*:xs '\n' -> { xs "\n" }
+  indented  = ' ' restLine:x -> { " " x }
   string    = '"'  (!'"'  innerChar)*:xs '"'  -> { xs }
   char      = '\''  !'\'' innerChar:x    '\'' -> x
   innerChar = '\\' escape | .

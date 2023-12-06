@@ -2,6 +2,7 @@ CodeGenerator {
   run           = "Optimized" .:p [asts:x]     -> put(["Part" p x])
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
+  Native        = .:x .:y                -> y
   Actor         = .:x [asts:ys] ast*:zs  -> Counter():nextid                                   ->
                                             collector():matchers                               ->
                                             collector():rules                                  ->

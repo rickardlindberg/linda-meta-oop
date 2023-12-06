@@ -1,19 +1,5 @@
 import operator
 
-def zip(name, xs, ys):
-    assert len(xs) == len(ys)
-    result = []
-    for i, x in enumerate(xs):
-        result.append([name, x, ys[i]])
-    return result
-
-def margin(time, distance):
-    margin = 0
-    for ms in range(time):
-        if (time-ms)*ms > distance:
-            margin += 1
-    return margin
-
 def run(actors, message):
     return run_simulation(
         actors=actors,
