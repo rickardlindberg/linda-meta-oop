@@ -59,3 +59,13 @@ if __name__ == "__main__":
         ["Args", "input.txt"],
         [['Result', 303600]]
     )
+    run_gives(
+        [CLI(), RecordParserBetterKerning(), MarginCalculator(), MarginProduct()],
+        ["Args", "example.txt"],
+        [['Result', 71503]]
+    )
+    run_gives(
+        [CLI(), RecordParserBetterKerning(), MarginCalculator(), MarginProduct()],
+        ["Args", "input.txt"],
+        [['Result', 23654842]]
+    )
