@@ -47,14 +47,11 @@ Seeder {
 
 SeederRange {
     run =
-        | "Seeds" seed*:xs !. -> put(["SeedsTwo" ~xs])
-        | "SeedsTwo" seedsTwoInner*:xs !.
+        "Seeds" seed*:xs !.
             -> Counter():next
             -> xs
             -> spawn(PartCollector(0 sub(next() 1) [] ["Locations"]))
-    seed = .:start .:len -> [start ~range(len)]
-    seedsTwoInner = [.:x seedInner*:xs !.] -> x:x -> xs
-    seedInner = .:y -> put(["Seed" next() add(x y)])
+    seed = .:start .:len -> put(["Seed" next() [[start len]]])
 }
 
 LocationMapper {
@@ -63,4 +60,10 @@ LocationMapper {
 
 LocationMinimizer {
     run = "Locations" [.*:xs] -> put(["Result" min(xs)])
+}
+
+LocationMinimizerRange {
+    run = "Locations" [locationRange*:xs !.] !. -> put(["Result" min([~~xs])])
+    locationRange = [minLocation*:xs !.] -> xs
+    minLocation = [.:x . !.] -> x
 }
