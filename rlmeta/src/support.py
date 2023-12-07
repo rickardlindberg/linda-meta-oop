@@ -213,6 +213,8 @@ def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
             "int": int,
             "Counter": Counter,
         }
+        for name, native in natives.items():
+            x[name] = native
         for key, value in extra.items():
             x[key] = value
         processed = False
@@ -245,3 +247,5 @@ def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
         iteration += 1
     debug_log("Simulation done!")
     return messages
+
+natives = {}

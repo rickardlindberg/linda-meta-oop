@@ -10,8 +10,6 @@ def run(actors, message):
             "sum": sum,
             "max": max,
             "min": min,
-            "zip": zip,
-            "margin": margin,
             "range": lambda x: list(range(x)),
             "append": lambda items, item: items.append(item),
         },
