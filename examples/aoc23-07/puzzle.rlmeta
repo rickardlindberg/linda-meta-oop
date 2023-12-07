@@ -1,0 +1,70 @@
+CLI {
+    run = "Args" .:input !. -> put(["File" read(input)])
+}
+
+HandParser {
+    run = "File" [hand*:xs !.] !. -> put(["Hands" ~xs])
+    hand = card*:xs ^number:y '\n' -> ["Card" y ~xs]
+    card =
+        | 'A'
+        | 'K'
+        | 'Q'
+        | 'J'
+        | 'T'
+        | '2'-'9'
+    number = digit:x digit*:xs -> int({x xs})
+    digit = '0'-'9'
+    space = ' '*
+}
+
+CardRanker {
+    run = "Hands" rank*:xs !. -> put(["RankedHands" ~xs])
+    rank = ["Card" .:bid rankCard*:xs !.] -> ["RankedHand" bid totalRank(xs) ~xs]
+    rankCard =
+        | "A"       -> 14
+        | "K"       -> 13
+        | "Q"       -> 12
+        | "J"       -> 11
+        | "T"       -> 10
+        | '2'-'9':x -> int(x)
+}
+
+CardSorter {
+    run = "RankedHands" .*:xs !. -> put(["SortedHands" ~sortHands(xs)])
+}
+
+CalculateWinnings {
+    run = "SortedHands" hand*:xs !.
+        -> Counter():rank
+        -> rank()
+        -> put(["Result" sum(xs)])
+    hand = ["RankedHand" .:bid]
+        -> mul(rank() bid)
+}
+
+def sortHands(hands):
+    return sorted(hands, key=lambda hand: hand[2:])
+
+def totalRank(cards):
+    map = {}
+    for x in cards:
+        if x not in map:
+            map[x] = 1
+        else:
+            map[x] += 1
+    buckets = sorted(map.values())
+    if buckets == [5]:
+        return 6
+    elif buckets == [1, 4]:
+        return 5
+    elif buckets == [2, 3]:
+        return 4
+    elif buckets == [1, 1, 3]:
+        return 3
+    elif buckets == [1, 2, 2]:
+        return 2
+    elif buckets == [1, 1, 1, 2]:
+        return 1
+    else:
+        assert buckets == [1, 1, 1, 1, 1], buckets
+        return 0
