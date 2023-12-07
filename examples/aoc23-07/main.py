@@ -42,3 +42,13 @@ if __name__ == "__main__":
         ["Args", "input.txt"],
         [['Result', 253910319]]
     )
+    run_gives(
+        [CLI(), HandParser(), CardRankerJoker(), CardSorter(), CalculateWinnings()],
+        ["Args", "example.txt"],
+        [['Result', 5905]]
+    )
+    run_gives(
+        [CLI(), HandParser(), CardRankerJoker(), CardSorter(), CalculateWinnings()],
+        ["Args", "input.txt"],
+        [['Result', 254083736]]
+    )
