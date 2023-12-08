@@ -1,0 +1,30 @@
+Miss (0, 'GCA') -> (22357, 0, 'FCZ')
+Miss (0, 'FCZ') -> (22357, 0, 'FCZ')
+
+Miss (0, 'AAA') -> (17263, 0, 'ZZZ')
+Miss (0, 'ZZZ') -> (17263, 0, 'ZZZ')
+
+Miss (0, 'CMA') -> (14999, 0, 'SMZ')
+Miss (0, 'SMZ') -> (14999, 0, 'SMZ')
+
+Miss (0, 'QNA') -> (16697, 0, 'TTZ')
+Miss (0, 'TTZ') -> (16697, 0, 'TTZ')
+
+Miss (0, 'FTA') -> (13301, 0, 'TBZ')
+Miss (0, 'TBZ') -> (13301, 0, 'TBZ')
+
+Miss (0, 'CBA') -> (20659, 0, 'XTZ')
+Miss (0, 'XTZ') -> (20659, 0, 'XTZ')
+
+
+numbers = [22357, 17263, 14999, 16697, 13301, 20659]
+y = math.gcd(*numbers)
+[x*y for x in numbers]
+
+themax = max(numbers)
+answer = themax
+while not all(answer%x==0 for x in numbers):
+    answer += themax
+
+>>> print(answer)
+14631604759649

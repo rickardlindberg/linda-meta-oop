@@ -33,14 +33,39 @@ PrepareSolver2 {
 }
 
 def solve2(directions, nodes):
-    positions = [x for x in nodes.keys() if x.endswith("A")]
-    steps = 0
-    index = 0
-    while not all(x.endswith("Z") for x in positions):
-        positions = [
-            nodes[position][directions[index]]
-            for position in positions
+    things = []
+    for node in nodes.keys():
+        if node.endswith("A"):
+            things.append((0, 0, node, {}))
+    things = [
+        stepToNextSolution(steps, index, node, cache, nodes, directions)
+        for steps, index, node, cache
+        in things
+    ]
+    while True:
+        step_set = set(x[0] for x in things)
+        import sys
+        #sys.stderr.write(f"set = {step_set}\n")
+        if len(step_set) == 1:
+            return things[0][0]
+        things = [
+            stepToNextSolution(steps, index, node, cache, nodes, directions) if steps < max(step_set)
+            else (steps, index, node, cache)
+            for steps, index, node, cache in things
         ]
-        steps += 1
-        index = (index + 1) % len(directions)
-    return steps
+
+def stepToNextSolution(steps, index, node, cache, nodes, directions):
+    key = (index, node)
+    if key not in cache:
+        steps_increment = 0
+        while True:
+            node = nodes[node][directions[index]]
+            steps_increment += 1
+            index = (index + 1) % len(directions)
+            if node.endswith("Z"):
+                cache[key] = (steps_increment, index, node)
+                break
+        import sys
+        sys.stderr.write(f"Miss {key} -> {cache[key]}\n")
+    steps_increment, index, node = cache[key]
+    return (steps+steps_increment, index, node, cache)
