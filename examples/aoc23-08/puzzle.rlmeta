@@ -1,0 +1,46 @@
+Puzzle {
+    run =
+        | "Args" .:input !. -> put(["File" read(input)])
+        | "File" [map:x] !. -> put(x)
+    map = dir*:xs '\n\n' node*:ys !. -> dict():nodes -> ys -> ["Map" xs nodes]
+    dir = 'R' | 'L'
+    node = name:x ' = (' name:y ', ' name:z ')\n'
+        -> dictSet(nodes x dict([["L" y] ["R" z]]))
+    name = .:x .:y .:z -> { x y z }
+}
+
+def dictSet(d, key, value):
+    d[key] = value
+
+PrepareSolver1 {
+    run = "Map" .:directions .:nodes !.
+        -> put(["Result" solve(directions nodes)])
+}
+
+def solve(directions, nodes):
+    node = "AAA"
+    steps = 0
+    index = 0
+    while node != "ZZZ":
+        node = nodes[node][directions[index]]
+        steps += 1
+        index = (index + 1) % len(directions)
+    return steps
+
+PrepareSolver2 {
+    run = "Map" .:directions .:nodes !.
+        -> put(["Result" solve2(directions nodes)])
+}
+
+def solve2(directions, nodes):
+    positions = [x for x in nodes.keys() if x.endswith("A")]
+    steps = 0
+    index = 0
+    while not all(x.endswith("Z") for x in positions):
+        positions = [
+            nodes[position][directions[index]]
+            for position in positions
+        ]
+        steps += 1
+        index = (index + 1) % len(directions)
+    return steps
