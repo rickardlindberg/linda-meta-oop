@@ -1,8 +1,8 @@
 actor CLI =
-    "Args" .:input !.        -> put(["File" read(input)])
+    "Args" .:input !. -> put(["File" read(input)])
 
 actor Parser =
-    "File" [entries:x] !.    -> put(x)
+    "File" [entries:x] !. -> put(x)
     where
         entries = entry*:xs !.             -> ["Entries" ~xs]
         entry   = ^number*:xs ^'\n'        -> ["Entry" ~xs]
@@ -14,7 +14,7 @@ actor Parser =
 actor ForwardExtrapolator =
     "Entries" extrapolate*:xs !. -> put(["Extrapolated" ~xs])
     where
-        extrapolate = ["Entry" .*:xs !.]           -> extrapolateForward(xs)
+        extrapolate = ["Entry" .*:xs !.] -> extrapolateForward(xs)
 
 def extrapolateForward(numbers):
     if sum(numbers) == 0:
@@ -30,7 +30,7 @@ def extrapolateForward(numbers):
 actor BackwardsExtrapolator =
     "Entries" extrapolate*:xs !. -> put(["Extrapolated" ~xs])
     where
-        extrapolate = ["Entry" .*:xs !.]           -> extrapolateBackwards(xs)
+        extrapolate = ["Entry" .*:xs !.] -> extrapolateBackwards(xs)
 
 def extrapolateBackwards(numbers):
     if sum(numbers) == 0:
