@@ -14,9 +14,10 @@ actor CodeGenerator =
                                                         "def __init__(self" {param} "):\n" indent({
                                                           "self._state = {"init"}\n"
                                                           "self._rules = {\n" indent({ rules }) "}\n"
+                                                          "self._main = self._rules.pop('_main')\n"
                                                          })
                                                         "def run(self, stream):\n" indent({
-                                                          "return self._rules['run'](stream)\n"
+                                                          "return self._main(stream)\n"
                                                          })
                                                         matchers
                                                       })

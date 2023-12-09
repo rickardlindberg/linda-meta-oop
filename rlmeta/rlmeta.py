@@ -254,11 +254,12 @@ class Cli:
     def __init__(self):
         self._state = {}
         self._rules = {
-            'run': self._matcher_15,
+            '_main': self._matcher_15,
             'arg': self._matcher_40,
         }
+        self._main = self._rules.pop('_main')
     def run(self, stream):
-        return self._rules['run'](stream)
+        return self._main(stream)
     def _matcher_0(self, stream):
         return stream.match(lambda item: item == 'Args', "'Args'")
     def _matcher_1(self, stream):
@@ -446,7 +447,7 @@ class Parser:
     def __init__(self):
         self._state = {}
         self._rules = {
-            'run': self._matcher_9,
+            '_main': self._matcher_9,
             'file': self._matcher_20,
             'body': self._matcher_57,
             'whereItems': self._matcher_68,
@@ -480,8 +481,9 @@ class Parser:
             'nameChar': self._matcher_486,
             'space': self._matcher_493,
         }
+        self._main = self._rules.pop('_main')
     def run(self, stream):
-        return self._rules['run'](stream)
+        return self._main(stream)
     def _matcher_0(self, stream):
         return stream.match(lambda item: item == 'SourceCode', "'SourceCode'")
     def _matcher_1(self, stream):
@@ -604,7 +606,7 @@ class Parser:
             self.lookup('splice')(0, self.lookup('ys')),
             self.lookup('splice')(0, self.lookup('concat')([
                 self.lookup('splice')(0, 'Rule'),
-                self.lookup('splice')(0, 'run'),
+                self.lookup('splice')(0, '_main'),
                 self.lookup('splice')(0, self.lookup('z'))
             ])),
             self.lookup('splice')(1, self.lookup('zs'))
@@ -2065,7 +2067,7 @@ class Optimizer:
     def __init__(self):
         self._state = {}
         self._rules = {
-            'run': self._matcher_9,
+            '_main': self._matcher_9,
             'opts': self._matcher_17,
             'opt': self._matcher_27,
             'Actor': self._matcher_36,
@@ -2076,8 +2078,9 @@ class Optimizer:
             'And': self._matcher_80,
             'andInner': self._matcher_94,
         }
+        self._main = self._rules.pop('_main')
     def run(self, stream):
-        return self._rules['run'](stream)
+        return self._main(stream)
     def _matcher_0(self, stream):
         return stream.match(lambda item: item == 'Ast', "'Ast'")
     def _matcher_1(self, stream):
@@ -2367,7 +2370,7 @@ class CodeGenerator:
     def __init__(self):
         self._state = {}
         self._rules = {
-            'run': self._matcher_9,
+            '_main': self._matcher_9,
             'asts': self._matcher_17,
             'ast': self._matcher_26,
             'Native': self._matcher_33,
@@ -2401,8 +2404,9 @@ class CodeGenerator:
             'matcher': self._matcher_203,
             'repr': self._matcher_208,
         }
+        self._main = self._rules.pop('_main')
     def run(self, stream):
-        return self._rules['run'](stream)
+        return self._main(stream)
     def _matcher_0(self, stream):
         return stream.match(lambda item: item == 'Optimized', "'Optimized'")
     def _matcher_1(self, stream):
@@ -2564,13 +2568,14 @@ class CodeGenerator:
                                     self.lookup('rules')
                                 ])
                             ),
-                            '}\n'
+                            '}\n',
+                            "self._main = self._rules.pop('_main')\n"
                         ])
                     ),
                     'def run(self, stream):\n',
                     self.lookup('indent')(
                         self.lookup('join')([
-                            "return self._rules['run'](stream)\n"
+                            'return self._main(stream)\n'
                         ])
                     ),
                     self.lookup('matchers')
@@ -3162,11 +3167,12 @@ class PartCollector:
         'doneMsg': doneMsg,
         }
         self._rules = {
-            'run': self._matcher_13,
+            '_main': self._matcher_13,
             'process': self._matcher_26,
         }
+        self._main = self._rules.pop('_main')
     def run(self, stream):
-        return self._rules['run'](stream)
+        return self._main(stream)
     def _matcher_0(self, stream):
         return stream.match(lambda item: item == 'Part', "'Part'")
     def _matcher_1(self, stream):
@@ -3268,10 +3274,11 @@ class StdoutWriter:
     def __init__(self):
         self._state = {}
         self._rules = {
-            'run': self._matcher_7,
+            '_main': self._matcher_7,
         }
+        self._main = self._rules.pop('_main')
     def run(self, stream):
-        return self._rules['run'](stream)
+        return self._main(stream)
     def _matcher_0(self, stream):
         return stream.match(lambda item: item == 'Write', "'Write'")
     def _matcher_1(self, stream):
