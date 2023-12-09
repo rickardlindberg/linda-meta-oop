@@ -32,3 +32,13 @@ if __name__ == "__main__":
         ["Args", "input.txt"],
         [["Result", 1916822650]]
     )
+    run_gives(
+        [CLI(), Parser(), Backwards(), Summer()],
+        ["Args", "example.txt"],
+        [["Result", 2]]
+    )
+    run_gives(
+        [CLI(), Parser(), Backwards(), Summer()],
+        ["Args", "input.txt"],
+        [["Result", 966]]
+    )

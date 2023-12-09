@@ -28,6 +28,22 @@ def diff(numbers):
             previous = number
         return numbers[-1] + diff(next)
 
+Backwards {
+    run = "Entries" diff*:xs !. -> put(["Diffs" ~xs])
+    diff = ["Entry" .*:xs !.] -> backwards(xs)
+}
+
+def backwards(numbers):
+    if sum(numbers) == 0:
+        return 0
+    else:
+        next = []
+        previous = numbers[0]
+        for number in numbers[1:]:
+            next.append(number - previous)
+            previous = number
+        return numbers[0] - backwards(next)
+
 Summer {
     run = "Diffs" .*:xs !. -> put(["Result" sum(xs)])
 }
