@@ -1,0 +1,34 @@
+CLI {
+    run = "Args" .:input !. -> put(["File" read(input)])
+}
+
+Parser {
+    run = "File" [entries:x] !. -> put(x)
+    entries = entry*:xs !. -> ["Entries" ~xs]
+    entry = ^number*:xs ^'\n' -> ["Entry" ~xs]
+    number = sign:x digit:y digit*:ys -> int({x y ys})
+    sign = '-' | -> ""
+    digit = '0'-'9'
+    space = ' '*
+}
+
+Differ {
+    run = "Entries" diff*:xs !. -> put(["Diffs" ~xs])
+    diff = ["Entry" .*:xs !.] -> diff(xs)
+}
+
+def diff(numbers):
+    if sum(numbers) == 0:
+        return 0
+    else:
+        next = []
+        previous = numbers[0]
+        for number in numbers[1:]:
+            next.append(number - previous)
+            previous = number
+        return numbers[-1] + diff(next)
+
+Summer {
+    run = "Diffs" .*:xs !. -> put(["Result" sum(xs)])
+}
+
