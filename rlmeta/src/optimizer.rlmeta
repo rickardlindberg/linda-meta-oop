@@ -1,17 +1,17 @@
 actor Optimizer =
-  run       = "Ast" .:p [opts:xs] -> put(["Optimized" p xs])
-  opts      = opt*:xs !.          -> xs
-  opt       = [%:x] -> x | .
-  Actor     = .:x .:y opts:zs     -> ["Actor" x y ~zs]
-  Rule      = .:x     opt:y       -> ["Rule" x y]
-  Or        =
-    | opt:y !.                    -> y
-    | opts:xs                     -> ["Or" ~xs]
-  Scope     = opt:x               -> ["Scope" x]
-  Star      = opt:x               -> ["Star" x]
-  And       =
-    | opt:x !.                    -> x
-    | andInner*:xs                -> ["And" ~~xs]
-  andInner  =
-    | ["And" opts:xs]             -> xs
-    | opt:x                       -> [x]
+    run       = "Ast" .:p [opts:xs] -> put(["Optimized" p xs])
+    opts      = opt*:xs !.          -> xs
+    opt       = [%:x] -> x | .
+    Actor     = .:x .:y opts:zs     -> ["Actor" x y ~zs]
+    Rule      = .:x     opt:y       -> ["Rule" x y]
+    Or        =
+      | opt:y !.                    -> y
+      | opts:xs                     -> ["Or" ~xs]
+    Scope     = opt:x               -> ["Scope" x]
+    Star      = opt:x               -> ["Star" x]
+    And       =
+      | opt:x !.                    -> x
+      | andInner*:xs                -> ["And" ~~xs]
+    andInner  =
+      | ["And" opts:xs]             -> xs
+      | opt:x                       -> [x]
