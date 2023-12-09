@@ -6,7 +6,8 @@ actor Parser =
         body =
             | keyActor ^name:x ^field*:ys ^'='
               ^choice:z ^whereItems:zs                   -> ["Actor" x ys ["Rule" "_main" z] ~zs]
-            | keyDef   ^name:x restLine:y indented*:zs   -> ["Native" x {"def " x y zs}]
+            | keyDef   ^name:x ^name*:ys ^'=\n'
+              indented*:zs                               -> ["Native" x {"def " x "(" join(ys ", ") "):\n" zs}]
         whereItems =
             | ^keyWhere ^rule* | -> []
         field =

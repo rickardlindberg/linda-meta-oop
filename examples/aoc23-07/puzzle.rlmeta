@@ -28,7 +28,7 @@ actor CardRanker =
             | "T"       -> 10
             | '2'-'9':x -> int(x)
 
-def totalRank(cards):
+def totalRank cards =
     map = {}
     for x in cards:
         if x not in map:
@@ -64,7 +64,7 @@ actor CardRankerJoker =
             | '2'-'9':x -> int(x)
             | "J"       -> 1
 
-def totalRankJoker(cards):
+def totalRankJoker cards =
     map = {}
     joker_count = 0
     for x in cards:
@@ -100,7 +100,7 @@ def totalRankJoker(cards):
 actor CardSorter =
     "RankedHands" .*:xs !. -> put(["SortedHands" ~sortHands(xs)])
 
-def sortHands(hands):
+def sortHands hands =
     return sorted(hands, key=lambda hand: hand[2:])
 
 actor CalculateWinnings =

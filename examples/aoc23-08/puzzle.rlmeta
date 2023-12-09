@@ -8,14 +8,14 @@ actor Puzzle =
             -> dictSet(nodes x dict([["L" y] ["R" z]]))
         name = .:x .:y .:z -> { x y z }
 
-def dictSet(d, key, value):
+def dictSet d key value =
     d[key] = value
 
 actor PrepareSolver1 =
     "Map" .:directions .:nodes !.
         -> put(["Result" solve(directions nodes)])
 
-def solve(directions, nodes):
+def solve directions nodes =
     node = "AAA"
     steps = 0
     index = 0
@@ -29,7 +29,7 @@ actor PrepareSolver2 =
     "Map" .:directions .:nodes !.
         -> put(["Result" solve2(directions nodes)])
 
-def solve2(directions, nodes):
+def solve2 directions nodes =
     things = []
     for node in nodes.keys():
         if node.endswith("A"):
@@ -51,7 +51,7 @@ def solve2(directions, nodes):
             for steps, index, node, cache in things
         ]
 
-def stepToNextSolution(steps, index, node, cache, nodes, directions):
+def stepToNextSolution steps index node cache nodes directions =
     key = (index, node)
     if key not in cache:
         steps_increment = 0

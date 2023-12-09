@@ -16,7 +16,7 @@ actor ForwardExtrapolator =
     where
         extrapolate = ["Entry" .*:xs !.] -> extrapolateForward(xs)
 
-def extrapolateForward(numbers):
+def extrapolateForward numbers =
     if sum(numbers) == 0:
         return 0
     else:
@@ -32,7 +32,7 @@ actor BackwardsExtrapolator =
     where
         extrapolate = ["Entry" .*:xs !.] -> extrapolateBackwards(xs)
 
-def extrapolateBackwards(numbers):
+def extrapolateBackwards numbers =
     if sum(numbers) == 0:
         return 0
     else:
