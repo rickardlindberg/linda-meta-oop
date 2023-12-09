@@ -1,17 +1,15 @@
-CLI {
+actor CLI =
     run = "Args" .:input !. -> put(["File" read(input)])
-}
 
-GridParser {
+actor GridParser =
     run = "File" [row*:xs] !. -> Counter():nextRow
                               -> put(["Grid" ~xs])
     row = col*:xs '\n'        -> Counter():nextCol
                               -> nextRow():row
                               -> xs
     col = !'\n' .:x           -> [x row nextCol()]
-}
 
-EngineParser {
+actor EngineParser =
     run = "Grid" row*:xs -> []:numbers
                          -> []:symbols
                          -> xs
@@ -27,9 +25,8 @@ EngineParser {
         | [['0'-'9':x] .:row .:col !.] -> append(positions [row col]) -> x
     symbol =
         | [!"." .:x    .:row .:col !.] -> append(symbols [x row col])
-}
 
-ExpandAdjecant {
+actor ExpandAdjecant =
     run = "Engine" ["Numbers" number*:xs !.]
                    ["Symbols" .*:ys !.]
         -> put(["FlatEngine" ["Numbers" ~xs] ["Symbols" ~ys]])
@@ -51,18 +48,16 @@ ExpandAdjecant {
         | [.:row .:col] positionsRest:xs ->
             [[sub(row 1) col]
              [add(row 1) col] ~xs]
-}
 
-PartSummer {
+actor PartSummer =
     run = "FlatEngine" ["Numbers" number*:xs !.]
                        ["Symbols" symbol*:ys !.]
             -> ys:symbols
             -> put(["Result" sum(xs)])
     symbol = [. .:row .:col] -> [row col]
     number = [.:x .*:ys] -> countIfOverlap(x ys symbols)
-}
 
-GearSummer {
+actor GearSummer =
     run = "FlatEngine" ["Numbers" .*:xs !.]
                        ["Symbols" symbol*:ys !.]
             -> xs:numbers
@@ -70,4 +65,3 @@ GearSummer {
     symbol =
         | ["*" .:row .:col] -> getRatio(row col numbers)
         | .                 -> 0
-}

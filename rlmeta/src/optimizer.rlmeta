@@ -1,4 +1,4 @@
-Optimizer {
+actor Optimizer =
   run       = "Ast" .:p [opts:xs] -> put(["Optimized" p xs])
   opts      = opt*:xs !.          -> xs
   opt       = [%:x] -> x | .
@@ -15,4 +15,3 @@ Optimizer {
   andInner  =
     | ["And" opts:xs]             -> xs
     | opt:x                       -> [x]
-}

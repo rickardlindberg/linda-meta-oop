@@ -1,12 +1,10 @@
-PartCollector #n #last #parts #doneMsg {
+actor PartCollector #n #last #parts #doneMsg =
   run =
     | "Part" !(!#n) process:x !. -> x
                                  -> kill()
   process =
     | #last .:x -> put([~doneMsg [~parts x]])
     | .     .:x -> spawn(PartCollector(increment(n) last [~parts x] doneMsg))
-}
 
-StdoutWriter {
+actor StdoutWriter =
   run = "Write" .:x !. -> write({ x })
-}

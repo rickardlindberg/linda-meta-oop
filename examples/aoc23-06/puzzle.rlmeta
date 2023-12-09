@@ -1,8 +1,7 @@
-CLI {
+actor CLI =
     run = "Args" .:input !. -> put(["File" read(input)])
-}
 
-RecordParser {
+actor RecordParser =
     run = "File" [races:xs] !. -> put(["Records" ~xs])
     races =
         'Time:' ^number*:xs ^'\n'
@@ -11,9 +10,8 @@ RecordParser {
     number = digit:x digit*:xs -> int({x xs})
     digit = '0'-'9'
     space = ' '*
-}
 
-RecordParserBetterKerning {
+actor RecordParserBetterKerning =
     run = "File" [races:xs] !. -> put(["Records" ~xs])
     races =
         'Time:' ^number*:xs ^'\n'
@@ -22,19 +20,16 @@ RecordParserBetterKerning {
     number = ^digit:x ^digit*:xs -> int({x xs})
     digit = '0'-'9'
     space = ' '*
-}
 
-MarginCalculator {
+actor MarginCalculator =
     run = "Records" record*:xs !. -> put(["Margins" ~xs])
     record = ["Record" .:time .:distance !.] -> margin(time distance)
-}
 
-MarginProduct {
+actor MarginProduct =
     run = "Margins" product:x !. -> put(["Result" x])
     product =
         | .:x !. -> x
         | .:x product:y -> mul(x y)
-}
 
 def zip(name, xs, ys):
     assert len(xs) == len(ys)

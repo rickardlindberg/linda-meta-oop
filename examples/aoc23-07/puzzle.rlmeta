@@ -1,8 +1,7 @@
-CLI {
+actor CLI =
     run = "Args" .:input !. -> put(["File" read(input)])
-}
 
-HandParser {
+actor HandParser =
     run = "File" [hand*:xs !.] !. -> put(["Hands" ~xs])
     hand = card*:xs ^number:y '\n' -> ["Card" y ~xs]
     card =
@@ -15,9 +14,8 @@ HandParser {
     number = digit:x digit*:xs -> int({x xs})
     digit = '0'-'9'
     space = ' '*
-}
 
-CardRanker {
+actor CardRanker =
     run = "Hands" rank*:xs !. -> put(["RankedHands" ~xs])
     rank = ["Card" .:bid rankCard*:xs !.] -> ["RankedHand" bid totalRank(xs) ~xs]
     rankCard =
@@ -27,7 +25,6 @@ CardRanker {
         | "J"       -> 11
         | "T"       -> 10
         | '2'-'9':x -> int(x)
-}
 
 def totalRank(cards):
     map = {}
@@ -53,7 +50,7 @@ def totalRank(cards):
         assert buckets == [1, 1, 1, 1, 1], buckets
         return 0
 
-CardRankerJoker {
+actor CardRankerJoker =
     run = "Hands" rank*:xs !. -> put(["RankedHands" ~xs])
     rank = ["Card" .:bid rankCard*:xs !.] -> ["RankedHand" bid totalRankJoker(xs) ~xs]
     rankCard =
@@ -63,7 +60,6 @@ CardRankerJoker {
         | "T"       -> 10
         | '2'-'9':x -> int(x)
         | "J"       -> 1
-}
 
 def totalRankJoker(cards):
     map = {}
@@ -98,18 +94,16 @@ def totalRankJoker(cards):
         assert buckets == [1, 1, 1, 1, 1], buckets
         return 0
 
-CardSorter {
+actor CardSorter =
     run = "RankedHands" .*:xs !. -> put(["SortedHands" ~sortHands(xs)])
-}
 
 def sortHands(hands):
     return sorted(hands, key=lambda hand: hand[2:])
 
-CalculateWinnings {
+actor CalculateWinnings =
     run = "SortedHands" hand*:xs !.
         -> Counter():rank
         -> rank()
         -> put(["Result" sum(xs)])
     hand = ["RankedHand" .:bid]
         -> mul(rank() bid)
-}

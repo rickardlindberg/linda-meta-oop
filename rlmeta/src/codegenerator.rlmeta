@@ -1,4 +1,4 @@
-CodeGenerator {
+actor CodeGenerator =
   run           = "Optimized" .:p [asts:x]     -> put(["Part" p x])
   asts          = ast*:xs !.             -> { xs                                         }
   ast           = [%:x !.]               -> x
@@ -56,4 +56,3 @@ CodeGenerator {
                                             })                                                ->
                                             { "self." id }
   repr          = .:x                    -> repr(x)
-}

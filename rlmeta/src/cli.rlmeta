@@ -1,4 +1,4 @@
-Cli {
+actor Cli =
   run =
     | "Args"         !.   -> put(["Args" "--compile" "-"])
     | "Args" arg*:xs !.   -> Counter():next
@@ -9,4 +9,3 @@ Cli {
     | "--copy"    .:x     -> put(["Part"       next() read(x)])
     | "--embed"   .:x .:y -> put(["Part"       next() {x " = " repr(read(y)) "\n"}])
     | "--compile" .:x     -> put(["SourceCode" next() read(x)])
-}

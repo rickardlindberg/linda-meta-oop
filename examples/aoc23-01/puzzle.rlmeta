@@ -1,23 +1,20 @@
-CLI {
+actor CLI =
     run = "Args" .:input !. -> put(["File" read(input)])
-}
 
-Solver {
+actor Solver =
     run = "File" [input:x] -> put(["Numbers" ~x])
     input = line*:xs !. -> xs
     line = char*:xs '\n' -> [~~xs]
     char =
         | '0'-'9':x -> [int(x)]
         | !'\n' .   -> []
-}
 
-Solver2 {
+actor Solver2 =
     run = "File" [input:x] -> put(["Lines" ~x])
     input = line*:xs !. -> xs
     line = (!'\n' .)*:xs '\n' -> [xs xs]
-}
 
-Lines {
+actor Lines =
     run = "Lines" line*:xs !. -> put(["Numbers" ~xs])
     line = [[nextDigit:x] [(. !(!nextDigit))* nextDigit:y]] -> [x y]
     nextDigit =
@@ -32,12 +29,10 @@ Lines {
         | 'nine'            -> 9
         | '1'-'9':x         -> x
         | !'\n' . nextDigit
-}
 
-Numbers {
+actor Numbers =
     run = "Numbers" item*:xs !. -> put(["Result" sum(xs)])
     item = [add:x] -> x
     add =
         | .:x (. !(!.))* .:y -> int({ x y })
         | .:x                -> int({ x x })
-}

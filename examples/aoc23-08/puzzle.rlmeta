@@ -1,4 +1,4 @@
-Puzzle {
+actor Puzzle =
     run =
         | "Args" .:input !. -> put(["File" read(input)])
         | "File" [map:x] !. -> put(x)
@@ -7,15 +7,13 @@ Puzzle {
     node = name:x ' = (' name:y ', ' name:z ')\n'
         -> dictSet(nodes x dict([["L" y] ["R" z]]))
     name = .:x .:y .:z -> { x y z }
-}
 
 def dictSet(d, key, value):
     d[key] = value
 
-PrepareSolver1 {
+actor PrepareSolver1 =
     run = "Map" .:directions .:nodes !.
         -> put(["Result" solve(directions nodes)])
-}
 
 def solve(directions, nodes):
     node = "AAA"
@@ -27,10 +25,9 @@ def solve(directions, nodes):
         index = (index + 1) % len(directions)
     return steps
 
-PrepareSolver2 {
+actor PrepareSolver2 =
     run = "Map" .:directions .:nodes !.
         -> put(["Result" solve2(directions nodes)])
-}
 
 def solve2(directions, nodes):
     things = []
