@@ -23,22 +23,22 @@ def run_gives(actors, message, expected):
 
 if __name__ == "__main__":
     run_gives(
-        [CLI(), Parser(), Differ(), Summer()],
+        [CLI(), Parser(), ForwardExtrapolator(), Summer()],
         ["Args", "example.txt"],
         [["Result", 114]]
     )
     run_gives(
-        [CLI(), Parser(), Differ(), Summer()],
+        [CLI(), Parser(), ForwardExtrapolator(), Summer()],
         ["Args", "input.txt"],
         [["Result", 1916822650]]
     )
     run_gives(
-        [CLI(), Parser(), Backwards(), Summer()],
+        [CLI(), Parser(), BackwardsExtrapolator(), Summer()],
         ["Args", "example.txt"],
         [["Result", 2]]
     )
     run_gives(
-        [CLI(), Parser(), Backwards(), Summer()],
+        [CLI(), Parser(), BackwardsExtrapolator(), Summer()],
         ["Args", "input.txt"],
         [["Result", 966]]
     )

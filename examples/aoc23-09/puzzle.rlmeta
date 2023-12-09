@@ -1,23 +1,23 @@
 CLI {
-    run = "Args" .:input !. -> put(["File" read(input)])
+    run     = "Args" .:input !.        -> put(["File" read(input)])
 }
 
 Parser {
-    run = "File" [entries:x] !. -> put(x)
-    entries = entry*:xs !. -> ["Entries" ~xs]
-    entry = ^number*:xs ^'\n' -> ["Entry" ~xs]
-    number = sign:x digit:y digit*:ys -> int({x y ys})
-    sign = '-' | -> ""
-    digit = '0'-'9'
-    space = ' '*
+    run     = "File" [entries:x] !.    -> put(x)
+    entries = entry*:xs !.             -> ["Entries" ~xs]
+    entry   = ^number*:xs ^'\n'        -> ["Entry" ~xs]
+    number  = sign:x digit:y digit*:ys -> int({x y ys})
+    sign    = '-' | -> ""
+    digit   = '0'-'9'
+    space   = ' '*
 }
 
-Differ {
-    run = "Entries" diff*:xs !. -> put(["Diffs" ~xs])
-    diff = ["Entry" .*:xs !.] -> diff(xs)
+ForwardExtrapolator {
+    run         = "Entries" extrapolate*:xs !. -> put(["Extrapolated" ~xs])
+    extrapolate = ["Entry" .*:xs !.]           -> extrapolateForward(xs)
 }
 
-def diff(numbers):
+def extrapolateForward(numbers):
     if sum(numbers) == 0:
         return 0
     else:
@@ -26,14 +26,14 @@ def diff(numbers):
         for number in numbers[1:]:
             next.append(number - previous)
             previous = number
-        return numbers[-1] + diff(next)
+        return numbers[-1] + extrapolateForward(next)
 
-Backwards {
-    run = "Entries" diff*:xs !. -> put(["Diffs" ~xs])
-    diff = ["Entry" .*:xs !.] -> backwards(xs)
+BackwardsExtrapolator {
+    run         = "Entries" extrapolate*:xs !. -> put(["Extrapolated" ~xs])
+    extrapolate = ["Entry" .*:xs !.]           -> extrapolateBackwards(xs)
 }
 
-def backwards(numbers):
+def extrapolateBackwards(numbers):
     if sum(numbers) == 0:
         return 0
     else:
@@ -42,9 +42,8 @@ def backwards(numbers):
         for number in numbers[1:]:
             next.append(number - previous)
             previous = number
-        return numbers[0] - backwards(next)
+        return numbers[0] - extrapolateBackwards(next)
 
 Summer {
-    run = "Diffs" .*:xs !. -> put(["Result" sum(xs)])
+    run = "Extrapolated" .*:xs !. -> put(["Result" sum(xs)])
 }
-
