@@ -1,30 +1,32 @@
 actor CLI =
-    run = "Args" .:input !. -> put(["File" read(input)])
+    "Args" .:input !. -> put(["File" read(input)])
 
 actor HandParser =
-    run = "File" [hand*:xs !.] !. -> put(["Hands" ~xs])
-    hand = card*:xs ^number:y '\n' -> ["Card" y ~xs]
-    card =
-        | 'A'
-        | 'K'
-        | 'Q'
-        | 'J'
-        | 'T'
-        | '2'-'9'
-    number = digit:x digit*:xs -> int({x xs})
-    digit = '0'-'9'
-    space = ' '*
+    "File" [hand*:xs !.] !. -> put(["Hands" ~xs])
+    where
+        hand = card*:xs ^number:y '\n' -> ["Card" y ~xs]
+        card =
+            | 'A'
+            | 'K'
+            | 'Q'
+            | 'J'
+            | 'T'
+            | '2'-'9'
+        number = digit:x digit*:xs -> int({x xs})
+        digit = '0'-'9'
+        space = ' '*
 
 actor CardRanker =
-    run = "Hands" rank*:xs !. -> put(["RankedHands" ~xs])
-    rank = ["Card" .:bid rankCard*:xs !.] -> ["RankedHand" bid totalRank(xs) ~xs]
-    rankCard =
-        | "A"       -> 14
-        | "K"       -> 13
-        | "Q"       -> 12
-        | "J"       -> 11
-        | "T"       -> 10
-        | '2'-'9':x -> int(x)
+    "Hands" rank*:xs !. -> put(["RankedHands" ~xs])
+    where
+        rank = ["Card" .:bid rankCard*:xs !.] -> ["RankedHand" bid totalRank(xs) ~xs]
+        rankCard =
+            | "A"       -> 14
+            | "K"       -> 13
+            | "Q"       -> 12
+            | "J"       -> 11
+            | "T"       -> 10
+            | '2'-'9':x -> int(x)
 
 def totalRank(cards):
     map = {}
@@ -51,15 +53,16 @@ def totalRank(cards):
         return 0
 
 actor CardRankerJoker =
-    run = "Hands" rank*:xs !. -> put(["RankedHands" ~xs])
-    rank = ["Card" .:bid rankCard*:xs !.] -> ["RankedHand" bid totalRankJoker(xs) ~xs]
-    rankCard =
-        | "A"       -> 13
-        | "K"       -> 12
-        | "Q"       -> 11
-        | "T"       -> 10
-        | '2'-'9':x -> int(x)
-        | "J"       -> 1
+    "Hands" rank*:xs !. -> put(["RankedHands" ~xs])
+    where
+        rank = ["Card" .:bid rankCard*:xs !.] -> ["RankedHand" bid totalRankJoker(xs) ~xs]
+        rankCard =
+            | "A"       -> 13
+            | "K"       -> 12
+            | "Q"       -> 11
+            | "T"       -> 10
+            | '2'-'9':x -> int(x)
+            | "J"       -> 1
 
 def totalRankJoker(cards):
     map = {}
@@ -95,15 +98,16 @@ def totalRankJoker(cards):
         return 0
 
 actor CardSorter =
-    run = "RankedHands" .*:xs !. -> put(["SortedHands" ~sortHands(xs)])
+    "RankedHands" .*:xs !. -> put(["SortedHands" ~sortHands(xs)])
 
 def sortHands(hands):
     return sorted(hands, key=lambda hand: hand[2:])
 
 actor CalculateWinnings =
-    run = "SortedHands" hand*:xs !.
+    "SortedHands" hand*:xs !.
         -> Counter():rank
         -> rank()
         -> put(["Result" sum(xs)])
-    hand = ["RankedHand" .:bid]
-        -> mul(rank() bid)
+    where
+        hand = ["RankedHand" .:bid]
+            -> mul(rank() bid)

@@ -1,38 +1,42 @@
 actor CLI =
-    run = "Args" .:input !. -> put(["File" read(input)])
+    "Args" .:input !. -> put(["File" read(input)])
 
 actor Solver =
-    run = "File" [input:x] -> put(["Numbers" ~x])
-    input = line*:xs !. -> xs
-    line = char*:xs '\n' -> [~~xs]
-    char =
-        | '0'-'9':x -> [int(x)]
-        | !'\n' .   -> []
+    "File" [input:x] -> put(["Numbers" ~x])
+    where
+        input = line*:xs !. -> xs
+        line = char*:xs '\n' -> [~~xs]
+        char =
+            | '0'-'9':x -> [int(x)]
+            | !'\n' .   -> []
 
 actor Solver2 =
-    run = "File" [input:x] -> put(["Lines" ~x])
-    input = line*:xs !. -> xs
-    line = (!'\n' .)*:xs '\n' -> [xs xs]
+    "File" [input:x] -> put(["Lines" ~x])
+    where
+        input = line*:xs !. -> xs
+        line = (!'\n' .)*:xs '\n' -> [xs xs]
 
 actor Lines =
-    run = "Lines" line*:xs !. -> put(["Numbers" ~xs])
-    line = [[nextDigit:x] [(. !(!nextDigit))* nextDigit:y]] -> [x y]
-    nextDigit =
-        | 'one'             -> 1
-        | 'two'             -> 2
-        | 'three'           -> 3
-        | 'four'            -> 4
-        | 'five'            -> 5
-        | 'six'             -> 6
-        | 'seven'           -> 7
-        | 'eight'           -> 8
-        | 'nine'            -> 9
-        | '1'-'9':x         -> x
-        | !'\n' . nextDigit
+    "Lines" line*:xs !. -> put(["Numbers" ~xs])
+    where
+        line = [[nextDigit:x] [(. !(!nextDigit))* nextDigit:y]] -> [x y]
+        nextDigit =
+            | 'one'             -> 1
+            | 'two'             -> 2
+            | 'three'           -> 3
+            | 'four'            -> 4
+            | 'five'            -> 5
+            | 'six'             -> 6
+            | 'seven'           -> 7
+            | 'eight'           -> 8
+            | 'nine'            -> 9
+            | '1'-'9':x         -> x
+            | !'\n' . nextDigit
 
 actor Numbers =
-    run = "Numbers" item*:xs !. -> put(["Result" sum(xs)])
-    item = [add:x] -> x
-    add =
-        | .:x (. !(!.))* .:y -> int({ x y })
-        | .:x                -> int({ x x })
+    "Numbers" item*:xs !. -> put(["Result" sum(xs)])
+    where
+        item = [add:x] -> x
+        add =
+            | .:x (. !(!.))* .:y -> int({ x y })
+            | .:x                -> int({ x x })

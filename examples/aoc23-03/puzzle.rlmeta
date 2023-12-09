@@ -1,67 +1,72 @@
 actor CLI =
-    run = "Args" .:input !. -> put(["File" read(input)])
+    "Args" .:input !. -> put(["File" read(input)])
 
 actor GridParser =
-    run = "File" [row*:xs] !. -> Counter():nextRow
-                              -> put(["Grid" ~xs])
-    row = col*:xs '\n'        -> Counter():nextCol
-                              -> nextRow():row
-                              -> xs
-    col = !'\n' .:x           -> [x row nextCol()]
+    "File" [row*:xs] !. -> Counter():nextRow
+                        -> put(["Grid" ~xs])
+    where
+        row = col*:xs '\n'        -> Counter():nextCol
+                                  -> nextRow():row
+                                  -> xs
+        col = !'\n' .:x           -> [x row nextCol()]
 
 actor EngineParser =
-    run = "Grid" row*:xs -> []:numbers
-                         -> []:symbols
-                         -> xs
-                         -> put(["Engine" ["Numbers" ~numbers]
-                                          ["Symbols" ~symbols]])
-    row = [col*:xs !.]   -> xs
-    col = number | symbol | .
-    number = digits:x -> []:positions
-                      -> append(numbers [x ~positions])
-    digits =
-        | digit:x digit*:xs -> int({x xs})
-    digit =
-        | [['0'-'9':x] .:row .:col !.] -> append(positions [row col]) -> x
-    symbol =
-        | [!"." .:x    .:row .:col !.] -> append(symbols [x row col])
+    "Grid" row*:xs -> []:numbers
+                   -> []:symbols
+                   -> xs
+                   -> put(["Engine" ["Numbers" ~numbers]
+                                    ["Symbols" ~symbols]])
+    where
+        row = [col*:xs !.]   -> xs
+        col = number | symbol | .
+        number = digits:x -> []:positions
+                          -> append(numbers [x ~positions])
+        digits =
+            | digit:x digit*:xs -> int({x xs})
+        digit =
+            | [['0'-'9':x] .:row .:col !.] -> append(positions [row col]) -> x
+        symbol =
+            | [!"." .:x    .:row .:col !.] -> append(symbols [x row col])
 
 actor ExpandAdjecant =
-    run = "Engine" ["Numbers" number*:xs !.]
-                   ["Symbols" .*:ys !.]
+    "Engine" ["Numbers" number*:xs !.]
+             ["Symbols" .*:ys !.]
         -> put(["FlatEngine" ["Numbers" ~xs] ["Symbols" ~ys]])
-    number = [.:x positions:xs] -> [x ~xs]
-    positions =
-        | [.:row .:col] !. ->
-            [[sub(row 1) sub(col 1)] [sub(row 1) col] [sub(row 1) add(col 1)]
-             [    row    sub(col 1)]                  [    row    add(col 1)]
-             [add(row 1) sub(col 1)] [add(row 1) col] [add(row 1) add(col 1)]]
-        | [.:row .:col] positionsRest:xs ->
-            [[sub(row 1) sub(col 1)] [sub(row 1) col]
-             [    row    sub(col 1)]
-             [add(row 1) sub(col 1)] [add(row 1) col] ~xs]
-    positionsRest =
-        | [.:row .:col] !. ->
-            [[sub(row 1) col] [sub(row 1) add(col 1)]
-                              [    row    add(col 1)]
-             [add(row 1) col] [add(row 1) add(col 1)]]
-        | [.:row .:col] positionsRest:xs ->
-            [[sub(row 1) col]
-             [add(row 1) col] ~xs]
+    where
+        number = [.:x positions:xs] -> [x ~xs]
+        positions =
+            | [.:row .:col] !. ->
+                [[sub(row 1) sub(col 1)] [sub(row 1) col] [sub(row 1) add(col 1)]
+                 [    row    sub(col 1)]                  [    row    add(col 1)]
+                 [add(row 1) sub(col 1)] [add(row 1) col] [add(row 1) add(col 1)]]
+            | [.:row .:col] positionsRest:xs ->
+                [[sub(row 1) sub(col 1)] [sub(row 1) col]
+                 [    row    sub(col 1)]
+                 [add(row 1) sub(col 1)] [add(row 1) col] ~xs]
+        positionsRest =
+            | [.:row .:col] !. ->
+                [[sub(row 1) col] [sub(row 1) add(col 1)]
+                                  [    row    add(col 1)]
+                 [add(row 1) col] [add(row 1) add(col 1)]]
+            | [.:row .:col] positionsRest:xs ->
+                [[sub(row 1) col]
+                 [add(row 1) col] ~xs]
 
 actor PartSummer =
-    run = "FlatEngine" ["Numbers" number*:xs !.]
-                       ["Symbols" symbol*:ys !.]
-            -> ys:symbols
-            -> put(["Result" sum(xs)])
-    symbol = [. .:row .:col] -> [row col]
-    number = [.:x .*:ys] -> countIfOverlap(x ys symbols)
+    "FlatEngine" ["Numbers" number*:xs !.]
+                 ["Symbols" symbol*:ys !.]
+        -> ys:symbols
+        -> put(["Result" sum(xs)])
+    where
+        symbol = [. .:row .:col] -> [row col]
+        number = [.:x .*:ys] -> countIfOverlap(x ys symbols)
 
 actor GearSummer =
-    run = "FlatEngine" ["Numbers" .*:xs !.]
-                       ["Symbols" symbol*:ys !.]
-            -> xs:numbers
-            -> put(["Result" sum(ys)])
-    symbol =
-        | ["*" .:row .:col] -> getRatio(row col numbers)
-        | .                 -> 0
+    "FlatEngine" ["Numbers" .*:xs !.]
+                 ["Symbols" symbol*:ys !.]
+        -> xs:numbers
+        -> put(["Result" sum(ys)])
+    where
+        symbol =
+            | ["*" .:row .:col] -> getRatio(row col numbers)
+            | .                 -> 0

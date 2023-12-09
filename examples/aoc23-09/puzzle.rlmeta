@@ -1,18 +1,20 @@
 actor CLI =
-    run     = "Args" .:input !.        -> put(["File" read(input)])
+    "Args" .:input !.        -> put(["File" read(input)])
 
 actor Parser =
-    run     = "File" [entries:x] !.    -> put(x)
-    entries = entry*:xs !.             -> ["Entries" ~xs]
-    entry   = ^number*:xs ^'\n'        -> ["Entry" ~xs]
-    number  = sign:x digit:y digit*:ys -> int({x y ys})
-    sign    = '-' | -> ""
-    digit   = '0'-'9'
-    space   = ' '*
+    "File" [entries:x] !.    -> put(x)
+    where
+        entries = entry*:xs !.             -> ["Entries" ~xs]
+        entry   = ^number*:xs ^'\n'        -> ["Entry" ~xs]
+        number  = sign:x digit:y digit*:ys -> int({x y ys})
+        sign    = '-' | -> ""
+        digit   = '0'-'9'
+        space   = ' '*
 
 actor ForwardExtrapolator =
-    run         = "Entries" extrapolate*:xs !. -> put(["Extrapolated" ~xs])
-    extrapolate = ["Entry" .*:xs !.]           -> extrapolateForward(xs)
+    "Entries" extrapolate*:xs !. -> put(["Extrapolated" ~xs])
+    where
+        extrapolate = ["Entry" .*:xs !.]           -> extrapolateForward(xs)
 
 def extrapolateForward(numbers):
     if sum(numbers) == 0:
@@ -26,8 +28,9 @@ def extrapolateForward(numbers):
         return numbers[-1] + extrapolateForward(next)
 
 actor BackwardsExtrapolator =
-    run         = "Entries" extrapolate*:xs !. -> put(["Extrapolated" ~xs])
-    extrapolate = ["Entry" .*:xs !.]           -> extrapolateBackwards(xs)
+    "Entries" extrapolate*:xs !. -> put(["Extrapolated" ~xs])
+    where
+        extrapolate = ["Entry" .*:xs !.]           -> extrapolateBackwards(xs)
 
 def extrapolateBackwards(numbers):
     if sum(numbers) == 0:
@@ -41,4 +44,4 @@ def extrapolateBackwards(numbers):
         return numbers[0] - extrapolateBackwards(next)
 
 actor Summer =
-    run = "Extrapolated" .*:xs !. -> put(["Result" sum(xs)])
+    "Extrapolated" .*:xs !. -> put(["Result" sum(xs)])

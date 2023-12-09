@@ -1,61 +1,64 @@
 actor CLI =
-    run = "Args" .:input !. -> put(["File" read(input)])
+    "Args" .:input !. -> put(["File" read(input)])
 
 actor AlmanacParser =
-    run = "File" [contents:x] !. -> put(x)
-    contents =
-        seeds:a
-        seedToSoil:b soilToFertilizer:c fertilizerToWater:d
-        waterToLight:e lightToTemp:f tempToHumidity:g humidityToLocation:h !.
-        -> b -> c -> d -> e -> f -> g -> h
-        -> a
-    seeds =
-        'seeds:' ^number*:xs '\n\n' -> ["Seeds" ~xs]
-    seedToSoil =
-        'seed-to-soil map:\n' map:x '\n' -> spawn(Mapper("Seed" "Soil" x))
-    soilToFertilizer =
-        'soil-to-fertilizer map:\n' map:x '\n' -> spawn(Mapper("Soil" "Fertilizer" x))
-    fertilizerToWater =
-        'fertilizer-to-water map:\n' map:x '\n' -> spawn(Mapper("Fertilizer" "Water" x))
-    waterToLight =
-        'water-to-light map:\n' map:x '\n' -> spawn(Mapper("Water" "Light" x))
-    lightToTemp =
-        'light-to-temperature map:\n' map:x '\n' -> spawn(Mapper("Light" "Temp" x))
-    tempToHumidity =
-        'temperature-to-humidity map:\n' map:x '\n' -> spawn(Mapper("Temp" "Humidity" x))
-    humidityToLocation =
-        'humidity-to-location map:\n' map:x -> spawn(Mapper("Humidity" "Location" x))
+    "File" [contents:x] !. -> put(x)
+    where
+        contents =
+            seeds:a
+            seedToSoil:b soilToFertilizer:c fertilizerToWater:d
+            waterToLight:e lightToTemp:f tempToHumidity:g humidityToLocation:h !.
+            -> b -> c -> d -> e -> f -> g -> h
+            -> a
+        seeds =
+            'seeds:' ^number*:xs '\n\n' -> ["Seeds" ~xs]
+        seedToSoil =
+            'seed-to-soil map:\n' map:x '\n' -> spawn(Mapper("Seed" "Soil" x))
+        soilToFertilizer =
+            'soil-to-fertilizer map:\n' map:x '\n' -> spawn(Mapper("Soil" "Fertilizer" x))
+        fertilizerToWater =
+            'fertilizer-to-water map:\n' map:x '\n' -> spawn(Mapper("Fertilizer" "Water" x))
+        waterToLight =
+            'water-to-light map:\n' map:x '\n' -> spawn(Mapper("Water" "Light" x))
+        lightToTemp =
+            'light-to-temperature map:\n' map:x '\n' -> spawn(Mapper("Light" "Temp" x))
+        tempToHumidity =
+            'temperature-to-humidity map:\n' map:x '\n' -> spawn(Mapper("Temp" "Humidity" x))
+        humidityToLocation =
+            'humidity-to-location map:\n' map:x -> spawn(Mapper("Humidity" "Location" x))
 
-    map = mapLine*
-    mapLine = ^number:x ^number:y ^number:z ^'\n' -> [x y z]
-    number = '0'-'9':x '0'-'9'*:xs -> int({x xs})
-    space = ' '*
+        map = mapLine*
+        mapLine = ^number:x ^number:y ^number:z ^'\n' -> [x y z]
+        number = '0'-'9':x '0'-'9'*:xs -> int({x xs})
+        space = ' '*
 
 actor Mapper #source #target #map =
-    run = #source .:id .:number -> put([target id doMap(map number)])
+    #source .:id .:number -> put([target id doMap(map number)])
 
 actor Seeder =
-    run = "Seeds" seed*:xs !.
+    "Seeds" seed*:xs !.
         -> Counter():next
         -> xs
         -> spawn(PartCollector(0 sub(next() 1) [] ["Locations"]))
-    seed = .:x -> put(["Seed" next() x])
+    where
+        seed = .:x -> put(["Seed" next() x])
 
 actor SeederRange =
-    run =
-        "Seeds" seed*:xs !.
-            -> Counter():next
-            -> xs
-            -> spawn(PartCollector(0 sub(next() 1) [] ["Locations"]))
-    seed = .:start .:len -> put(["Seed" next() [[start len]]])
+    "Seeds" seed*:xs !.
+        -> Counter():next
+        -> xs
+        -> spawn(PartCollector(0 sub(next() 1) [] ["Locations"]))
+    where
+        seed = .:start .:len -> put(["Seed" next() [[start len]]])
 
 actor LocationMapper =
-    run = "Location" .*:xs -> put(["Part" ~xs])
+    "Location" .*:xs -> put(["Part" ~xs])
 
 actor LocationMinimizer =
-    run = "Locations" [.*:xs] -> put(["Result" min(xs)])
+    "Locations" [.*:xs] -> put(["Result" min(xs)])
 
 actor LocationMinimizerRange =
-    run = "Locations" [locationRange*:xs !.] !. -> put(["Result" min([~~xs])])
-    locationRange = [minLocation*:xs !.] -> xs
-    minLocation = [.:x . !.] -> x
+    "Locations" [locationRange*:xs !.] !. -> put(["Result" min([~~xs])])
+    where
+        locationRange = [minLocation*:xs !.] -> xs
+        minLocation = [.:x . !.] -> x

@@ -1,18 +1,18 @@
 actor Puzzle =
-    run =
-        | "Args" .:input !. -> put(["File" read(input)])
-        | "File" [map:x] !. -> put(x)
-    map = dir*:xs '\n\n' node*:ys !. -> dict():nodes -> ys -> ["Map" xs nodes]
-    dir = 'R' | 'L'
-    node = name:x ' = (' name:y ', ' name:z ')\n'
-        -> dictSet(nodes x dict([["L" y] ["R" z]]))
-    name = .:x .:y .:z -> { x y z }
+    | "Args" .:input !. -> put(["File" read(input)])
+    | "File" [map:x] !. -> put(x)
+    where
+        map = dir*:xs '\n\n' node*:ys !. -> dict():nodes -> ys -> ["Map" xs nodes]
+        dir = 'R' | 'L'
+        node = name:x ' = (' name:y ', ' name:z ')\n'
+            -> dictSet(nodes x dict([["L" y] ["R" z]]))
+        name = .:x .:y .:z -> { x y z }
 
 def dictSet(d, key, value):
     d[key] = value
 
 actor PrepareSolver1 =
-    run = "Map" .:directions .:nodes !.
+    "Map" .:directions .:nodes !.
         -> put(["Result" solve(directions nodes)])
 
 def solve(directions, nodes):
@@ -26,7 +26,7 @@ def solve(directions, nodes):
     return steps
 
 actor PrepareSolver2 =
-    run = "Map" .:directions .:nodes !.
+    "Map" .:directions .:nodes !.
         -> put(["Result" solve2(directions nodes)])
 
 def solve2(directions, nodes):

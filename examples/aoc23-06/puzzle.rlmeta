@@ -1,35 +1,39 @@
 actor CLI =
-    run = "Args" .:input !. -> put(["File" read(input)])
+    "Args" .:input !. -> put(["File" read(input)])
 
 actor RecordParser =
-    run = "File" [races:xs] !. -> put(["Records" ~xs])
-    races =
-        'Time:' ^number*:xs ^'\n'
-        'Distance:' ^number*:ys ^'\n'
-        !. -> zip("Record" xs ys)
-    number = digit:x digit*:xs -> int({x xs})
-    digit = '0'-'9'
-    space = ' '*
+    "File" [races:xs] !. -> put(["Records" ~xs])
+    where
+        races =
+            'Time:' ^number*:xs ^'\n'
+            'Distance:' ^number*:ys ^'\n'
+            !. -> zip("Record" xs ys)
+        number = digit:x digit*:xs -> int({x xs})
+        digit = '0'-'9'
+        space = ' '*
 
 actor RecordParserBetterKerning =
-    run = "File" [races:xs] !. -> put(["Records" ~xs])
-    races =
-        'Time:' ^number*:xs ^'\n'
-        'Distance:' ^number*:ys ^'\n'
-        !. -> zip("Record" xs ys)
-    number = ^digit:x ^digit*:xs -> int({x xs})
-    digit = '0'-'9'
-    space = ' '*
+    "File" [races:xs] !. -> put(["Records" ~xs])
+    where
+        races =
+            'Time:' ^number*:xs ^'\n'
+            'Distance:' ^number*:ys ^'\n'
+            !. -> zip("Record" xs ys)
+        number = ^digit:x ^digit*:xs -> int({x xs})
+        digit = '0'-'9'
+        space = ' '*
 
 actor MarginCalculator =
-    run = "Records" record*:xs !. -> put(["Margins" ~xs])
-    record = ["Record" .:time .:distance !.] -> margin(time distance)
+    "Records" record*:xs !. -> put(["Margins" ~xs])
+    where
+        record = ["Record" .:time .:distance !.] -> margin(time distance)
 
 actor MarginProduct =
-    run = "Margins" product:x !. -> put(["Result" x])
-    product =
-        | .:x !. -> x
-        | .:x product:y -> mul(x y)
+    "Margins" product:x !. -> put(["Result" x])
+    where
+        product =
+            | .:x !. -> x
+            | .:x product:y -> mul(x y)
 
 def zip(name, xs, ys):
     assert len(xs) == len(ys)

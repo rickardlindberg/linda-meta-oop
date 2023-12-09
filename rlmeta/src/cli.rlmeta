@@ -1,11 +1,11 @@
 actor Cli =
-    run =
-        | "Args"         !.   -> put(["Args" "--compile" "-"])
-        | "Args" arg*:xs !.   -> Counter():next
-                              -> xs
-                              -> spawn(PartCollector(0 decrement(next()) [] ["Write"]))
-    arg =
-        | "--support"         -> put(["Part"       next() SUPPORT])
-        | "--copy"    .:x     -> put(["Part"       next() read(x)])
-        | "--embed"   .:x .:y -> put(["Part"       next() {x " = " repr(read(y)) "\n"}])
-        | "--compile" .:x     -> put(["SourceCode" next() read(x)])
+    | "Args"         !.   -> put(["Args" "--compile" "-"])
+    | "Args" arg*:xs !.   -> Counter():next
+                          -> xs
+                          -> spawn(PartCollector(0 decrement(next()) [] ["Write"]))
+    where
+        arg =
+            | "--support"         -> put(["Part"       next() SUPPORT])
+            | "--copy"    .:x     -> put(["Part"       next() read(x)])
+            | "--embed"   .:x .:y -> put(["Part"       next() {x " = " repr(read(y)) "\n"}])
+            | "--compile" .:x     -> put(["SourceCode" next() read(x)])

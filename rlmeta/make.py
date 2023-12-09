@@ -42,11 +42,11 @@ def test(rlmeta):
     log("Test: Has its own support library")
     assert run_rlmeta(rlmeta, ["--support"]) == read("src/support.py")
     log("Test: Disallow semantic action in the middle")
-    run_rlmeta(rlmeta, [], b"actor Grammar = x = . -> [] .", expect_failure=True)
+    run_rlmeta(rlmeta, [], b"actor Grammar = . -> [] .", expect_failure=True)
     log("Test: Call unknown rule foo")
     assert test_grammar(
         rlmeta,
-        b"actor Grammar = run = % | .:x -> print(x)",
+        b"actor Grammar = % | .:x -> print(x)",
         b"run_simulation(actors=[Grammar()], messages=[['foo']], extra={'print': print})"
     ) == b"foo\n"
     log("Test: unittest")
@@ -132,7 +132,7 @@ class RlmetaTests(unittest.TestCase):
     def test_parse_optimize_1(self):
         parsed_messages = self.run_simulation(
             [rlmeta_module.Parser()],
-            [["SourceCode", 0, "actor Grammar = x = ^'hello'"]]
+            [["SourceCode", 0, "actor Grammar = ^'hello'"]]
         )
         self.assertEqual(parsed_messages,
             [['Ast',
@@ -141,7 +141,7 @@ class RlmetaTests(unittest.TestCase):
                 'Grammar',
                 [],
                 ['Rule',
-                 'x',
+                 'run',
                  ['Or',
                   ['Scope',
                    ['And',
@@ -152,7 +152,8 @@ class RlmetaTests(unittest.TestCase):
                       ['MatchObject', ['Eq', 'e']],
                       ['MatchObject', ['Eq', 'l']],
                       ['MatchObject', ['Eq', 'l']],
-                      ['MatchObject', ['Eq', 'o']]]]]]]]]]]]
+                      ['MatchObject', ['Eq', 'o']]]]]]]],
+                ]]]]
         )
         optimized_messages = self.run_simulation(
             [rlmeta_module.Optimizer()],
@@ -165,7 +166,7 @@ class RlmetaTests(unittest.TestCase):
                 'Grammar',
                 [],
                 ['Rule',
-                 'x',
+                 'run',
                  ['Scope',
                   ['And',
                    ['MatchRule', 'space'],
@@ -173,13 +174,14 @@ class RlmetaTests(unittest.TestCase):
                    ['MatchObject', ['Eq', 'e']],
                    ['MatchObject', ['Eq', 'l']],
                    ['MatchObject', ['Eq', 'l']],
-                   ['MatchObject', ['Eq', 'o']]]]]]]]]
+                   ['MatchObject', ['Eq', 'o']]]]],
+                ]]]]
         )
 
     def test_parse_optimize_2(self):
         parsed_and_optimized = self.run_simulation(
             [rlmeta_module.Parser(), rlmeta_module.Optimizer()],
-            [["SourceCode", 0, "actor Grammar = x = ('a' | 'b')*"]]
+            [["SourceCode", 0, "actor Grammar = ('a' | 'b')*"]]
         )
         self.assertEqual(parsed_and_optimized,
             [['Optimized',
@@ -188,12 +190,13 @@ class RlmetaTests(unittest.TestCase):
                 'Grammar',
                 [],
                 ['Rule',
-                 'x',
+                 'run',
                  ['Scope',
                   ['Star',
                    ['Or',
                     ['Scope', ['MatchObject', ['Eq', 'a']]],
-                    ['Scope', ['MatchObject', ['Eq', 'b']]]]]]]]]]]
+                    ['Scope', ['MatchObject', ['Eq', 'b']]]]]]],
+                ]]]]
         )
 
 if __name__ == "__main__":
