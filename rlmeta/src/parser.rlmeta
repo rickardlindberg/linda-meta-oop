@@ -2,10 +2,10 @@ Parser {
   run =
     | "SourceCode" .:p [file:x]               -> put(["Ast" p x])
   file =
-    | ^actor*:xs space !.                     -> xs
-  actor =
+    | ^body*:xs space !.                      -> xs
+  body =
     | name:x ^field*:ys ^'{' ^rule*:zs ^'}'   -> ["Actor" x ys ~zs]
-    | 'def ' name:x restLine:y indented*:zs   -> ["Native" x {"def " x y zs}]
+    | keyDef ^name:x restLine:y indented*:zs  -> ["Native" x {"def " x y zs}]
   field =
     | '#' name:x                              -> ["Field" x]
   rule =
@@ -65,7 +65,10 @@ Parser {
   escape    = '\\' -> "\\" | '\'' -> "'"
             | '"'  -> "\"" | 'n'  -> "\n"
   number    = '0'-'9':x '0'-'9'*:xs           -> int({ x xs })
-  name      = nameStart:x nameChar*:xs        -> { x xs }
+  name      = !reserved nameStart:x nameChar*:xs -> { x xs }
+  reserved  = keyDef | keyActor
+  keyDef    = 'def'   !nameChar
+  keyActor  = 'actor' !nameChar
   nameStart = 'a'-'z' | 'A'-'Z'
   nameChar  = 'a'-'z' | 'A'-'Z' | '0'-'9'
   space     = (' ' | '\n')*
