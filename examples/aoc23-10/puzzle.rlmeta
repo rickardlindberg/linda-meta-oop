@@ -12,68 +12,51 @@ actor Parser =
         col   = shape:z     -> nextPosX():posX
                             -> ["Node" posX posY ~z]
         shape =
-            | '|' -> [[posX decrement(posY)] [posX increment(posY)]]
-            | '-' -> [[decrement(posX) posY] [increment(posX) posY]]
-            | 'L' -> [[posX decrement(posY)] [increment(posX) posY]]
-            | 'J' -> [[posX decrement(posY)] [decrement(posX) posY]]
-            | '7' -> [[decrement(posX) posY] [posX increment(posY)]]
-            | 'F' -> [[increment(posX) posY] [posX increment(posY)]]
+            | '|' -> [pos(posX decrement(posY)) pos(posX increment(posY))]
+            | '-' -> [pos(decrement(posX) posY) pos(increment(posX) posY)]
+            | 'L' -> [pos(posX decrement(posY)) pos(increment(posX) posY)]
+            | 'J' -> [pos(posX decrement(posY)) pos(decrement(posX) posY)]
+            | '7' -> [pos(decrement(posX) posY) pos(posX increment(posY))]
+            | 'F' -> [pos(increment(posX) posY) pos(posX increment(posY))]
             | '.' -> []
             | 'S' -> ["START"]
 
 actor Flattener =
-    | "Map" indexNode*:xs !.
-        -> Counter():nextId
-        -> dict():nodeIds
-        -> put(["IndexedMap" nodeIds ~xs])
-    | "IndexedMap" .:nodeIds flattenNode*:xs !.
-        -> nodeIds:nodeIds
-        -> put(["FlatMap" ~xs])
+    "Map" node*:xs !. -> put(["Grid" dict(xs)])
     where
-        indexNode = ["Node" .:x .:y .*:zs]
-            -> storePosToId(nodeIds x y nextId())
-            -> zs
-        flattenNode =
-            | ["START" !.]         -> "START"
-            | [flattenEdge*:zs !.] -> [~~zs]
-        flattenEdge =
-            [.:a .:b !.] -> lookupPosToId(nodeIds a b)
+        node =
+            | ["Node" .:x .:y "START" !.] -> [pos(x y) "START"]
+            | ["Node" .:x .:y .*:zs   !.] -> [pos(x y) zs]
 
-def storePosToId nodeIds x y id =
-    nodeIds[(x, y)] = id
-
-def lookupPosToId nodeIds x y =
-    if (x, y) in nodeIds:
-        return [nodeIds[(x, y)]]
-    else:
-        return []
+def pos x y =
+    return (x, y)
 
 actor StepMaximizer =
-    "FlatMap" .*:nodes !. -> put(["Result" maxSteps(nodes)])
+    "Grid" .:grid !. -> put(["Result" maxSteps(grid)])
 
-def maxSteps nodes =
+def maxSteps grid =
     def furthest(id):
         visited = {id}
-        nextNodes = nodes[id]
+        nextNodes = grid.get(id, [])
         steps = 0
         while nextNodes:
             steps += 1
             newNextNodes = []
             for nextNode in nextNodes:
                 visited.add(nextNode)
-                newNextNodes.extend(x for x in nodes[nextNode] if x not in visited)
+                newNextNodes.extend(x for x in grid.get(nextNode, []) if x not in visited)
             nextNodes = newNextNodes
         return steps
-    startNode = None
+    startPos = None
     startEdges = []
-    for id in range(len(nodes)):
-        if nodes[id] == "START":
-            startNode = id
+    for pos in grid.keys():
+        if grid.get(pos) == "START":
+            startPos = pos
         else:
-            for next in nodes[id]:
-                if nodes[next] == "START":
-                    startEdges.append(id)
-    assert startNode is not None
+            for next in grid.get(pos, []):
+                if grid.get(next) == "START":
+                    startEdges.append(pos)
+    assert startPos is not None
     assert len(startEdges) == 2
-    nodes[startNode] = startEdges
-    return furthest(startNode)
+    grid[startPos] = startEdges
+    return furthest(startPos)
