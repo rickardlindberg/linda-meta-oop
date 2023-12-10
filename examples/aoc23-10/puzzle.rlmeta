@@ -35,7 +35,7 @@ actor Flattener =
             -> zs
         flattenNode =
             | ["START" !.]         -> "START"
-            | [flattenEdge*:zs !.] -> zs
+            | [flattenEdge*:zs !.] -> [~~zs]
         flattenEdge =
             [.:a .:b !.] -> lookupPosToId(nodeIds a b)
 
@@ -43,7 +43,10 @@ def storePosToId nodeIds x y id =
     nodeIds[(x, y)] = id
 
 def lookupPosToId nodeIds x y =
-    return nodeIds.get((x, y), None)
+    if (x, y) in nodeIds:
+        return [nodeIds[(x, y)]]
+    else:
+        return []
 
 actor StepMaximizer =
     "FlatMap" .*:nodes !. -> put(["Result" maxSteps(nodes)])
@@ -68,11 +71,9 @@ def maxSteps nodes =
             startNode = id
         else:
             for next in nodes[id]:
-                if next is not None and nodes[next] == "START":
+                if nodes[next] == "START":
                     startEdges.append(id)
-    if startNode is None:
-        return None
-    else:
-        assert len(startEdges) == 2
-        nodes[startNode] = startEdges
-        return furthest(startNode)
+    assert startNode is not None
+    assert len(startEdges) == 2
+    nodes[startNode] = startEdges
+    return furthest(startNode)
