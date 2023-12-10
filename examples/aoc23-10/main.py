@@ -51,3 +51,23 @@ if __name__ == "__main__":
         ["Args", "input.txt"],
         [['Result', 6786]]
     )
+    run_gives(
+        [CLI(), Parser(), Flattener(), TileCounter()],
+        ["Args", "example2.txt"],
+        [['Result', 1]]
+    )
+    run_gives(
+        [CLI(), Parser(), Flattener(), TileCounter()],
+        ["Args", "example3.txt"],
+        [['Result', 4]]
+    )
+    run_gives(
+        [CLI(), Parser(), Flattener(), TileCounter()],
+        ["Args", "example4.txt"],
+        [['Result', 8]]
+    )
+    run_gives(
+        [CLI(), Parser(), Flattener(), TileCounter()],
+        ["Args", "input.txt"],
+        [['Result', 495]]
+    )

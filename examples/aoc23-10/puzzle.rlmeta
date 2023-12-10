@@ -60,3 +60,39 @@ def maxSteps grid =
     assert len(startEdges) == 2
     grid[startPos] = startEdges
     return furthest(startPos)
+
+actor TileCounter =
+    "Grid" .:grid !. -> put(["Result" countTiles(grid)])
+
+def countTiles grid =
+    from polygonfiller import classify
+    polygon = findPolygon(grid)
+    count = 0
+    for x, y in grid.keys():
+        if classify(polygon, x, y) == ".":
+            count += 1
+    return count
+
+def findPolygon grid =
+    startPos = None
+    startEdges = []
+    for pos in grid.keys():
+        if grid.get(pos) == "START":
+            startPos = pos
+        else:
+            for next in grid.get(pos, []):
+                if grid.get(next) == "START":
+                    startEdges.append(pos)
+    assert startPos is not None
+    assert len(startEdges) == 2
+    grid[startPos] = startEdges
+    polygon = [startPos]
+    while True:
+        left, right = grid[polygon[-1]]
+        if left not in polygon:
+            polygon.append(left)
+        elif right not in polygon:
+            polygon.append(right)
+        else:
+            break
+    return polygon
