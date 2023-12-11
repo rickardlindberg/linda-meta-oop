@@ -24,14 +24,14 @@ actor GalaxyExpander #by =
 def expand galaxies by =
     xs, ys = findExpansionXY(galaxies)
     offset = 0
-    for expandX in sorted(xs):
+    for expandX in xs:
         galaxies = [
             (x+by, y) if x > offset+expandX else (x, y)
             for (x, y) in galaxies
         ]
         offset += by
     offset = 0
-    for expandY in sorted(ys):
+    for expandY in ys:
         galaxies = [
             (x, y+by) if y > offset+expandY else (x, y)
             for (x, y) in galaxies
@@ -45,14 +45,14 @@ def findExpansionXY galaxies =
     for x, y in galaxies:
         xs.add(x)
         ys.add(y)
-    expandXs = set()
+    expandXs = []
     for x in range(max(xs)):
         if x not in xs:
-            expandXs.add(x)
-    expandYs = set()
+            expandXs.append(x)
+    expandYs = []
     for y in range(max(ys)):
         if y not in ys:
-            expandYs.add(y)
+            expandYs.append(y)
     return (expandXs, expandYs)
 
 actor GalaxyPairer =
