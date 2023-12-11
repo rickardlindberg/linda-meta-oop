@@ -1,0 +1,87 @@
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [universe:x] !. -> put(x)
+    where
+        universe   = row*:xs !.  -> Counter():nextPosY
+                                 -> ["Galaxies" ~~~xs]
+        row        = col*:xs '\n'-> Counter():nextPosX
+                                 -> nextPosY():posY
+                                 -> xs
+        col        = shape:z     -> nextPosX():posX
+                                 -> z
+        shape =
+            | '#' -> [pos(posX posY)]
+            | '.' -> []
+
+def pos x y =
+    return (x, y)
+
+actor GalaxyExpander =
+    "Galaxies" .*:xs !. -> put(["Expanded" ~expand(xs)])
+
+def expand galaxies =
+    xs, ys = findExpansionXY(galaxies)
+    offset = 0
+    for expandX in sorted(xs):
+        galaxies = [
+            (x+1, y) if x > offset+expandX else (x, y)
+            for (x, y) in galaxies
+        ]
+        offset += 1
+    offset = 0
+    for expandY in sorted(ys):
+        galaxies = [
+            (x, y+1) if y > offset+expandY else (x, y)
+            for (x, y) in galaxies
+        ]
+        offset += 1
+    return galaxies
+
+def findExpansionXY galaxies =
+    xs = set()
+    ys = set()
+    for x, y in galaxies:
+        xs.add(x)
+        ys.add(y)
+    expandXs = set()
+    for x in range(max(xs)):
+        if x not in xs:
+            expandXs.add(x)
+    expandYs = set()
+    for y in range(max(ys)):
+        if y not in ys:
+            expandYs.add(y)
+    return (expandXs, expandYs)
+
+actor GalaxyPairer =
+    "Expanded" .*:xs !. -> put(["Pairs" ~pairs(xs)])
+
+def pairs items =
+    pairs = []
+    remaining = list(items)
+    while remaining:
+        first = remaining.pop(0)
+        for second in remaining:
+            pairs.append((first, second))
+    return pairs
+
+def pairs items =
+    pairs = []
+    remaining = list(items)
+    while remaining:
+        first = remaining.pop(0)
+        for second in remaining:
+            pairs.append((first, second))
+    return pairs
+
+actor ShortestPathSummer =
+    "Pairs" short*:xs !. -> put(["Result" sum(xs)])
+    where
+        short = [.:left .:right !.] -> shortestPath(left right)
+
+def shortestPath left right =
+    x1, y1 = left
+    x2, y2 = right
+    return abs(x1-x2) + abs(y1-y2)
