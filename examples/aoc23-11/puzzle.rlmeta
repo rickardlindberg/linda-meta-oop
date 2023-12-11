@@ -67,15 +67,6 @@ def pairs items =
             pairs.append((first, second))
     return pairs
 
-def pairs items =
-    pairs = []
-    remaining = list(items)
-    while remaining:
-        first = remaining.pop(0)
-        for second in remaining:
-            pairs.append((first, second))
-    return pairs
-
 actor ShortestPathSummer =
     "Pairs" short*:xs !. -> put(["Result" sum(xs)])
     where
