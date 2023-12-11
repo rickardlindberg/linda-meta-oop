@@ -4,13 +4,13 @@ actor CLI =
 actor Parser =
     "File" [universe:x] !. -> put(x)
     where
-        universe   = row*:xs !.  -> Counter():nextPosY
-                                 -> ["Galaxies" ~~~xs]
-        row        = col*:xs '\n'-> Counter():nextPosX
-                                 -> nextPosY():posY
-                                 -> xs
-        col        = shape:z     -> nextPosX():posX
-                                 -> z
+        universe   = row*:xs !.   -> Counter():nextPosY
+                                  -> ["Universe" ~~~xs]
+        row        = col*:xs '\n' -> Counter():nextPosX
+                                  -> nextPosY():posY
+                                  -> xs
+        col        = shape:z      -> nextPosX():posX
+                                  -> z
         shape =
             | '#' -> [pos(posX posY)]
             | '.' -> []
@@ -18,8 +18,8 @@ actor Parser =
 def pos x y =
     return (x, y)
 
-actor GalaxyExpander #by =
-    "Galaxies" .*:xs !. -> put(["Expanded" ~expand(xs by)])
+actor Expander #by =
+    "Universe" .*:xs !. -> put(["ExpandedUniverse" ~expand(xs by)])
 
 def expand galaxies by =
     xs, ys = findExpansionXY(galaxies)
@@ -55,8 +55,8 @@ def findExpansionXY galaxies =
             expandYs.append(y)
     return (expandXs, expandYs)
 
-actor GalaxyPairer =
-    "Expanded" .*:xs !. -> put(["Pairs" ~pairs(xs)])
+actor Pairer =
+    "ExpandedUniverse" .*:xs !. -> put(["Pairs" ~pairs(xs)])
 
 def pairs items =
     pairs = []
