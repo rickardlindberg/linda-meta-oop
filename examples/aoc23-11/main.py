@@ -10,6 +10,7 @@ def run(actors, message):
             "sum": sum,
             "max": max,
             "min": min,
+            "abs": abs,
             "dict": dict,
         },
         debug=True,
