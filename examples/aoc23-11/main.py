@@ -28,12 +28,22 @@ if __name__ == "__main__":
         [['Galaxies', (3, 0), (7, 1), (0, 2), (6, 4), (1, 5), (9, 6), (7, 8), (0, 9), (4, 9)]]
     )
     run_gives(
-        [CLI(), Parser(), GalaxyExpander()],
+        [CLI(), Parser(), GalaxyExpander(1)],
         ["Args", "example.txt"],
         [['Expanded', (4, 0), (9, 1), (0, 2), (8, 5), (1, 6), (12, 7), (9, 10), (0, 11), (5, 11)]]
     )
     run_gives(
-        [CLI(), Parser(), GalaxyExpander(), GalaxyPairer(), ShortestPathSummer()],
+        [CLI(), Parser(), GalaxyExpander(9), GalaxyPairer(), ShortestPathSummer()],
+        ["Args", "example.txt"],
+        [['Result', 1030]]
+    )
+    run_gives(
+        [CLI(), Parser(), GalaxyExpander(1), GalaxyPairer(), ShortestPathSummer()],
         ["Args", "input.txt"],
         [['Result', 9521550]]
+    )
+    run_gives(
+        [CLI(), Parser(), GalaxyExpander(1000000-1), GalaxyPairer(), ShortestPathSummer()],
+        ["Args", "input.txt"],
+        [['Result', 298932923702]]
     )

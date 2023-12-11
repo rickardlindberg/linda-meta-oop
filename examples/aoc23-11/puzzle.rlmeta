@@ -18,25 +18,25 @@ actor Parser =
 def pos x y =
     return (x, y)
 
-actor GalaxyExpander =
-    "Galaxies" .*:xs !. -> put(["Expanded" ~expand(xs)])
+actor GalaxyExpander #by =
+    "Galaxies" .*:xs !. -> put(["Expanded" ~expand(xs by)])
 
-def expand galaxies =
+def expand galaxies by =
     xs, ys = findExpansionXY(galaxies)
     offset = 0
     for expandX in sorted(xs):
         galaxies = [
-            (x+1, y) if x > offset+expandX else (x, y)
+            (x+by, y) if x > offset+expandX else (x, y)
             for (x, y) in galaxies
         ]
-        offset += 1
+        offset += by
     offset = 0
     for expandY in sorted(ys):
         galaxies = [
-            (x, y+1) if y > offset+expandY else (x, y)
+            (x, y+by) if y > offset+expandY else (x, y)
             for (x, y) in galaxies
         ]
-        offset += 1
+        offset += by
     return galaxies
 
 def findExpansionXY galaxies =
