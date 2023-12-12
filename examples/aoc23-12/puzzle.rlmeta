@@ -51,3 +51,34 @@ def canPlaceBrokenSection pattern pos offset size =
 
 actor Summer =
     "ArrangementCount" .*:xs !. -> put(["Result" sum(xs)])
+
+universe TmpExamples =
+    CLI()
+    Parser()
+    ArrangementCounter("Records")
+    examples
+        ["Args" "example.txt"] -> [["ArrangementCount" 1 4 1 1 4 10]]
+
+universe UnfolderExamples =
+    Unfolder()
+    examples
+        ["Records" ["Record" ".#" [1]]] ->
+            [["UnfoldedRecords" ["Record" ".#?.#?.#?.#?.#" [1 1 1 1 1]]]]
+
+universe Part1 =
+    CLI()
+    Parser()
+    ArrangementCounter("Records")
+    Summer()
+    examples
+        ["Args" "input.txt"] -> [["Result" 7344]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    Unfolder()
+    ArrangementCounter("UnfoldedRecords")
+    Summer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 525152]]
+        ["Args" "input.txt"] -> [["Result" 1088006519007]]

@@ -8,6 +8,15 @@ actor Parser =
               ^choice:z ^whereItems:zs                   -> ["Actor" x ys ["Rule" "_main" z] ~zs]
             | keyDef   ^name:x ^name*:ys ^'=\n'
               indented*:zs                               -> ["Native" x {"def " x "(" join(ys ", ") "):\n" zs}]
+            | keyUniverse ^name:x ^'='
+              ^globalHostExpr*:xs ^examplesp:ys          -> ["Universe" x xs ys]
+        examplesp =
+            | keyExamples ^example:x ^example*:xs        -> [x ~xs]
+            |                                            -> []
+        example =
+            | globalHostExpr:x ^'->' ^globalHostExpr:y   -> ["Example" x y]
+        globalHostExpr =
+            | hostExpr:x                                 -> ["GlobalExpr" x]
         whereItems =
             | ^keyWhere ^rule* | -> []
         field =

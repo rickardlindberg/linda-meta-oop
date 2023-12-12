@@ -1,3 +1,6 @@
+import sys
+import unittest
+
 class Stream:
 
     def __init__(self, items):
@@ -70,7 +73,7 @@ class Stream:
         self.error("no list found")
 
     def match_call_rule(self, rules):
-        name = self.items[self.index]
+        name = str(self.items[self.index])
         if name in rules:
             matcher = rules[name]
             self.index += 1
@@ -130,7 +133,7 @@ class Runtime:
     def lookup(self, name):
         if name in self.vars:
             return self.vars[name]
-        elif name in self.actor._state:
+        elif self.actor and name in self.actor._state:
             return self.actor._state[name]
         else:
             return getattr(self, name)
@@ -176,7 +179,6 @@ class Counter:
         return result
 
 def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
-    import sys
     def debug_log(text):
         if debug:
             sys.stderr.write(f"{text}\n")
@@ -211,6 +213,7 @@ def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
             "len": len,
             "repr": repr,
             "int": int,
+            "sum": sum,
             "Counter": Counter,
         }
         for name, native in natives.items():
@@ -247,5 +250,24 @@ def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
         iteration += 1
     debug_log("Simulation done!")
     return messages
+
+class Example(unittest.TestCase):
+
+    def check_example(self, actors, in_message, expected_out_messages):
+        actual_out_messages = run_simulation(
+            actors=actors,
+            extra={},
+            debug=True,
+            fail=False,
+            messages=[in_message]
+        )
+        if actual_out_messages != expected_out_messages:
+            self.fail("\n".join([
+                f"Example failed.",
+                f"",
+                f"Message:  {in_message!r}",
+                f"Expected: {expected_out_messages!r}",
+                f"Actual:   {actual_out_messages!r}",
+            ]))
 
 natives = {}
