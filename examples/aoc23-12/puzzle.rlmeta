@@ -5,7 +5,7 @@ actor Parser =
     "File" [records:x] !. -> put(x)
     where
         records = record*:xs !.                 -> ["Records" ~xs]
-        record  = state*:xs ' ' numbers:ys '\n' -> ["Record" xs ys]
+        record  = state*:xs ' ' numbers:ys '\n' -> ["Record" { xs } ys]
         state   = '?' | '.' | '#'
         numbers = number:x (',' number)*:xs     -> [x ~xs]
         number  = '0'-'9':x '0'-'9'*:xs         -> int({ x xs })
@@ -16,15 +16,14 @@ actor CountArrangements =
         record = ["Record" .:pattern .:groups !.] -> count(pattern groups)
 
 def count pattern groups =
-    return countInner(pattern, groups, 0, "")
+    return countInner(pattern, groups, 0)
 
-def countInner pattern groups pos prefix =
+def countInner pattern groups pos =
     if groups:
         count = 0
-        for placement in range(pos, pos+len(pattern)-sum(groups)):
-            if canPlaceBroken(pattern, pos, placement, groups[0]):
-                y = countInner(pattern, groups[1:], placement+groups[0]+1, prefix+"  ")
-                count += y
+        for offset in range(len(pattern[pos:])-sum(groups)-len(groups)+2):
+            if canPlaceBrokenSection(pattern, pos, offset, groups[0]):
+                count += countInner(pattern, groups[1:], pos+offset+groups[0]+1)
         return count
     else:
         if "#" not in pattern[pos:]:
@@ -32,14 +31,12 @@ def countInner pattern groups pos prefix =
         else:
             return 0
 
-def canPlaceBroken pattern p pos size =
-    if "#" in pattern[p:pos]:
+def canPlaceBrokenSection pattern pos offset size =
+    start = pos + offset
+    end = start + size
+    if "#" in pattern[pos:start]:
         return False
-    end = pos + size
-    x = "." not in pattern[pos:end] and pattern[end:end+1] != ["#"]
-    if len(pattern[pos:]) < size:
-        x = False
-    return x
+    return "." not in pattern[start:end] and pattern[end:end+1] != "#"
 
 actor Summer =
     "PlacementCounts" .*:xs !. -> put(["Result" sum(xs)])
