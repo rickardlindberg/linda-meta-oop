@@ -2,9 +2,9 @@ actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
 actor Parser =
-    "File" [universe:x] !. -> put(x)
+    "File" [universep:x] !. -> put(x)
     where
-        universe   = row*:xs !.   -> Counter():nextPosY
+        universep  = row*:xs !.   -> Counter():nextPosY
                                   -> ["Universe" ~~~xs]
         row        = col*:xs '\n' -> Counter():nextPosX
                                   -> nextPosY():posY

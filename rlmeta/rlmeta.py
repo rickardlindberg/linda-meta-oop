@@ -473,13 +473,15 @@ class Parser:
             'escape': self._matcher_431,
             'number': self._matcher_439,
             'name': self._matcher_449,
-            'reserved': self._matcher_456,
-            'keyDef': self._matcher_463,
-            'keyActor': self._matcher_472,
-            'keyWhere': self._matcher_481,
-            'nameStart': self._matcher_486,
-            'nameChar': self._matcher_493,
-            'space': self._matcher_500,
+            'reserved': self._matcher_460,
+            'keyDef': self._matcher_467,
+            'keyActor': self._matcher_476,
+            'keyWhere': self._matcher_485,
+            'keyUniverse': self._matcher_497,
+            'keyExamples': self._matcher_509,
+            'nameStart': self._matcher_514,
+            'nameChar': self._matcher_521,
+            'space': self._matcher_528,
         }
         self._main = self._rules.pop('_main')
     def run(self, stream):
@@ -1968,128 +1970,206 @@ class Parser:
     def _matcher_455(self, stream):
         return stream.with_scope(self._matcher_454)
     def _matcher_456(self, stream):
+        return self._rules['keyUniverse'](stream)
+    def _matcher_457(self, stream):
+        return stream.with_scope(self._matcher_456)
+    def _matcher_458(self, stream):
+        return self._rules['keyExamples'](stream)
+    def _matcher_459(self, stream):
+        return stream.with_scope(self._matcher_458)
+    def _matcher_460(self, stream):
         return stream.operator_or([
             self._matcher_451,
             self._matcher_453,
-            self._matcher_455
-        ])
-    def _matcher_457(self, stream):
-        return stream.match(lambda item: item == 'd', "'d'")
-    def _matcher_458(self, stream):
-        return stream.match(lambda item: item == 'e', "'e'")
-    def _matcher_459(self, stream):
-        return stream.match(lambda item: item == 'f', "'f'")
-    def _matcher_460(self, stream):
-        return self._rules['nameChar'](stream)
-    def _matcher_461(self, stream):
-        return stream.operator_not(self._matcher_460)
-    def _matcher_462(self, stream):
-        return stream.operator_and([
+            self._matcher_455,
             self._matcher_457,
-            self._matcher_458,
-            self._matcher_459,
-            self._matcher_461
+            self._matcher_459
         ])
+    def _matcher_461(self, stream):
+        return stream.match(lambda item: item == 'd', "'d'")
+    def _matcher_462(self, stream):
+        return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_463(self, stream):
-        return stream.with_scope(self._matcher_462)
+        return stream.match(lambda item: item == 'f', "'f'")
     def _matcher_464(self, stream):
-        return stream.match(lambda item: item == 'a', "'a'")
+        return self._rules['nameChar'](stream)
     def _matcher_465(self, stream):
-        return stream.match(lambda item: item == 'c', "'c'")
+        return stream.operator_not(self._matcher_464)
     def _matcher_466(self, stream):
-        return stream.match(lambda item: item == 't', "'t'")
+        return stream.operator_and([
+            self._matcher_461,
+            self._matcher_462,
+            self._matcher_463,
+            self._matcher_465
+        ])
     def _matcher_467(self, stream):
-        return stream.match(lambda item: item == 'o', "'o'")
+        return stream.with_scope(self._matcher_466)
     def _matcher_468(self, stream):
-        return stream.match(lambda item: item == 'r', "'r'")
+        return stream.match(lambda item: item == 'a', "'a'")
     def _matcher_469(self, stream):
-        return self._rules['nameChar'](stream)
+        return stream.match(lambda item: item == 'c', "'c'")
     def _matcher_470(self, stream):
-        return stream.operator_not(self._matcher_469)
+        return stream.match(lambda item: item == 't', "'t'")
     def _matcher_471(self, stream):
-        return stream.operator_and([
-            self._matcher_464,
-            self._matcher_465,
-            self._matcher_466,
-            self._matcher_467,
-            self._matcher_468,
-            self._matcher_470
-        ])
+        return stream.match(lambda item: item == 'o', "'o'")
     def _matcher_472(self, stream):
-        return stream.with_scope(self._matcher_471)
-    def _matcher_473(self, stream):
-        return stream.match(lambda item: item == 'w', "'w'")
-    def _matcher_474(self, stream):
-        return stream.match(lambda item: item == 'h', "'h'")
-    def _matcher_475(self, stream):
-        return stream.match(lambda item: item == 'e', "'e'")
-    def _matcher_476(self, stream):
         return stream.match(lambda item: item == 'r', "'r'")
-    def _matcher_477(self, stream):
-        return stream.match(lambda item: item == 'e', "'e'")
-    def _matcher_478(self, stream):
+    def _matcher_473(self, stream):
         return self._rules['nameChar'](stream)
-    def _matcher_479(self, stream):
-        return stream.operator_not(self._matcher_478)
-    def _matcher_480(self, stream):
+    def _matcher_474(self, stream):
+        return stream.operator_not(self._matcher_473)
+    def _matcher_475(self, stream):
         return stream.operator_and([
-            self._matcher_473,
-            self._matcher_474,
-            self._matcher_475,
-            self._matcher_476,
-            self._matcher_477,
-            self._matcher_479
+            self._matcher_468,
+            self._matcher_469,
+            self._matcher_470,
+            self._matcher_471,
+            self._matcher_472,
+            self._matcher_474
         ])
+    def _matcher_476(self, stream):
+        return stream.with_scope(self._matcher_475)
+    def _matcher_477(self, stream):
+        return stream.match(lambda item: item == 'w', "'w'")
+    def _matcher_478(self, stream):
+        return stream.match(lambda item: item == 'h', "'h'")
+    def _matcher_479(self, stream):
+        return stream.match(lambda item: item == 'e', "'e'")
+    def _matcher_480(self, stream):
+        return stream.match(lambda item: item == 'r', "'r'")
     def _matcher_481(self, stream):
-        return stream.with_scope(self._matcher_480)
+        return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_482(self, stream):
-        return stream.match(lambda item: 'a' <= item <= 'z', "'a'-'z'")
+        return self._rules['nameChar'](stream)
     def _matcher_483(self, stream):
-        return stream.with_scope(self._matcher_482)
+        return stream.operator_not(self._matcher_482)
     def _matcher_484(self, stream):
-        return stream.match(lambda item: 'A' <= item <= 'Z', "'A'-'Z'")
+        return stream.operator_and([
+            self._matcher_477,
+            self._matcher_478,
+            self._matcher_479,
+            self._matcher_480,
+            self._matcher_481,
+            self._matcher_483
+        ])
     def _matcher_485(self, stream):
         return stream.with_scope(self._matcher_484)
     def _matcher_486(self, stream):
-        return stream.operator_or([
-            self._matcher_483,
-            self._matcher_485
-        ])
+        return stream.match(lambda item: item == 'u', "'u'")
     def _matcher_487(self, stream):
-        return stream.match(lambda item: 'a' <= item <= 'z', "'a'-'z'")
+        return stream.match(lambda item: item == 'n', "'n'")
     def _matcher_488(self, stream):
-        return stream.with_scope(self._matcher_487)
+        return stream.match(lambda item: item == 'i', "'i'")
     def _matcher_489(self, stream):
-        return stream.match(lambda item: 'A' <= item <= 'Z', "'A'-'Z'")
+        return stream.match(lambda item: item == 'v', "'v'")
     def _matcher_490(self, stream):
-        return stream.with_scope(self._matcher_489)
+        return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_491(self, stream):
-        return stream.match(lambda item: '0' <= item <= '9', "'0'-'9'")
+        return stream.match(lambda item: item == 'r', "'r'")
     def _matcher_492(self, stream):
-        return stream.with_scope(self._matcher_491)
+        return stream.match(lambda item: item == 's', "'s'")
     def _matcher_493(self, stream):
-        return stream.operator_or([
-            self._matcher_488,
-            self._matcher_490,
-            self._matcher_492
-        ])
+        return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_494(self, stream):
-        return stream.match(lambda item: item == ' ', "' '")
+        return self._rules['nameChar'](stream)
     def _matcher_495(self, stream):
-        return stream.with_scope(self._matcher_494)
+        return stream.operator_not(self._matcher_494)
     def _matcher_496(self, stream):
-        return stream.match(lambda item: item == '\n', "'\\n'")
+        return stream.operator_and([
+            self._matcher_486,
+            self._matcher_487,
+            self._matcher_488,
+            self._matcher_489,
+            self._matcher_490,
+            self._matcher_491,
+            self._matcher_492,
+            self._matcher_493,
+            self._matcher_495
+        ])
     def _matcher_497(self, stream):
         return stream.with_scope(self._matcher_496)
     def _matcher_498(self, stream):
-        return stream.operator_or([
-            self._matcher_495,
-            self._matcher_497
-        ])
+        return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_499(self, stream):
-        return stream.operator_star(self._matcher_498)
+        return stream.match(lambda item: item == 'x', "'x'")
     def _matcher_500(self, stream):
-        return stream.with_scope(self._matcher_499)
+        return stream.match(lambda item: item == 'a', "'a'")
+    def _matcher_501(self, stream):
+        return stream.match(lambda item: item == 'm', "'m'")
+    def _matcher_502(self, stream):
+        return stream.match(lambda item: item == 'p', "'p'")
+    def _matcher_503(self, stream):
+        return stream.match(lambda item: item == 'l', "'l'")
+    def _matcher_504(self, stream):
+        return stream.match(lambda item: item == 'e', "'e'")
+    def _matcher_505(self, stream):
+        return stream.match(lambda item: item == 's', "'s'")
+    def _matcher_506(self, stream):
+        return self._rules['nameChar'](stream)
+    def _matcher_507(self, stream):
+        return stream.operator_not(self._matcher_506)
+    def _matcher_508(self, stream):
+        return stream.operator_and([
+            self._matcher_498,
+            self._matcher_499,
+            self._matcher_500,
+            self._matcher_501,
+            self._matcher_502,
+            self._matcher_503,
+            self._matcher_504,
+            self._matcher_505,
+            self._matcher_507
+        ])
+    def _matcher_509(self, stream):
+        return stream.with_scope(self._matcher_508)
+    def _matcher_510(self, stream):
+        return stream.match(lambda item: 'a' <= item <= 'z', "'a'-'z'")
+    def _matcher_511(self, stream):
+        return stream.with_scope(self._matcher_510)
+    def _matcher_512(self, stream):
+        return stream.match(lambda item: 'A' <= item <= 'Z', "'A'-'Z'")
+    def _matcher_513(self, stream):
+        return stream.with_scope(self._matcher_512)
+    def _matcher_514(self, stream):
+        return stream.operator_or([
+            self._matcher_511,
+            self._matcher_513
+        ])
+    def _matcher_515(self, stream):
+        return stream.match(lambda item: 'a' <= item <= 'z', "'a'-'z'")
+    def _matcher_516(self, stream):
+        return stream.with_scope(self._matcher_515)
+    def _matcher_517(self, stream):
+        return stream.match(lambda item: 'A' <= item <= 'Z', "'A'-'Z'")
+    def _matcher_518(self, stream):
+        return stream.with_scope(self._matcher_517)
+    def _matcher_519(self, stream):
+        return stream.match(lambda item: '0' <= item <= '9', "'0'-'9'")
+    def _matcher_520(self, stream):
+        return stream.with_scope(self._matcher_519)
+    def _matcher_521(self, stream):
+        return stream.operator_or([
+            self._matcher_516,
+            self._matcher_518,
+            self._matcher_520
+        ])
+    def _matcher_522(self, stream):
+        return stream.match(lambda item: item == ' ', "' '")
+    def _matcher_523(self, stream):
+        return stream.with_scope(self._matcher_522)
+    def _matcher_524(self, stream):
+        return stream.match(lambda item: item == '\n', "'\\n'")
+    def _matcher_525(self, stream):
+        return stream.with_scope(self._matcher_524)
+    def _matcher_526(self, stream):
+        return stream.operator_or([
+            self._matcher_523,
+            self._matcher_525
+        ])
+    def _matcher_527(self, stream):
+        return stream.operator_star(self._matcher_526)
+    def _matcher_528(self, stream):
+        return stream.with_scope(self._matcher_527)
 class Optimizer:
     def __init__(self):
         self._state = {}

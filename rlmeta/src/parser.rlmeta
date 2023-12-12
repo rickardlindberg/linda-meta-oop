@@ -61,19 +61,21 @@ actor Parser =
             | '~'*:ys hostExpr:x                         -> ["ListItem" len(ys) x]
         var =
             | name:x !^'='                               -> ["Lookup" x]
-        restLine  = (!'\n' .)*:xs '\n' -> { xs "\n" }
-        indented  = ' ' restLine:x -> { " " x }
-        string    = '"'  (!'"'  innerChar)*:xs '"'       -> { xs }
-        char      = '\''  !'\'' innerChar:x    '\''      -> x
-        innerChar = '\\' escape | .
-        escape    = '\\' -> "\\" | '\'' -> "'"
-                  | '"'  -> "\"" | 'n'  -> "\n"
-        number    = '0'-'9':x '0'-'9'*:xs                -> int({ x xs })
-        name      = !reserved nameStart:x nameChar*:xs   -> { x xs }
-        reserved  = keyDef | keyActor | keyWhere
-        keyDef    = 'def'   !nameChar
-        keyActor  = 'actor' !nameChar
-        keyWhere  = 'where' !nameChar
-        nameStart = 'a'-'z' | 'A'-'Z'
-        nameChar  = 'a'-'z' | 'A'-'Z' | '0'-'9'
-        space     = (' ' | '\n')*
+        restLine    = (!'\n' .)*:xs '\n' -> { xs "\n" }
+        indented    = ' ' restLine:x -> { " " x }
+        string      = '"'  (!'"'  innerChar)*:xs '"'     -> { xs }
+        char        = '\''  !'\'' innerChar:x    '\''    -> x
+        innerChar   = '\\' escape | .
+        escape      = '\\' -> "\\" | '\'' -> "'"
+                    | '"'  -> "\"" | 'n'  -> "\n"
+        number      = '0'-'9':x '0'-'9'*:xs              -> int({ x xs })
+        name        = !reserved nameStart:x nameChar*:xs -> { x xs }
+        reserved    = keyDef | keyActor | keyWhere | keyUniverse | keyExamples
+        keyDef      = 'def'      !nameChar
+        keyActor    = 'actor'    !nameChar
+        keyWhere    = 'where'    !nameChar
+        keyUniverse = 'universe' !nameChar
+        keyExamples = 'examples' !nameChar
+        nameStart   = 'a'-'z' | 'A'-'Z'
+        nameChar    = 'a'-'z' | 'A'-'Z' | '0'-'9'
+        space       = (' ' | '\n')*
