@@ -10,23 +10,30 @@ actor Parser =
         numbers = number:x (',' number)*:xs     -> [x ~xs]
         number  = '0'-'9':x '0'-'9'*:xs         -> int({ x xs })
 
-actor CountArrangements #which =
-    #which record*:xs !. -> put(["PlacementCounts" ~xs])
+actor Unfolder =
+    "Records" record*:xs !. -> put(["UnfoldedRecords" ~xs])
+    where
+        record = ["Record" .:pattern .:groups !.] -> ["Record" ~unfold(pattern groups)]
+
+def unfold pattern groups =
+    return ["?".join([pattern]*5), groups*5]
+
+actor ArrangementCounter #whichRecordContainer =
+    #whichRecordContainer record*:xs !. -> put(["ArrangementCount" ~xs])
     where
         record = ["Record" .:pattern .:groups !.] -> count(pattern groups)
 
 def count pattern groups =
-    return countInner(pattern, groups, 0, {})
+    return countPosCache(pattern, groups, 0, {})
 
-def countInner pattern groups pos cache =
+def countPosCache pattern groups pos cache =
     key = (pattern, tuple(groups), pos)
     if key not in cache:
         if groups:
-            count = 0
+            cache[key] = 0
             for offset in range(len(pattern[pos:])-sum(groups)-len(groups)+2):
                 if canPlaceBrokenSection(pattern, pos, offset, groups[0]):
-                    count += countInner(pattern, groups[1:], pos+offset+groups[0]+1, cache)
-            cache[key] = count
+                    cache[key] += countPosCache(pattern, groups[1:], pos+offset+groups[0]+1, cache)
         else:
             if "#" not in pattern[pos:]:
                 cache[key] = 1
@@ -42,13 +49,5 @@ def canPlaceBrokenSection pattern pos offset size =
     else:
         return "." not in pattern[start:end] and pattern[end:end+1] != "#"
 
-actor Unfolder =
-    "Records" record*:xs !. -> put(["Unfolded" ~xs])
-    where
-        record = ["Record" .:pattern .:groups !.] -> ["Record" ~unfold(pattern groups)]
-
-def unfold pattern group =
-    return ["?".join([pattern]*5), group*5]
-
 actor Summer =
-    "PlacementCounts" .*:xs !. -> put(["Result" sum(xs)])
+    "ArrangementCount" .*:xs !. -> put(["Result" sum(xs)])

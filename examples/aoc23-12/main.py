@@ -24,27 +24,27 @@ def run_gives(actors, message, expected):
 
 if __name__ == "__main__":
     run_gives(
-        [CLI(), Parser(), CountArrangements("Records")],
+        [CLI(), Parser(), ArrangementCounter("Records")],
         ["Args", "example.txt"],
-        [['PlacementCounts', 1, 4, 1, 1, 4, 10]]
+        [['ArrangementCount', 1, 4, 1, 1, 4, 10]]
     )
     run_gives(
-        [CLI(), Parser(), CountArrangements("Records"), Summer()],
+        [CLI(), Parser(), ArrangementCounter("Records"), Summer()],
         ["Args", "input.txt"],
         [['Result', 7344]]
     )
     run_gives(
         [Unfolder()],
         ["Records", ["Record", ".#", [1]]],
-        [["Unfolded", ["Record", ".#?.#?.#?.#?.#", [1,1,1,1,1]]]]
+        [["UnfoldedRecords", ["Record", ".#?.#?.#?.#?.#", [1,1,1,1,1]]]]
     )
     run_gives(
-        [CLI(), Parser(), Unfolder(), CountArrangements("Unfolded"), Summer()],
+        [CLI(), Parser(), Unfolder(), ArrangementCounter("UnfoldedRecords"), Summer()],
         ["Args", "example.txt"],
         [['Result', 525152]]
     )
     run_gives(
-        [CLI(), Parser(), Unfolder(), CountArrangements("Unfolded"), Summer()],
+        [CLI(), Parser(), Unfolder(), ArrangementCounter("UnfoldedRecords"), Summer()],
         ["Args", "input.txt"],
         [['Result', 1088006519007]]
     )
