@@ -10,33 +10,48 @@ actor Parser =
         numbers = number:x (',' number)*:xs     -> [x ~xs]
         number  = '0'-'9':x '0'-'9'*:xs         -> int({ x xs })
 
-actor CountArrangements =
-    "Records" record*:xs !. -> put(["PlacementCounts" ~xs])
+actor CountArrangements #which =
+    #which record*:xs !. -> put(["PlacementCounts" ~xs])
     where
         record = ["Record" .:pattern .:groups !.] -> count(pattern groups)
 
 def count pattern groups =
-    return countInner(pattern, groups, 0)
+    return countInner(pattern, groups, 0, {})
 
-def countInner pattern groups pos =
-    if groups:
-        count = 0
-        for offset in range(len(pattern[pos:])-sum(groups)-len(groups)+2):
-            if canPlaceBrokenSection(pattern, pos, offset, groups[0]):
-                count += countInner(pattern, groups[1:], pos+offset+groups[0]+1)
-        return count
-    else:
-        if "#" not in pattern[pos:]:
-            return 1
+def countInner pattern groups pos cache =
+    key = (pattern, tuple(groups), pos)
+    if key not in cache:
+        if groups:
+            count = 0
+            for offset in range(len(pattern[pos:])-sum(groups)-len(groups)+2):
+                if canPlaceBrokenSection(pattern, pos, offset, groups[0], cache):
+                    count += countInner(pattern, groups[1:], pos+offset+groups[0]+1, cache)
+            cache[key] = count
         else:
-            return 0
+            if "#" not in pattern[pos:]:
+                cache[key] = 1
+            else:
+                cache[key] = 0
+    return cache[key]
 
-def canPlaceBrokenSection pattern pos offset size =
-    start = pos + offset
-    end = start + size
-    if "#" in pattern[pos:start]:
-        return False
-    return "." not in pattern[start:end] and pattern[end:end+1] != "#"
+def canPlaceBrokenSection pattern pos offset size cache =
+    key = (pattern, pos, offset, size)
+    if key not in cache:
+        start = pos + offset
+        end = start + size
+        if "#" in pattern[pos:start]:
+            cache[key] = False
+        else:
+            cache[key] = "." not in pattern[start:end] and pattern[end:end+1] != "#"
+    return cache[key]
+
+actor Unfolder =
+    "Records" record*:xs !. -> put(["Unfolded" ~xs])
+    where
+        record = ["Record" .:pattern .:groups !.] -> ["Record" ~unfold(pattern groups)]
+
+def unfold pattern group =
+    return ["?".join([pattern]*5), group*5]
 
 actor Summer =
     "PlacementCounts" .*:xs !. -> put(["Result" sum(xs)])
