@@ -1,0 +1,45 @@
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [records:x] !. -> put(x)
+    where
+        records = record*:xs !.                 -> ["Records" ~xs]
+        record  = state*:xs ' ' numbers:ys '\n' -> ["Record" xs ys]
+        state   = '?' | '.' | '#'
+        numbers = number:x (',' number)*:xs     -> [x ~xs]
+        number  = '0'-'9':x '0'-'9'*:xs         -> int({ x xs })
+
+actor CountArrangements =
+    "Records" record*:xs !. -> put(["PlacementCounts" ~xs])
+    where
+        record = ["Record" .:pattern .:groups !.] -> count(pattern groups)
+
+def count pattern groups =
+    return countInner(pattern, groups, 0, "")
+
+def countInner pattern groups pos prefix =
+    if groups:
+        count = 0
+        for placement in range(pos, pos+len(pattern)-sum(groups)):
+            if canPlaceBroken(pattern, pos, placement, groups[0]):
+                y = countInner(pattern, groups[1:], placement+groups[0]+1, prefix+"  ")
+                count += y
+        return count
+    else:
+        if "#" not in pattern[pos:]:
+            return 1
+        else:
+            return 0
+
+def canPlaceBroken pattern p pos size =
+    if "#" in pattern[p:pos]:
+        return False
+    end = pos + size
+    x = "." not in pattern[pos:end] and pattern[end:end+1] != ["#"]
+    if len(pattern[pos:]) < size:
+        x = False
+    return x
+
+actor Summer =
+    "PlacementCounts" .*:xs !. -> put(["Result" sum(xs)])
