@@ -24,7 +24,7 @@ def countInner pattern groups pos cache =
         if groups:
             count = 0
             for offset in range(len(pattern[pos:])-sum(groups)-len(groups)+2):
-                if canPlaceBrokenSection(pattern, pos, offset, groups[0], cache):
+                if canPlaceBrokenSection(pattern, pos, offset, groups[0]):
                     count += countInner(pattern, groups[1:], pos+offset+groups[0]+1, cache)
             cache[key] = count
         else:
@@ -34,16 +34,13 @@ def countInner pattern groups pos cache =
                 cache[key] = 0
     return cache[key]
 
-def canPlaceBrokenSection pattern pos offset size cache =
-    key = (pattern, pos, offset, size)
-    if key not in cache:
-        start = pos + offset
-        end = start + size
-        if "#" in pattern[pos:start]:
-            cache[key] = False
-        else:
-            cache[key] = "." not in pattern[start:end] and pattern[end:end+1] != "#"
-    return cache[key]
+def canPlaceBrokenSection pattern pos offset size =
+    start = pos + offset
+    end = start + size
+    if "#" in pattern[pos:start]:
+        return False
+    else:
+        return "." not in pattern[start:end] and pattern[end:end+1] != "#"
 
 actor Unfolder =
     "Records" record*:xs !. -> put(["Unfolded" ~xs])
