@@ -37,10 +37,12 @@ def sumReflect rows columns =
     return 100*reflectIndex(rows) + reflectIndex(columns)
 
 def reflectIndex items =
+    lines = []
     for line in range(1, len(items)):
         if isPerfectReflection(items, line):
-            return line
-    return 0
+            lines.append(line)
+    assert len(lines) in [0, 1]
+    return max([0]+lines)
 
 def isPerfectReflection items line =
     start = line - 1
