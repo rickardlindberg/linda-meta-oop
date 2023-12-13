@@ -1,0 +1,77 @@
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [grids:x] !. -> put(x)
+    where
+        grids = grid:x ('\n' grid)*:xs !. -> ["Grids" x ~xs]
+        grid  = line*:xs                  -> ["Grid"
+                                                ["Rows" ~xs]
+                                                ["Columns" ~transpose(xs)]]
+        line  = char:x char*:xs '\n'      -> { x xs }
+        char  = '#' | '.'
+
+def transpose rows =
+    assert len(set(len(x) for x in rows)) == 1
+    return [
+        "".join(rows[row][column] for row in range(len(rows)))
+        for column in range(len(rows[0]))
+    ]
+
+universe ParserExamples =
+    Parser()
+    examples
+        ["File" "#.\n##\n"] -> [
+            ["Grids"
+                ["Grid"
+                    ["Rows"    "#." "##"]
+                    ["Columns" "##" ".#"]]]]
+
+actor ReflectionFinder =
+    "Grids" grid*:xs !. -> put(["Reflections" ~xs])
+    where
+        grid = ["Grid" ["Rows" .*:rows] ["Columns" .*:columns] !.] ->
+            sumReflect(rows columns)
+
+def sumReflect rows columns =
+    return 100*reflectIndex(rows) + reflectIndex(columns)
+
+def reflectIndex items =
+    for line in range(1, len(items)):
+        if isPerfectReflection(items, line):
+            return line
+    return 0
+
+def isPerfectReflection items line =
+    start = line - 1
+    end = line
+    while start >= 0 and end < len(items):
+        if items[start] != items[end]:
+            return False
+        start -= 1
+        end += 1
+    return True
+
+universe ReflectionFinderExamples =
+    ReflectionFinder()
+    examples
+        ["Grids"
+            ["Grid"
+                ["Rows"    "##" "##"]
+                ["Columns" "##" "##"]]
+            ["Grid"
+                ["Rows"    "##" "##"]
+                ["Columns" "##" "##"]]] ->
+            [["Reflections" 101 101]]
+
+actor Summer =
+    "Reflections" .*:xs !. -> put(["Result" sum(xs)])
+
+universe Part1 =
+    CLI()
+    Parser()
+    ReflectionFinder()
+    Summer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 405]]
+        ["Args" "input.txt"] -> [["Result" 31877]]
