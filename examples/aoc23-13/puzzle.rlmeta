@@ -82,24 +82,6 @@ actor ReflectionSmudgeFinder =
             sumReflectSmudge(rows columns)
 
 def sumReflectSmudge rows columns =
-    return smudgeNew(rows, columns)
-    rows, columns = smudge(rows, columns)
-    return 100*reflectIndex(rows) + reflectIndex(columns)
-
-def smudge rows columns =
-    for row in range(1, len(rows)):
-        index = isPerfectReflectionSmudge(rows, row)
-        if index is not None:
-            row_index, column_index, line = index
-            return smudgeLists(rows, columns, row_index, column_index)
-    for column in range(1, len(columns)):
-        index = isPerfectReflectionSmudge(columns, column)
-        if index is not None:
-            column_index, row_index, line = index
-            return smudgeLists(rows, columns, row_index, column_index)
-    assert False, "no smudge"
-
-def smudgeNew rows columns =
     for row in range(1, len(rows)):
         index = isPerfectReflectionSmudge(rows, row)
         if index is not None:
@@ -111,28 +93,6 @@ def smudgeNew rows columns =
             column_index, row_index, line = index
             return line
     assert False, "no smudge"
-
-def smudgeLists rows columns rowIndex columnIndex =
-    assert rows[rowIndex][columnIndex] == columns[columnIndex][rowIndex]
-    if rows[rowIndex][columnIndex] == ".":
-        switch = "#"
-    else:
-        switch = "."
-    return (
-        [
-            row[:columnIndex] + switch + row[columnIndex+1:]
-            if i == rowIndex
-            else
-            row
-            for (i, row) in enumerate(rows)
-        ],
-        [
-            column[:rowIndex] + switch + column[rowIndex+1:]
-            if i == columnIndex
-            else column
-            for (i, column) in enumerate(columns)
-        ]
-    )
 
 def isPerfectReflectionSmudge items line =
     start = line - 1
