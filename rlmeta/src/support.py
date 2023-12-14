@@ -180,7 +180,9 @@ class Counter:
 
 def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
     def debug_log(text):
-        if debug:
+        if callable(debug):
+            debug(text)
+        elif debug:
             sys.stderr.write(f"{text}\n")
     def read(path):
         if path == "-":
@@ -254,16 +256,19 @@ def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
 class Example(unittest.TestCase):
 
     def check_example(self, actors, in_message, expected_out_messages):
+        log = []
         actual_out_messages = run_simulation(
             actors=actors,
             extra={},
-            debug=True,
+            debug=log.append,
             fail=False,
             messages=[in_message]
         )
         if actual_out_messages != expected_out_messages:
             self.fail("\n".join([
                 f"Example failed.",
+                f"",
+            ]+log+[
                 f"",
                 f"Message:  {in_message!r}",
                 f"Expected: {expected_out_messages!r}",
