@@ -41,7 +41,7 @@ def reflectIndex items =
     for line in range(1, len(items)):
         if isPerfectReflection(items, line):
             lines.append(line)
-    assert len(lines) in [0, 1]
+    assert len(lines) in [0, 1, 2]
     return max([0]+lines)
 
 def isPerfectReflection items line =
@@ -82,7 +82,72 @@ actor ReflectionSmudgeFinder =
             sumReflectSmudge(rows columns)
 
 def sumReflectSmudge rows columns =
+    return smudgeNew(rows, columns)
+    rows, columns = smudge(rows, columns)
     return 100*reflectIndex(rows) + reflectIndex(columns)
+
+def smudge rows columns =
+    for row in range(1, len(rows)):
+        index = isPerfectReflectionSmudge(rows, row)
+        if index is not None:
+            row_index, column_index, line = index
+            return smudgeLists(rows, columns, row_index, column_index)
+    for column in range(1, len(columns)):
+        index = isPerfectReflectionSmudge(columns, column)
+        if index is not None:
+            column_index, row_index, line = index
+            return smudgeLists(rows, columns, row_index, column_index)
+    assert False, "no smudge"
+
+def smudgeNew rows columns =
+    for row in range(1, len(rows)):
+        index = isPerfectReflectionSmudge(rows, row)
+        if index is not None:
+            row_index, column_index, line = index
+            return line*100
+    for column in range(1, len(columns)):
+        index = isPerfectReflectionSmudge(columns, column)
+        if index is not None:
+            column_index, row_index, line = index
+            return line
+    assert False, "no smudge"
+
+def smudgeLists rows columns rowIndex columnIndex =
+    assert rows[rowIndex][columnIndex] == columns[columnIndex][rowIndex]
+    if rows[rowIndex][columnIndex] == ".":
+        switch = "#"
+    else:
+        switch = "."
+    return (
+        [
+            row[:columnIndex] + switch + row[columnIndex+1:]
+            if i == rowIndex
+            else
+            row
+            for (i, row) in enumerate(rows)
+        ],
+        [
+            column[:rowIndex] + switch + column[rowIndex+1:]
+            if i == columnIndex
+            else column
+            for (i, column) in enumerate(columns)
+        ]
+    )
+
+def isPerfectReflectionSmudge items line =
+    start = line - 1
+    end = line
+    smudge = None
+    while start >= 0 and end < len(items):
+        indices = diffIndices(items[start], items[end])
+        if indices:
+            if len(indices) == 1 and smudge is None:
+                smudge = (start, indices[0], line)
+            else:
+                return None
+        start -= 1
+        end += 1
+    return smudge
 
 actor Summer =
     "Reflections" .*:xs !. -> put(["Result" sum(xs)])
@@ -102,4 +167,5 @@ universe Part2 =
     ReflectionSmudgeFinder()
     Summer()
     examples
-        ["Args" "example.txt"] -> [["Result" 405]]
+        ["Args" "example.txt"] -> [["Result" 400]]
+        ["Args" "input.txt"] -> [["Result" 42996]]
