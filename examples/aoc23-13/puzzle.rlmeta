@@ -48,11 +48,20 @@ def isPerfectReflection items line =
     start = line - 1
     end = line
     while start >= 0 and end < len(items):
-        if items[start] != items[end]:
+        indices = diffIndices(items[start], items[end])
+        if indices:
             return False
         start -= 1
         end += 1
     return True
+
+def diffIndices left right =
+    assert len(left) == len(right)
+    return [
+        index
+        for index in range(len(left))
+        if left[index] != right[index]
+    ]
 
 universe ReflectionFinderExamples =
     ReflectionFinder()
