@@ -75,6 +75,15 @@ universe ReflectionFinderExamples =
                 ["Columns" "##" "##"]]] ->
             [["Reflections" 101 101]]
 
+actor ReflectionSmudgeFinder =
+    "Grids" grid*:xs !. -> put(["Reflections" ~xs])
+    where
+        grid = ["Grid" ["Rows" .*:rows] ["Columns" .*:columns] !.] ->
+            sumReflectSmudge(rows columns)
+
+def sumReflectSmudge rows columns =
+    return 100*reflectIndex(rows) + reflectIndex(columns)
+
 actor Summer =
     "Reflections" .*:xs !. -> put(["Result" sum(xs)])
 
@@ -86,3 +95,11 @@ universe Part1 =
     examples
         ["Args" "example.txt"] -> [["Result" 405]]
         ["Args" "input.txt"] -> [["Result" 31877]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    ReflectionSmudgeFinder()
+    Summer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 405]]
