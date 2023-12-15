@@ -46,6 +46,64 @@ def roll line =
 actor Summer =
     "Loads" .*:xs !. -> put(["Result" sum(xs)])
 
+actor LoadCycler =
+    "Grid" ["Columns" .*:xs !.] !. -> put(["Result" cycle(xs)])
+
+def cycle grid =
+    assert transpose(transpose(grid)) == grid
+    grid = transpose(grid)
+    seenAtIteration = {}
+    left = 1_000_000_000
+    iterations = 0
+    while left > 0:
+        assert iterations + left == 1_000_000_000
+        gridKey = tuple(grid)
+        if gridKey in seenAtIteration:
+            loopSize = iterations - seenAtIteration[gridKey]
+            if loopSize <= left:
+                gg = grid
+                for floppa in range(loopSize):
+                    gg = doOneCycle(gg)
+                assert gg == grid
+                x = loopSize * (left // loopSize)
+                left -= x
+                iterations += x
+                continue
+        else:
+            seenAtIteration[gridKey] = iterations
+        left -= 1
+        iterations += 1
+        grid = doOneCycle(grid)
+    assert left == 0
+    assert iterations == 1_000_000_000
+    for x, y in seenAtIteration.items():
+        loads = [
+            sum(calculateLoad(line) for line in transpose(x)),
+            sum(calculateLoad(line) for line in x),
+            sum(calculateLoad(line[::-1]) for line in transpose(x)),
+            sum(calculateLoad(line[::-1]) for line in x),
+        ]
+        print(f"GRID: {y} -> {loads}")
+    return sum(calculateLoad(line) for line in transpose(grid))
+
+def doOneCycle grid =
+    for dir in "NWSE":
+        if dir in "NS":
+            grid = transpose(grid)
+            if dir == "N":
+                grid = [roll(line) for line in grid]
+            else:
+                assert dir == "S"
+                grid = [roll(line[::-1])[::-1] for line in grid]
+            grid = transpose(grid)
+        else:
+            if dir == "W":
+                grid = [roll(line) for line in grid]
+            else:
+                assert dir == "E"
+                grid = [roll(line[::-1])[::-1] for line in grid]
+    return grid
+
 universe Part1 =
     CLI()
     Parser()
@@ -54,3 +112,10 @@ universe Part1 =
     examples
         ["Args" "example.txt"] -> [["Result" 136]]
         ["Args" "input.txt"] -> [["Result" 105784]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    LoadCycler()
+    examples
+        ["Args" "example.txt"] -> [["Result" 103]]
