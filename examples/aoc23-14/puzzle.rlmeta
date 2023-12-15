@@ -18,18 +18,30 @@ def transpose rows =
 actor LoadCalculator =
     "Grid" ["Columns" loadColumn*:xs !.] !. -> put(["Loads" ~xs])
     where
-        loadColumn = .:x -> load(x)
+        loadColumn = .:x -> calculateLoad(x)
 
-def load line =
+def calculateLoad line =
+    return sum(
+        len(line)-pos if char == "O" else 0
+        for pos, char in enumerate(roll(line))
+    )
+
+def roll line =
+    newLine = []
     loadSum = 0
-    zeroAmount = len(line)
+    skippedDots = []
     for pos in range(len(line)):
         if line[pos] == "O":
-            loadSum += zeroAmount
-            zeroAmount -= 1
+            newLine.append("O")
         elif line[pos] == "#":
-            zeroAmount = len(line) - pos - 1
-    return loadSum
+            newLine.extend(skippedDots)
+            newLine.append("#")
+            skippedDots = []
+        else:
+            skippedDots.append(".")
+    newLine.extend(skippedDots)
+    assert len(newLine) == len(line)
+    return "".join(newLine)
 
 actor Summer =
     "Loads" .*:xs !. -> put(["Result" sum(xs)])
