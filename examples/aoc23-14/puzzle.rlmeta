@@ -1,0 +1,46 @@
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [grid:x] !. -> put(x)
+    where
+        grid  = line*:xs                  -> ["Grid" ["Columns" ~transpose(xs)]]
+        line  = char:x char*:xs '\n'      -> { x xs }
+        char  = '#' | '.' | 'O'
+
+def transpose rows =
+    assert len(set(len(x) for x in rows)) == 1
+    return [
+        "".join(rows[row][column] for row in range(len(rows)))
+        for column in range(len(rows[0]))
+    ]
+
+actor LoadCalculator =
+    "Grid" ["Columns" loadColumn*:xs !.] !. -> put(["Loads" ~xs])
+    where
+        loadColumn = .:x -> load(x)
+
+def load x =
+    loadSum = 0
+    amount = len(x)
+    pos = 0
+    while pos < len(x):
+        if x[pos] == "O":
+            loadSum += amount
+            amount -= 1
+        elif x[pos] == "#":
+            amount = len(x) - pos - 1
+        pos += 1
+    return loadSum
+
+actor Summer =
+    "Loads" .*:xs !. -> put(["Result" sum(xs)])
+
+universe Part1 =
+    CLI()
+    Parser()
+    LoadCalculator()
+    Summer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 136]]
+        ["Args" "input.txt"] -> [["Result" 105784]]
