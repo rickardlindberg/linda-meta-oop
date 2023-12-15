@@ -18,12 +18,12 @@ def transpose rows =
 actor LoadCalculator =
     "Grid" ["Columns" loadColumn*:xs !.] !. -> put(["Loads" ~xs])
     where
-        loadColumn = .:x -> calculateLoad(x)
+        loadColumn = .:x -> calculateLoad(roll(x))
 
 def calculateLoad line =
     return sum(
         len(line)-pos if char == "O" else 0
-        for pos, char in enumerate(roll(line))
+        for pos, char in enumerate(line)
     )
 
 def roll line =
@@ -76,14 +76,6 @@ def cycle grid =
         grid = doOneCycle(grid)
     assert left == 0
     assert iterations == 1_000_000_000
-    for x, y in seenAtIteration.items():
-        loads = [
-            sum(calculateLoad(line) for line in transpose(x)),
-            sum(calculateLoad(line) for line in x),
-            sum(calculateLoad(line[::-1]) for line in transpose(x)),
-            sum(calculateLoad(line[::-1]) for line in x),
-        ]
-        print(f"GRID: {y} -> {loads}")
     return sum(calculateLoad(line) for line in transpose(grid))
 
 def doOneCycle grid =
@@ -118,4 +110,5 @@ universe Part2 =
     Parser()
     LoadCycler()
     examples
-        ["Args" "example.txt"] -> [["Result" 103]]
+        ["Args" "example.txt"] -> [["Result" 64]]
+        ["Args" "input.txt"] -> [["Result" 91286]]
