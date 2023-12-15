@@ -20,17 +20,15 @@ actor LoadCalculator =
     where
         loadColumn = .:x -> load(x)
 
-def load x =
+def load line =
     loadSum = 0
-    amount = len(x)
-    pos = 0
-    while pos < len(x):
-        if x[pos] == "O":
-            loadSum += amount
-            amount -= 1
-        elif x[pos] == "#":
-            amount = len(x) - pos - 1
-        pos += 1
+    zeroAmount = len(line)
+    for pos in range(len(line)):
+        if line[pos] == "O":
+            loadSum += zeroAmount
+            zeroAmount -= 1
+        elif line[pos] == "#":
+            zeroAmount = len(line) - pos - 1
     return loadSum
 
 actor Summer =
