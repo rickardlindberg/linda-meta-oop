@@ -1,5 +1,10 @@
 universe Part1 =
     CLI()
+    Parser()
+    BeamExecutor()
+    examples
+        ["Args" "example.txt"] -> [["Result" 46]]
+        ["Args" "input.txt"] -> [["Result" 7046]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -22,3 +27,66 @@ actor Parser =
                 tuple(tuple(0 1) "|") tuple(tuple(1 1) ".")
             ])]
         ]
+
+actor BeamExecutor =
+    "Contraption" .:x !. -> put(["Result" execute(x)])
+    examples
+        ["Contraption" dict([
+            tuple(tuple(0 0) ".") tuple(tuple(1 0) ".")
+        ])] -> [["Result" 2]]
+
+def execute contraption =
+    visited = set()
+    active = [(0, 0, "R")]
+    energized = set()
+    while active:
+        x, y, dir = active.pop(0)
+        if (x, y) in contraption and (x, y, dir) not in visited:
+            visited.add((x, y, dir))
+            energized.add((x, y))
+            active.extend(newBeams(x, y, dir, contraption[(x, y)]))
+    return len(energized)
+
+def newBeams x y dir action =
+    up    = (x, y-1, "U")
+    down  = (x, y+1, "D")
+    left  = (x-1, y, "L")
+    right = (x+1, y, "R")
+    if dir == "R":
+        if action == "/":
+            return [up]
+        elif action == "\\":
+            return [down]
+        elif action == "|":
+            return [up, down]
+        else:
+            return [right]
+    elif dir == "L":
+        if action == "/":
+            return [down]
+        elif action == "\\":
+            return [up]
+        elif action == "|":
+            return [up, down]
+        else:
+            return [left]
+    elif dir == "U":
+        if action == "/":
+            return [right]
+        elif action == "\\":
+            return [left]
+        elif action == "-":
+            return [left, right]
+        else:
+            return [up]
+    elif dir == "D":
+        if action == "/":
+            return [left]
+        elif action == "\\":
+            return [right]
+        elif action == "-":
+            return [left, right]
+        else:
+            return [down]
+    else:
+        assert False, "invalid dir"
