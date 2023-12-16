@@ -14,6 +14,21 @@ actor Parser =
             ]
         ]
 
+actor Hasher =
+    "Sequence" hash*:xs !. -> put(["Result" sum(xs)])
+    where
+        hash = [.*:xs] -> hashAlgorithm(xs)
+    examples
+        ["Sequence" ["H"]] -> [["Result" 200]]
+
+def hashAlgorithm characters =
+    result = 0
+    for character in characters:
+        result += ord(character)
+        result *= 17
+        result = result % 256
+    return result
+
 universe Part1 =
     CLI()
     Parser()
