@@ -102,6 +102,19 @@ def boxRemove boxes boxId label =
             if x[0] != label
         ]
 
+actor BoxSummer =
+    "Boxes" .:x !. -> put(["Result" sumBoxes(x)])
+    examples
+        ["Boxes" dict([[0 [["rn" 5]]]])] -> [["Result" 5]]
+        ["Boxes" dict([[3 [["ot" 7]]]])] -> [["Result" 28]]
+
+def sumBoxes boxes =
+    result = 0
+    for boxId, lenses in boxes.items():
+        for slotId, (lable, value) in enumerate(lenses):
+            result += (boxId+1)*(slotId+1)*value
+    return result
+
 universe Part1 =
     CLI()
     Parser()
@@ -109,3 +122,13 @@ universe Part1 =
     examples
         ["Args" "example.txt"] -> [["Result" 1320]]
         ["Args" "input.txt"] -> [["Result" 518107]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    InstructionParser()
+    InstructionRunner()
+    BoxSummer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 145]]
+        ["Args" "input.txt"] -> [["Result" 303404]]
