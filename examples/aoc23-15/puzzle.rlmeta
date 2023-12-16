@@ -75,16 +75,22 @@ actor InstructionRunner =
         ["Operations"
             [["r" "n"] ["set" 1]]
             [["c" "m"] ["remove"]]
+            [["q" "p"] ["set" 3]]
+            [["c" "m"] ["set" 2]]
         ] -> [["Boxes" dict([
-            [0 [["rn" 1]]]
+            [0 [["rn" 1] ["cm" 2]]]
+            [1 [["qp" 3]]]
         ])]]
 
 def boxSet boxes boxId label value =
     if boxId in boxes:
-        boxes[boxId] = [
-            x if x[0] != label else [label, value]
-            for x in boxes[boxId]
-        ]
+        if label in [x[0] for x in boxes[boxId]]:
+            boxes[boxId] = [
+                x if x[0] != label else [label, value]
+                for x in boxes[boxId]
+            ]
+        else:
+            boxes[boxId] = boxes[boxId] + [[label, value]]
     else:
         boxes[boxId] = [[label, value]]
 
