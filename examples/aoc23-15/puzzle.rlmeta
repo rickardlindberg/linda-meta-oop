@@ -4,13 +4,19 @@ actor CLI =
 actor Parser =
     "File" [sequence:x] !. -> put(x)
     where
-        sequence  = step:x (',' step)*:xs -> ["Sequence" x ~xs]
-        step      = (!',' .)*:xs          -> xs
+        sequence  = step:x (',' step)*:xs !. -> ["Sequence" x ~xs]
+        step      = char*:xs                 -> [~~xs]
+        char      = !',' ('\n' -> [] | .:x   -> [x])
     examples
         ["File" "rn=1,cm-"] -> [
             ["Sequence"
                 ["r" "n" "=" "1"]
                 ["c" "m" "-"]
+            ]
+        ]
+        ["File" "ot=7\n"] -> [
+            ["Sequence"
+                ["o" "t" "=" "7"]
             ]
         ]
 
@@ -20,6 +26,8 @@ actor Hasher =
         hash = [.*:xs] -> hashAlgorithm(xs)
     examples
         ["Sequence" ["H"]] -> [["Result" 200]]
+        ["Sequence" ["H" "A" "S" "H"]] -> [["Result" 52]]
+        ["Sequence" ["o" "t" "=" "7"]] -> [["Result" 231]]
 
 def hashAlgorithm characters =
     result = 0
@@ -32,3 +40,7 @@ def hashAlgorithm characters =
 universe Part1 =
     CLI()
     Parser()
+    Hasher()
+    examples
+        ["Args" "example.txt"] -> [["Result" 1320]]
+        ["Args" "input.txt"] -> [["Result" 518107]]
