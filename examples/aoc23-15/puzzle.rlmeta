@@ -1,3 +1,21 @@
+universe Part1 =
+    CLI()
+    Parser()
+    Hasher()
+    examples
+        ["Args" "example.txt"] -> [["Result" 1320]]
+        ["Args" "input.txt"] -> [["Result" 518107]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    InstructionParser()
+    InstructionRunner()
+    BoxSummer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 145]]
+        ["Args" "input.txt"] -> [["Result" 303404]]
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -114,21 +132,3 @@ def sumBoxes boxes =
         for slotId, (lable, value) in enumerate(lenses):
             result += (boxId+1)*(slotId+1)*value
     return result
-
-universe Part1 =
-    CLI()
-    Parser()
-    Hasher()
-    examples
-        ["Args" "example.txt"] -> [["Result" 1320]]
-        ["Args" "input.txt"] -> [["Result" 518107]]
-
-universe Part2 =
-    CLI()
-    Parser()
-    InstructionParser()
-    InstructionRunner()
-    BoxSummer()
-    examples
-        ["Args" "example.txt"] -> [["Result" 145]]
-        ["Args" "input.txt"] -> [["Result" 303404]]
