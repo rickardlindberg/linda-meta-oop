@@ -6,6 +6,14 @@ universe Part1 =
         ["Args" "example.txt"] -> [["Result" 46]]
         ["Args" "input.txt"] -> [["Result" 7046]]
 
+universe Part2 =
+    CLI()
+    Parser()
+    BeamMaxExecutor()
+    examples
+        ["Args" "example.txt"] -> [["Result" 51]]
+        ["Args" "input.txt"] -> [["Result" 7313]]
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -29,15 +37,15 @@ actor Parser =
         ]
 
 actor BeamExecutor =
-    "Contraption" .:x !. -> put(["Result" execute(x)])
+    "Contraption" .:x !. -> put(["Result" execute(x tuple(0 0 "R"))])
     examples
         ["Contraption" dict([
             tuple(tuple(0 0) ".") tuple(tuple(1 0) ".")
         ])] -> [["Result" 2]]
 
-def execute contraption =
+def execute contraption initial =
     visited = set()
-    active = [(0, 0, "R")]
+    active = [initial]
     energized = set()
     while active:
         x, y, dir = active.pop(0)
@@ -90,3 +98,18 @@ def newBeams x y dir action =
             return [down]
     else:
         assert False, "invalid dir"
+
+actor BeamMaxExecutor =
+    "Contraption" .:x !. -> put(["Result" executeMax(x)])
+
+def executeMax contraption =
+    maxX = max(x for x, y in contraption)
+    maxY = max(y for x, y in contraption)
+    results = []
+    for y in range(maxY+1):
+        results.append(execute(contraption, (0, y, "R")))
+        results.append(execute(contraption, (maxX, y, "L")))
+    for x in range(maxX+1):
+        results.append(execute(contraption, (x, 0, "D")))
+        results.append(execute(contraption, (x, maxX, "U")))
+    return max(results)
