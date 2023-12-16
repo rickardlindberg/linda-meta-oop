@@ -5,11 +5,11 @@ actor CodeGenerator =
         ast           = [%:x !.]                   -> x
         Native        = .:x .:y                    -> { y "natives[" repr(x) "] = " x "\n" }
         Universe      = .:x [astList:xs] [ast*:ys] -> Counter():nextid
-                                                   -> x:universeName
-                                                   -> { ys "natives[" repr(universeName) "] = lambda: [" xs "]\n" }
-        Example       = ast:x ast:y                -> { "class " universeName "_Example_" nextid() "(Example):\n" indent({
+                                                   -> x:name
+                                                   -> { ys "natives[" repr(name) "] = lambda: [" xs "]\n" }
+        Example       = ast:x ast:y                -> { "class " name "_Example_" nextid() "(Example):\n" indent({
                                                           "def test_example(self):\n" indent({
-                                                            "self.check_example(natives[" repr(universeName) "](), " x ", " y ")\n"
+                                                            "self.check_example(natives[" repr(name) "](), " x ", " y ")\n"
                                                           })
                                                         })
                                                       }
@@ -19,6 +19,7 @@ actor CodeGenerator =
                                                       collector():rules                                  ->
                                                       collector():param                                  ->
                                                       collector():init                                   ->
+                                                      x:name                                             ->
                                                       { ys zs
                                                         "class " x ":\n" indent({
                                                           "def __init__(self" {param} "):\n" indent({

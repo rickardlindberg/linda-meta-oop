@@ -1,0 +1,19 @@
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [sequence:x] !. -> put(x)
+    where
+        sequence  = step:x (',' step)*:xs -> ["Sequence" x ~xs]
+        step      = (!',' .)*:xs          -> xs
+    examples
+        ["File" "rn=1,cm-"] -> [
+            ["Sequence"
+                ["r" "n" "=" "1"]
+                ["c" "m" "-"]
+            ]
+        ]
+
+universe Part1 =
+    CLI()
+    Parser()
