@@ -277,4 +277,6 @@ class Example(unittest.TestCase):
                 f"Actual:   {actual_out_messages!r}",
             ]))
 
-natives = {}
+natives = {
+    "dict": dict,
+}

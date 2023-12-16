@@ -28,6 +28,7 @@ actor Hasher =
         ["Sequence" ["H"]] -> [["Result" 200]]
         ["Sequence" ["H" "A" "S" "H"]] -> [["Result" 52]]
         ["Sequence" ["o" "t" "=" "7"]] -> [["Result" 231]]
+        ["Sequence" ["r" "n"]] -> [["Result" 0]]
 
 def hashAlgorithm characters =
     result = 0
@@ -36,6 +37,64 @@ def hashAlgorithm characters =
         result *= 17
         result = result % 256
     return result
+
+actor InstructionParser =
+    "Sequence" operation*:xs !. -> put(["Operations" ~xs])
+    where
+        operation = [label:x action:y !.] -> [x y]
+        label     = char:x char*:xs       -> [x ~xs]
+        char      = !('=' | '-') .
+        action =
+            | '=' number:x -> ["set" x]
+            | '-'          -> ["remove"]
+        number    = digit:x digit*:xs     -> int({x xs})
+        digit     = '0'-'9'
+    examples
+        ["Sequence"
+            ["r" "n" "=" "1"]
+            ["c" "m" "-"]
+        ] -> [["Operations"
+            [["r" "n"] ["set" 1]]
+            [["c" "m"] ["remove"]]
+        ]]
+
+actor InstructionRunner =
+    "Operations" operation*:xs !.
+        -> dict():boxes
+        -> xs
+        -> put(["Boxes" boxes])
+    where
+        operation = [[.*:label] action:y !.]
+            -> hashAlgorithm(label):boxId
+            -> { label }:label
+            -> y
+        action =
+            | ["set" .:value] -> boxSet(boxes boxId label value)
+            | ["remove"]      -> boxRemove(boxes boxId label)
+    examples
+        ["Operations"
+            [["r" "n"] ["set" 1]]
+            [["c" "m"] ["remove"]]
+        ] -> [["Boxes" dict([
+            [0 [["rn" 1]]]
+        ])]]
+
+def boxSet boxes boxId label value =
+    if boxId in boxes:
+        boxes[boxId] = [
+            x if x[0] != label else [label, value]
+            for x in boxes[boxId]
+        ]
+    else:
+        boxes[boxId] = [[label, value]]
+
+def boxRemove boxes boxId label =
+    if boxId in boxes:
+        boxes[boxId] = [
+            x
+            for x in boxes[boxId]
+            if x[0] != label
+        ]
 
 universe Part1 =
     CLI()
