@@ -1,0 +1,24 @@
+universe Part1 =
+    CLI()
+
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [contraption:x] !. -> put(x)
+    where
+        contraption = row*:xs
+            -> Counter():nextY
+            -> ["Contraption" dict([~~xs])]
+        row = col*:xs '\n'
+            -> nextY():y
+            -> Counter():nextX
+            -> xs
+        col = ('.' | '|' | '-' | '\\' | '/'):x -> [tuple(nextX() y) x]
+    examples
+        ["File" ".|\n|.\n"] -> [
+            ["Contraption" dict([
+                tuple(tuple(0 0) ".") tuple(tuple(1 0) "|")
+                tuple(tuple(0 1) "|") tuple(tuple(1 1) ".")
+            ])]
+        ]
