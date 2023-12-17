@@ -2,6 +2,8 @@ universe Part1 =
     CLI()
     Parser()
     ShortestPathFinder()
+    examples
+        ["Args" "example.txt"] -> [["Result" 102]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -31,8 +33,8 @@ def countColumns rows =
 
 actor ShortestPathFinder =
     "Map" .:width .:height .:map -> put(["Result" astar(
-        tuple(0 0)
-        tuple(dec(width) dec(height))
+        tuple(0 0 "-")
+        tuple(dec(width) dec(height) "-")
         map
     )])
     examples
@@ -42,6 +44,10 @@ actor ShortestPathFinder =
         ["Map" 5 1 [
             [1 1 1 1 1]
         ]] -> [["Result" "no path found"]]
+        ["Map" 5 2 [
+            [1 1 1 1 1]
+            [1 1 1 1 1]
+        ]] -> [["Result" 5]]
         ["Map" 3 2 [
             [1 9 8]
             [1 1 1]
@@ -60,14 +66,14 @@ def astar start goal map =
     while openSet:
         openSet = sorted(openSet, key=lambda x: estimates[x])
         next = openSet.pop(0)
-        x, y = next
-        if next == goal:
-            return cost[cameFrom[next][0]] + map[y][x]
-        for neighbour, dir in findNeighbours(next, map, cameFrom):
-            xn, yn = neighbour
-            neighbourCost = cost[next] + map[yn][xn]
+        x, y, inDir = next
+        if next[:2] == goal[:2]:
+            return cost[cameFrom[next]] + map[y][x]
+        for neighbour in findNeighbours(next, map, cameFrom):
+            xN, yN, inDirN = neighbour
+            neighbourCost = cost[next] + map[yN][xN]
             if neighbour not in cost or neighbourCost < cost[neighbour]:
-                cameFrom[neighbour] = (next, dir)
+                cameFrom[neighbour] = (x, y, inDir)
                 cost[neighbour] = neighbourCost
                 estimates[neighbour] = neighbourCost + ideal(neighbour, goal)
                 if neighbour not in openSet:
@@ -79,31 +85,31 @@ actor NeighbourFinder =
         -> put(findNeighbours(pos map cameFrom))
     examples
         ["FindNeighbour"
-            tuple(3 0)
+            tuple(3 0 "right")
             [
                 [1 1 1 1 1]
                 [1 1 1 1 1]
             ]
             dict([
-                tuple(tuple(3 0) tuple(tuple(2 0) "right"))
+                tuple(tuple(3 0 "right") tuple(2 0 "right"))
             ])
         ] -> [[
-            tuple(tuple(3 1) "down")
-            tuple(tuple(4 0) "right")
+            tuple(3 1 "down")
+            tuple(4 0 "right")
         ]]
 
-def findNeighbours pos map cameFrom =
-    x, y = pos
-    path = reconstruct(pos, cameFrom)
+def findNeighbours node map cameFrom =
+    x, y, inDir = node
+    path = reconstruct(node, cameFrom)
     repeat = None
     if len(path) >= 3:
-        dirs = [dir for pos, dir in path[-3:]]
+        dirs = [dir for _, _, dir in path[-3:]]
         if len(set(dirs)) == 1:
             repeat = dirs[0]
-    up = ((x, y-1), "up")
-    down = ((x, y+1), "down")
-    left = ((x-1, y), "left")
-    right = ((x+1, y), "right")
+    up = (x, y-1, "up")
+    down = (x, y+1, "down")
+    left = (x-1, y, "left")
+    right = (x+1, y, "right")
     candidates = [up, down, left, right]
     if repeat in ["up", "down"]:
         candidates.remove(up)
@@ -112,8 +118,8 @@ def findNeighbours pos map cameFrom =
         candidates.remove(left)
         candidates.remove(right)
     for candidate in list(candidates):
-        (xc, yc), dir = candidate
-        if xc < 0 or yc < 0 or cameFrom.get(pos, (None, None))[0] == candidate[0]:
+        xc, yc, dir = candidate
+        if xc < 0 or yc < 0 or cameFrom.get(node, (None, None, None))[:2] == candidate[:2]:
             candidates.remove(candidate)
         else:
             try:
@@ -122,15 +128,14 @@ def findNeighbours pos map cameFrom =
                 candidates.remove(candidate)
     return candidates
 
-def reconstruct pos cameFrom =
-    path = []
-    while pos in cameFrom:
-        prevPos, dir = cameFrom[pos]
-        path.insert(0, (pos, dir))
-        pos = prevPos
+def reconstruct node cameFrom =
+    path = [node]
+    while node in cameFrom:
+        node = cameFrom[node]
+        path.insert(0, node)
     return path
 
 def ideal start end =
-    x1, y1 = start
-    x2, y2 = end
+    x1, y1, inDir1 = start
+    x2, y2, inDir2 = end
     return abs(x1-x2) + abs(y1-y2)
