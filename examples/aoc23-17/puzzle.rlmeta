@@ -3,7 +3,7 @@ universe Part1 =
     Parser()
     ShortestPathFinder()
     examples
-        ["Args" "example.txt"] -> [["Result" 2]]
+        ["Args" "example.txt"] -> [["Result" 3]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -13,7 +13,7 @@ actor Parser =
     where
         map   = row*:xs !.     -> ["Map" countColumns(xs) len(xs) xs]
         row   = digit*:xs '\n' -> xs
-        digit = '0'-'9':x      -> int(x)
+        digit = '1'-'9':x      -> int(x)
     examples
         ["File" "123\n456\n"] -> [
             ["Map"
@@ -32,12 +32,22 @@ def countColumns rows =
     return columns[0]
 
 actor ShortestPathFinder =
-    "Map" .:widht .:height .:map -> put(["Result" astar()])
+    "Map" .:width .:height .:map -> put(["Result" astar(
+        tuple(0 0)
+        tuple(dec(width) dec(height))
+        map
+    )])
     examples
-        ["Map" 2 2 [
-            [1 1]
-            [1 1]
-        ]] -> [["Result" 2]]
+        ["Map" 3 1 [
+            [1 1 1]
+        ]] -> [["Result" 3]]
 
-def astar =
-    return 2
+def astar start goal map =
+    estimates = {start: ideal(start, goal)}
+    open = [start]
+    return 3
+
+def ideal start end =
+    x1, y1 = start
+    x2, y2 = end
+    return abs(x1-x2) + abs(y1-y2)
