@@ -39,6 +39,9 @@ actor ShortestPathFinder =
         ["Map" 3 1 [
             [1 2 1]
         ]] -> [["Result" 3]]
+        ["Map" 5 1 [
+            [1 1 1 1 1]
+        ]] -> [["Result" "no path found"]]
         ["Map" 3 2 [
             [1 9 8]
             [1 1 1]
@@ -59,36 +62,39 @@ def astar start goal map =
         next = openSet.pop(0)
         x, y = next
         if next == goal:
-            return cost[cameFrom[next]] + map[y][x]
-        for neighbour in findNeighbours(next, map, cameFrom):
+            return cost[cameFrom[next][0]] + map[y][x]
+        for neighbour, dir in findNeighbours(next, map, cameFrom):
             xn, yn = neighbour
             neighbourCost = cost[next] + map[yn][xn]
             if neighbour not in cost or neighbourCost < cost[neighbour]:
-                cameFrom[neighbour] = next
+                cameFrom[neighbour] = (next, dir)
                 cost[neighbour] = neighbourCost
                 estimates[neighbour] = neighbourCost + ideal(neighbour, goal)
                 if neighbour not in openSet:
                     openSet.append(neighbour)
-    raise ValueError("no path found")
+    return "no path found"
 
 def findNeighbours pos map cameFrom =
     x, y = pos
     path = reconstruct(pos, cameFrom)
-    sameX = len(path) >= 3 and len(set(x for x, y in path[-3:])) == 1
-    sameY = len(path) >= 3 and len(set(y for x, y in path[-3:])) == 1
-    up = (x, y-1)
-    down = (x, y+1)
-    left = (x-1, y)
-    right = (x+1, y)
+    repeat = None
+    if len(path) >= 3:
+        dirs = [dir for pos, dir in path[-3:]]
+        if len(set(dirs)) == 1:
+            repeat = dirs[0]
+    up = ((x, y-1), "up")
+    down = ((x, y+1), "down")
+    left = ((x-1, y), "left")
+    right = ((x+1, y), "right")
     candidates = [up, down, left, right]
-    if sameX:
+    if repeat in ["up", "down"]:
         candidates.remove(up)
         candidates.remove(down)
-    if sameY:
+    if repeat in ["left", "right"]:
         candidates.remove(left)
         candidates.remove(right)
     for candidate in list(candidates):
-        xc, yc = candidate
+        (xc, yc), dir = candidate
         if xc < 0 or yc < 0 or cameFrom.get(pos) == candidate:
             candidates.remove(candidate)
         else:
@@ -100,10 +106,10 @@ def findNeighbours pos map cameFrom =
 
 def reconstruct pos cameFrom =
     path = []
-    path.insert(0, pos)
     while pos in cameFrom:
-        pos = cameFrom[pos]
-        path.insert(0, pos)
+        prevPos, dir = cameFrom[pos]
+        path.insert(0, (pos, dir))
+        pos = prevPos
     return path
 
 def ideal start end =
