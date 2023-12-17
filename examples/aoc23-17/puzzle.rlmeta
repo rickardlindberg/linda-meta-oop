@@ -74,6 +74,24 @@ def astar start goal map =
                     openSet.append(neighbour)
     return "no path found"
 
+actor NeighbourFinder =
+    "FindNeighbour" .:pos .:map .:cameFrom
+        -> put(findNeighbours(pos map cameFrom))
+    examples
+        ["FindNeighbour"
+            tuple(3 0)
+            [
+                [1 1 1 1 1]
+                [1 1 1 1 1]
+            ]
+            dict([
+                tuple(tuple(3 0) tuple(tuple(2 0) "right"))
+            ])
+        ] -> [[
+            tuple(tuple(3 1) "down")
+            tuple(tuple(4 0) "right")
+        ]]
+
 def findNeighbours pos map cameFrom =
     x, y = pos
     path = reconstruct(pos, cameFrom)
@@ -95,7 +113,7 @@ def findNeighbours pos map cameFrom =
         candidates.remove(right)
     for candidate in list(candidates):
         (xc, yc), dir = candidate
-        if xc < 0 or yc < 0 or cameFrom.get(pos) == candidate:
+        if xc < 0 or yc < 0 or cameFrom.get(pos, (None, None))[0] == candidate[0]:
             candidates.remove(candidate)
         else:
             try:
