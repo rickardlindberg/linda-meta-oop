@@ -39,9 +39,15 @@ actor ShortestPathFinder =
         ["Map" 3 1 [
             [1 2 1]
         ]] -> [["Result" 3]]
-        ["Map" 3 1 [
+        ["Map" 3 2 [
+            [1 9 8]
             [1 1 1]
-        ]] -> [["Result" 2]]
+        ]] -> [["Result" 3]]
+        ["Map" 3 3 [
+            [1 1 9]
+            [9 1 5]
+            [9 6 1]
+        ]] -> [["Result" 8]]
 
 def astar start goal map =
     estimates = {start: ideal(start, goal)}
