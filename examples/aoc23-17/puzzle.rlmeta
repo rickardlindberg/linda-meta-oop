@@ -39,6 +39,9 @@ actor ShortestPathFinder =
         ["Map" 3 1 [
             [1 2 1]
         ]] -> [["Result" 3]]
+        ["Map" 3 1 [
+            [1 1 1]
+        ]] -> [["Result" 2]]
 
 def astar start goal map =
     estimates = {start: ideal(start, goal)}
@@ -73,11 +76,11 @@ def findNeighbours pos map cameFrom =
     right = (x+1, y)
     candidates = [up, down, left, right]
     if sameX:
-        candidates.remove(left)
-        candidates.remove(right)
-    if sameY:
         candidates.remove(up)
         candidates.remove(down)
+    if sameY:
+        candidates.remove(left)
+        candidates.remove(right)
     for candidate in list(candidates):
         xc, yc = candidate
         if xc < 0 or yc < 0 or cameFrom.get(pos) == candidate:
@@ -91,9 +94,10 @@ def findNeighbours pos map cameFrom =
 
 def reconstruct pos cameFrom =
     path = []
+    path.insert(0, pos)
     while pos in cameFrom:
-        path.insert(0, pos)
         pos = cameFrom[pos]
+        path.insert(0, pos)
     return path
 
 def ideal start end =
