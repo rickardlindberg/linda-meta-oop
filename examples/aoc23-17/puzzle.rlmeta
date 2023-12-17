@@ -2,8 +2,6 @@ universe Part1 =
     CLI()
     Parser()
     ShortestPathFinder()
-    examples
-        ["Args" "example.txt"] -> [["Result" 3]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -39,13 +37,30 @@ actor ShortestPathFinder =
     )])
     examples
         ["Map" 3 1 [
-            [1 1 1]
+            [1 2 1]
         ]] -> [["Result" 3]]
 
 def astar start goal map =
     estimates = {start: ideal(start, goal)}
-    open = [start]
-    return 3
+    cost = {start: 0}
+    cameFrom = {}
+    openSet = [start]
+    while openSet:
+        openSet = sorted(openSet, key=lambda x: estimates[x])
+        next = openSet.pop(0)
+        x, y = next
+        if next == goal:
+            return cost[cameFrom[next]] + map[y][x]
+        for neighbour in [(x+1, y)]:
+            xn, yn = neighbour
+            neighbourCost = cost[next] + map[yn][xn]
+            if neighbour not in cost or neighbourCost < cost[neighbour]:
+                cameFrom[neighbour] = next
+                cost[neighbour] = neighbourCost
+                estimates[neighbour] = neighbourCost + ideal(neighbour, goal)
+                if neighbour not in openSet:
+                    openSet.append(neighbour)
+    raise ValueError("no path found")
 
 def ideal start end =
     x1, y1 = start
