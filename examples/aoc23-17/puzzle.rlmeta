@@ -66,14 +66,14 @@ def astar start goal map =
     while openSet:
         openSet = sorted(openSet, key=lambda x: estimates[x])
         next = openSet.pop(0)
-        x, y, inDir = next
+        x, y, _ = next
         if next[:2] == goal[:2]:
             return cost[cameFrom[next]] + map[y][x]
         for neighbour in findNeighbours(next, map, cameFrom):
-            xN, yN, inDirN = neighbour
+            xN, yN, _ = neighbour
             neighbourCost = cost[next] + map[yN][xN]
             if neighbour not in cost or neighbourCost < cost[neighbour]:
-                cameFrom[neighbour] = (x, y, inDir)
+                cameFrom[neighbour] = next
                 cost[neighbour] = neighbourCost
                 estimates[neighbour] = neighbourCost + ideal(neighbour, goal)
                 if neighbour not in openSet:
@@ -99,26 +99,26 @@ actor NeighbourFinder =
         ]]
 
 def findNeighbours node map cameFrom =
-    x, y, inDir = node
-    path = reconstruct(node, cameFrom)
-    repeat = None
-    if len(path) >= 3:
-        dirs = [dir for _, _, dir in path[-3:]]
-        if len(set(dirs)) == 1:
-            repeat = dirs[0]
+    x, y, _ = node
     up = (x, y-1, "up")
     down = (x, y+1, "down")
     left = (x-1, y, "left")
     right = (x+1, y, "right")
     candidates = [up, down, left, right]
-    if repeat in ["up", "down"]:
+    path = reconstruct(node, cameFrom)
+    repeatedDir = None
+    if len(path) >= 3:
+        dirs = [dir for _, _, dir in path[-3:]]
+        if len(set(dirs)) == 1:
+            repeatedDir = dirs[0]
+    if repeatedDir in ["up", "down"]:
         candidates.remove(up)
         candidates.remove(down)
-    if repeat in ["left", "right"]:
+    if repeatedDir in ["left", "right"]:
         candidates.remove(left)
         candidates.remove(right)
     for candidate in list(candidates):
-        xc, yc, dir = candidate
+        xc, yc, _ = candidate
         if xc < 0 or yc < 0 or cameFrom.get(node, (None, None, None))[:2] == candidate[:2]:
             candidates.remove(candidate)
         else:
