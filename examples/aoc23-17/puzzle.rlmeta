@@ -51,7 +51,7 @@ def astar start goal map =
         x, y = next
         if next == goal:
             return cost[cameFrom[next]] + map[y][x]
-        for neighbour in [(x+1, y)]:
+        for neighbour in findNeighbours(next, map, cameFrom):
             xn, yn = neighbour
             neighbourCost = cost[next] + map[yn][xn]
             if neighbour not in cost or neighbourCost < cost[neighbour]:
@@ -61,6 +61,40 @@ def astar start goal map =
                 if neighbour not in openSet:
                     openSet.append(neighbour)
     raise ValueError("no path found")
+
+def findNeighbours pos map cameFrom =
+    x, y = pos
+    path = reconstruct(pos, cameFrom)
+    sameX = len(path) >= 3 and len(set(x for x, y in path[-3:])) == 1
+    sameY = len(path) >= 3 and len(set(y for x, y in path[-3:])) == 1
+    up = (x, y-1)
+    down = (x, y+1)
+    left = (x-1, y)
+    right = (x+1, y)
+    candidates = [up, down, left, right]
+    if sameX:
+        candidates.remove(left)
+        candidates.remove(right)
+    if sameY:
+        candidates.remove(up)
+        candidates.remove(down)
+    for candidate in list(candidates):
+        xc, yc = candidate
+        if xc < 0 or yc < 0 or cameFrom.get(pos) == candidate:
+            candidates.remove(candidate)
+        else:
+            try:
+                map[yc][xc]
+            except IndexError:
+                candidates.remove(candidate)
+    return candidates
+
+def reconstruct pos cameFrom =
+    path = []
+    while pos in cameFrom:
+        path.insert(0, pos)
+        pos = cameFrom[pos]
+    return path
 
 def ideal start end =
     x1, y1 = start
