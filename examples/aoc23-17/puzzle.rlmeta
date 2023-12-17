@@ -1,0 +1,27 @@
+universe Part1 =
+    CLI()
+    Parser()
+
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [map:x] !. -> put(x)
+    where
+        map   = row*:xs !.     -> ["Map" len(xs) countColumns(xs) ~xs]
+        row   = digit*:xs '\n' -> xs
+        digit = '0'-'9':x      -> int(x)
+    examples
+        ["File" "123\n456\n"] -> [
+            ["Map"
+                2
+                3
+                [1 2 3]
+                [4 5 6]
+            ]
+        ]
+
+def countColumns rows =
+    columns = [len(x) for x in rows]
+    assert len(set(columns))
+    return columns[0]
