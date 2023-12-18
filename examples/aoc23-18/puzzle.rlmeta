@@ -25,3 +25,34 @@ actor Parser =
                 ["U" 6 "#113213"]
             ]
         ]
+
+actor Digger =
+    "Plan" instruction*:xs !.
+        -> dict([tuple("x" 0) tuple("y" 0)]):pos
+        -> put(["Polygon" render(pos) ~xs])
+    where
+        instruction =
+            | ["U" .:n] -> move(pos 0         negate(n))
+            | ["D" .:n] -> move(pos 0         n)
+            | ["L" .:n] -> move(pos negate(n) 0)
+            | ["R" .:n] -> move(pos n         0)
+    examples
+        ["Plan"
+            ["R" 2 "red"]
+            ["D" 2 "green"]
+        ] -> [["Polygon"
+            tuple(0 0)
+            tuple(2 0)
+            tuple(2 2)
+        ]]
+
+def render pos =
+    return (pos["x"], pos["y"])
+
+def move pos dx dy =
+    pos["x"] += dx
+    pos["y"] += dy
+    return render(pos)
+
+def negate x =
+    return -1*x
