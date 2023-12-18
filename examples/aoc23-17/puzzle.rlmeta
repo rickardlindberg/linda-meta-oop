@@ -1,10 +1,17 @@
 universe Part1 =
     CLI()
     Parser()
-    ShortestPathFinder()
+    ShortestPathFinder(findNeighboursPart1)
     examples
         ["Args" "example.txt"] -> [["Result" 102]]
         ["Args" "input.txt"] -> [["Result" 1023]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    ShortestPathFinder(findNeighboursPart2)
+    examples
+        ["Args" "example.txt"] -> [["Result" 102]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -32,13 +39,16 @@ def countColumns rows =
     assert len(set(columns))
     return columns[0]
 
-actor ShortestPathFinder =
+actor ShortestPathFinder #findNeighbours =
     "Map" .:width .:height .:map -> put(["Result" astar(
         tuple(0 0)
         tuple(dec(width) dec(height))
         map
-        findNeighboursPart1
+        findNeighbours
     )])
+
+universe ShortestPathFinderPart1Examples =
+    ShortestPathFinder(findNeighboursPart1)
     examples
         ["Map" 3 1 [
             [1 2 1]
@@ -119,3 +129,29 @@ def ideal start end =
     x1, y1 = start[:2]
     x2, y2 = end[:2]
     return abs(x1-x2) + abs(y1-y2)
+
+def findNeighboursPart2 node map cameFrom =
+    x, y = node[:2]
+    if len(node) == 4:
+        repeatedDir = node[2]
+        repeatCount = node[3]
+    else:
+        repeatedDir = None
+        repeatCount = 0
+    up    = (x,   y-1, "vertical",   repeatCount+1 if repeatedDir == "vertical"   else 1)
+    down  = (x,   y+1, "vertical",   repeatCount+1 if repeatedDir == "vertical"   else 1)
+    left  = (x-1, y,   "horizontal", repeatCount+1 if repeatedDir == "horizontal" else 1)
+    right = (x+1, y,   "horizontal", repeatCount+1 if repeatedDir == "horizontal" else 1)
+    candidates = [up, down, left, right]
+    for candidate in list(candidates):
+        xc, yc = candidate[:2]
+        if candidate[3] > 3:
+            candidates.remove(candidate)
+        elif xc < 0 or yc < 0 or cameFrom.get(node, (None, None))[:2] == candidate[:2]:
+            candidates.remove(candidate)
+        else:
+            try:
+                map[yc][xc]
+            except IndexError:
+                candidates.remove(candidate)
+    return candidates
