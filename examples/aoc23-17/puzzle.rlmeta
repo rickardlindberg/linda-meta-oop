@@ -13,8 +13,7 @@ universe Part2 =
     examples
         ["Args" "example.txt"] -> [["Result" 94]]
         ["Args" "example2.txt"] -> [["Result" 71]]
-        //["Args" "input.txt"] -> [["Result" 1167]]
-        // wrong
+        ["Args" "input.txt"] -> [["Result" 1165]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -223,16 +222,24 @@ def findNeighboursPart2 node map cameFrom =
     else:
         repeatedDir = None
         repeatCount = 0
-    up    = (x,   y-1, "vertical",   repeatCount+1 if repeatedDir == "vertical"   else 1)
-    down  = (x,   y+1, "vertical",   repeatCount+1 if repeatedDir == "vertical"   else 1)
-    left  = (x-1, y,   "horizontal", repeatCount+1 if repeatedDir == "horizontal" else 1)
-    right = (x+1, y,   "horizontal", repeatCount+1 if repeatedDir == "horizontal" else 1)
+    up    = (x,   y-1, "up",    repeatCount+1 if repeatedDir == "up"    else 1)
+    down  = (x,   y+1, "down",  repeatCount+1 if repeatedDir == "down"  else 1)
+    left  = (x-1, y,   "left",  repeatCount+1 if repeatedDir == "left"  else 1)
+    right = (x+1, y,   "right", repeatCount+1 if repeatedDir == "right" else 1)
     candidates = [up, down, left, right]
+    if repeatedDir == "right":
+        candidates.remove(left)
+    elif repeatedDir == "left":
+        candidates.remove(right)
+    elif repeatedDir == "up":
+        candidates.remove(down)
+    elif repeatedDir == "down":
+        candidates.remove(up)
     for candidate in list(candidates):
         xc, yc = candidate[:2]
         if isForbidden2(node, candidate):
             candidates.remove(candidate)
-        elif xc < 0 or yc < 0 or cameFrom.get(node, (None, None))[:2] == candidate[:2]:
+        elif xc < 0 or yc < 0:
             candidates.remove(candidate)
         else:
             try:
