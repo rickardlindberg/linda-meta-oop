@@ -4,6 +4,7 @@ universe Part1 =
     ShortestPathFinder()
     examples
         ["Args" "example.txt"] -> [["Result" 102]]
+        ["Args" "input.txt"] -> [["Result" 1023]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -80,44 +81,24 @@ def astar start goal map =
                     openSet.append(neighbour)
     return "no path found"
 
-actor NeighbourFinder =
-    "FindNeighbour" .:pos .:map .:cameFrom
-        -> put(findNeighbours(pos map cameFrom))
-    examples
-        ["FindNeighbour"
-            tuple(3 0 "up" "right" "right")
-            [
-                [1 1 1 1 1]
-                [1 1 1 1 1]
-            ]
-            dict([
-                tuple(tuple(3 0 "up" "right" "right") tuple(2 0 "right"))
-            ])
-        ] -> [[
-            tuple(3 1 "right" "right" "down")
-            tuple(4 0 "right" "right" "right")
-        ]]
-
 def findNeighbours node map cameFrom =
     x, y = node[:2]
-    up    = (x,   y-1)+node[-2:]+("up",)
-    down  = (x,   y+1)+node[-2:]+("down",)
-    left  = (x-1, y, )+node[-2:]+("left",)
-    right = (x+1, y, )+node[-2:]+("right",)
-    if len(set(node[-3:])) == 1:
-        repeatedDir = node[-1]
+    if len(node) == 4:
+        repeatedDir = node[2]
+        repeatCount = node[3]
     else:
         repeatedDir = None
+        repeatCount = 0
+    up    = (x,   y-1, "up",    repeatCount+1 if repeatedDir=="up" else 1)
+    down  = (x,   y+1, "down",  repeatCount+1 if repeatedDir=="down" else 1)
+    left  = (x-1, y,   "left",  repeatCount+1 if repeatedDir=="left" else 1)
+    right = (x+1, y,   "right", repeatCount+1 if repeatedDir=="right" else 1)
     candidates = [up, down, left, right]
-    if repeatedDir in ["up", "down"]:
-        candidates.remove(up)
-        candidates.remove(down)
-    if repeatedDir in ["left", "right"]:
-        candidates.remove(left)
-        candidates.remove(right)
     for candidate in list(candidates):
         xc, yc = candidate[:2]
-        if xc < 0 or yc < 0 or cameFrom.get(node, (None, None))[:2] == candidate[:2]:
+        if candidate[3] > 3:
+            candidates.remove(candidate)
+        elif xc < 0 or yc < 0 or cameFrom.get(node, (None, None))[:2] == candidate[:2]:
             candidates.remove(candidate)
         else:
             try:
