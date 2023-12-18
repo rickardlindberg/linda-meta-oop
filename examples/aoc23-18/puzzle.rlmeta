@@ -4,7 +4,8 @@ universe Part1 =
     Digger()
     HoleCounter()
     examples
-        ["Args" "example.txt"] -> [["Result" 14]]
+        ["Args" "example.txt"] -> [["Result" 62]]
+        ["Args" "input.txt"] -> [["Result" 52231]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -20,7 +21,7 @@ actor Parser =
                 -> [d n c]
         direction   = 'U' | 'D' | 'L' | 'R'
         number      = digit:x digit*:xs    -> int({ x xs })
-        digit       = '1'-'9':x            -> int(x)
+        digit       = '0'-'9':x            -> int(x)
         color       = '(' (!')' .)*:xs ')' -> { xs }
     examples
         ["File" "R 9 (#066240)\nU 6 (#113213)\n"] -> [
@@ -62,19 +63,53 @@ def negate x =
     return -1*x
 
 actor HoleCounter =
-    "Polygon" .*:xs !. -> put(["Result" pointsInside(xs)])
+    "Polygon" .*:xs !. -> put(["Result" pointsInside(xs 0)])
     examples
         ["Polygon"
             tuple(0 0) tuple(2 0)
                        tuple(2 2)
             tuple(0 2)
-        ] -> [["Result" 4]]
+        ] -> [["Result" 9]]
 
-def pointsInside points =
+def pointsInside points print =
+    if print:
+        printFn = sys.stdout.write
+    else:
+        printFn = lambda x: None
     count = 0
-    for y in range(max(y for x, y in points)+1):
-        insideFlage = False
-        for x in range(max(x for x, y in points)+1):
-            if (x, y) in points:
+    edges = list(getEdges(points))
+    printFn("\n")
+    for y in range(min(y for x, y in points), max(y for x, y in points)+1):
+        printFn("> ")
+        for x in range(min(x for x, y in points), max(x for x, y in points)+1):
+            insideFlag = False
+            atEdge = False
+            for kind, at, start, stop in edges:
+                if kind == "|":
+                    if at == x and start <= y <= stop:
+                        atEdge = True
+                    if at < x and start < y <= stop:
+                        insideFlag = not insideFlag
+                elif kind == "-":
+                    if at == y and start <= x <= stop:
+                        atEdge = True
+            if atEdge or insideFlag:
                 count += 1
+            if atEdge:
+                printFn("#")
+            elif insideFlag:
+                printFn(".")
+            else:
+                printFn(" ")
+        printFn("\n")
     return count
+
+def getEdges points =
+    x1, y1 = points[-1]
+    for x2, y2 in points:
+        if x1 == x2:
+            yield ("|", x1, min(y1, y2), max(y1, y2))
+        else:
+            assert y1 == y2
+            yield ("-", y1, min(x1, x2), max(x1, x2))
+        x1, y1 = x2, y2
