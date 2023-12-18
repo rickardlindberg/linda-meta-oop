@@ -72,6 +72,17 @@ universe ShortestPathFinderPart1Examples =
             [9 6 1]
         ]] -> [["Result" 8]]
 
+universe ShortestPathFinderPart2Examples =
+    ShortestPathFinder(findNeighboursPart2 "part2")
+    examples
+        ["Map" 12 5 [
+            [1 1 1 1 1 1 1 1 1 1 1 1]
+            [1 1 1 1 1 1 1 1 1 1 1 1]
+            [1 1 1 1 1 1 1 1 1 1 1 1]
+            [1 1 1 1 1 1 1 1 1 1 1 1]
+            [4 4 4 4 4 4 4 4 4 4 4 1]
+        ]] -> [["Result" 27]]
+
 def astar start goal map findNeighbours part =
     estimates = {start: ideal(start, goal)}
     cost = {start: 0}
