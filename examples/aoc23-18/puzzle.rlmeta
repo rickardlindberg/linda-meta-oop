@@ -1,0 +1,27 @@
+universe Part1 =
+    CLI()
+    Parser()
+
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [plan:x] !. -> put(x)
+    where
+        plan        = instruction*:xs !.   -> ["Plan" ~xs]
+        instruction =
+            direction:d ' '
+            number:n ' '
+            color:c '\n'
+                -> [d n c]
+        direction   = 'U' | 'D' | 'L' | 'R'
+        number      = digit:x digit*:xs    -> int({ x xs })
+        digit       = '1'-'9':x            -> int(x)
+        color       = '(' (!')' .)*:xs ')' -> { xs }
+    examples
+        ["File" "R 9 (#066240)\nU 6 (#113213)\n"] -> [
+            ["Plan"
+                ["R" 9 "#066240"]
+                ["U" 6 "#113213"]
+            ]
+        ]
