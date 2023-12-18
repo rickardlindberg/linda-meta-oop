@@ -1,6 +1,10 @@
 universe Part1 =
     CLI()
     Parser()
+    Digger()
+    HoleCounter()
+    examples
+        ["Args" "example.txt"] -> [["Result" 0]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -56,3 +60,15 @@ def move pos dx dy =
 
 def negate x =
     return -1*x
+
+actor HoleCounter =
+    "Polygon" .*:xs !. -> put(["Result" pointsInside(xs)])
+    examples
+        ["Polygon"
+            tuple(0 0) tuple(2 0)
+                       tuple(2 2)
+            tuple(0 2)
+        ] -> [["Result" 0]]
+
+def pointsInside points =
+    return 0
