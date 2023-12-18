@@ -13,6 +13,8 @@ universe Part2 =
     examples
         ["Args" "example.txt"] -> [["Result" 94]]
         ["Args" "example2.txt"] -> [["Result" 71]]
+        //["Args" "input.txt"] -> [["Result" 1167]]
+        // wrong
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -246,7 +248,11 @@ def isForbidden2 previous next =
     if len(previous) == 4:
         repeatedDir = previous[2]
         repeatCount = previous[3]
+        assert repeatCount >= 1
+        if next[3] > 10:
+            return True
+        if repeatCount < 4 and next[2:] != (repeatedDir, repeatCount+1):
+            return True
+        return False
     else:
-        repeatedDir = None
-        repeatCount = 0
-    return next[3] > 10 or (repeatCount < 4 and next[3] != repeatCount+1)
+        return False
