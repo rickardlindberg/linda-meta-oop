@@ -518,7 +518,8 @@ class Parser:
             'keyExamples': self._matcher_566,
             'nameStart': self._matcher_571,
             'nameChar': self._matcher_578,
-            'space': self._matcher_585,
+            'space': self._matcher_587,
+            'comment': self._matcher_599,
         }
         self._main = self._rules.pop('_main')
     def run(self, stream):
@@ -2382,14 +2383,53 @@ class Parser:
     def _matcher_582(self, stream):
         return stream.with_scope(self._matcher_581)
     def _matcher_583(self, stream):
+        return self._rules['comment'](stream)
+    def _matcher_584(self, stream):
+        return stream.with_scope(self._matcher_583)
+    def _matcher_585(self, stream):
         return stream.operator_or([
             self._matcher_580,
-            self._matcher_582
+            self._matcher_582,
+            self._matcher_584
         ])
-    def _matcher_584(self, stream):
-        return stream.operator_star(self._matcher_583)
-    def _matcher_585(self, stream):
-        return stream.with_scope(self._matcher_584)
+    def _matcher_586(self, stream):
+        return stream.operator_star(self._matcher_585)
+    def _matcher_587(self, stream):
+        return stream.with_scope(self._matcher_586)
+    def _matcher_588(self, stream):
+        return stream.match(lambda item: item == '/', "'/'")
+    def _matcher_589(self, stream):
+        return stream.match(lambda item: item == '/', "'/'")
+    def _matcher_590(self, stream):
+        return stream.match(lambda item: item == '\n', "'\\n'")
+    def _matcher_591(self, stream):
+        return stream.operator_and([
+            self._matcher_590
+        ])
+    def _matcher_592(self, stream):
+        return stream.operator_not(self._matcher_591)
+    def _matcher_593(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_594(self, stream):
+        return stream.operator_and([
+            self._matcher_592,
+            self._matcher_593
+        ])
+    def _matcher_595(self, stream):
+        return stream.with_scope(self._matcher_594)
+    def _matcher_596(self, stream):
+        return stream.operator_star(self._matcher_595)
+    def _matcher_597(self, stream):
+        return stream.match(lambda item: item == '\n', "'\\n'")
+    def _matcher_598(self, stream):
+        return stream.operator_and([
+            self._matcher_588,
+            self._matcher_589,
+            self._matcher_596,
+            self._matcher_597
+        ])
+    def _matcher_599(self, stream):
+        return stream.with_scope(self._matcher_598)
 natives['Parser'] = Parser
 class Optimizer:
     def __init__(self):

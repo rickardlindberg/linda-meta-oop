@@ -87,4 +87,5 @@ actor Parser =
         keyExamples = 'examples' !nameChar
         nameStart   = 'a'-'z' | 'A'-'Z'
         nameChar    = 'a'-'z' | 'A'-'Z' | '0'-'9'
-        space       = (' ' | '\n')*
+        space       = (' ' | '\n' | comment)*
+        comment     = '//' (!'\n' .)* '\n'
