@@ -4,7 +4,7 @@ universe Part1 =
     Digger()
     HoleCounter()
     examples
-        ["Args" "example.txt"] -> [["Result" 0]]
+        ["Args" "example.txt"] -> [["Result" 14]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -68,7 +68,13 @@ actor HoleCounter =
             tuple(0 0) tuple(2 0)
                        tuple(2 2)
             tuple(0 2)
-        ] -> [["Result" 0]]
+        ] -> [["Result" 4]]
 
 def pointsInside points =
-    return 0
+    count = 0
+    for y in range(max(y for x, y in points)+1):
+        insideFlage = False
+        for x in range(max(x for x, y in points)+1):
+            if (x, y) in points:
+                count += 1
+    return count
