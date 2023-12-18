@@ -37,6 +37,7 @@ actor ShortestPathFinder =
         tuple(0 0)
         tuple(dec(width) dec(height))
         map
+        findNeighboursPart1
     )])
     examples
         ["Map" 3 1 [
@@ -59,7 +60,7 @@ actor ShortestPathFinder =
             [9 6 1]
         ]] -> [["Result" 8]]
 
-def astar start goal map =
+def astar start goal map findNeighbours =
     estimates = {start: ideal(start, goal)}
     cost = {start: 0}
     cameFrom = {}
@@ -81,7 +82,7 @@ def astar start goal map =
                     openSet.append(neighbour)
     return "no path found"
 
-def findNeighbours node map cameFrom =
+def findNeighboursPart1 node map cameFrom =
     x, y = node[:2]
     if len(node) == 4:
         repeatedDir = node[2]
@@ -89,10 +90,10 @@ def findNeighbours node map cameFrom =
     else:
         repeatedDir = None
         repeatCount = 0
-    up    = (x,   y-1, "up",    repeatCount+1 if repeatedDir=="up" else 1)
-    down  = (x,   y+1, "down",  repeatCount+1 if repeatedDir=="down" else 1)
-    left  = (x-1, y,   "left",  repeatCount+1 if repeatedDir=="left" else 1)
-    right = (x+1, y,   "right", repeatCount+1 if repeatedDir=="right" else 1)
+    up    = (x,   y-1, "vertical",   repeatCount+1 if repeatedDir == "vertical"   else 1)
+    down  = (x,   y+1, "vertical",   repeatCount+1 if repeatedDir == "vertical"   else 1)
+    left  = (x-1, y,   "horizontal", repeatCount+1 if repeatedDir == "horizontal" else 1)
+    right = (x+1, y,   "horizontal", repeatCount+1 if repeatedDir == "horizontal" else 1)
     candidates = [up, down, left, right]
     for candidate in list(candidates):
         xc, yc = candidate[:2]
