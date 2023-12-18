@@ -1,7 +1,7 @@
 universe Part1 =
     CLI()
     Parser()
-    ShortestPathFinder(findNeighboursPart1)
+    ShortestPathFinder(findNeighboursPart1 "part1")
     examples
         ["Args" "example.txt"] -> [["Result" 102]]
         ["Args" "input.txt"] -> [["Result" 1023]]
@@ -9,9 +9,10 @@ universe Part1 =
 universe Part2 =
     CLI()
     Parser()
-    ShortestPathFinder(findNeighboursPart2)
+    ShortestPathFinder(findNeighboursPart2 "part2")
     examples
-        ["Args" "example.txt"] -> [["Result" 102]]
+        ["Args" "example.txt"] -> [["Result" 94]]
+        ["Args" "example2.txt"] -> [["Result" 71]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -39,16 +40,17 @@ def countColumns rows =
     assert len(set(columns))
     return columns[0]
 
-actor ShortestPathFinder #findNeighbours =
+actor ShortestPathFinder #findNeighbours #part =
     "Map" .:width .:height .:map -> put(["Result" astar(
         tuple(0 0)
         tuple(dec(width) dec(height))
         map
         findNeighbours
+        part
     )])
 
 universe ShortestPathFinderPart1Examples =
-    ShortestPathFinder(findNeighboursPart1)
+    ShortestPathFinder(findNeighboursPart1 "part1")
     examples
         ["Map" 3 1 [
             [1 2 1]
@@ -70,7 +72,7 @@ universe ShortestPathFinderPart1Examples =
             [9 6 1]
         ]] -> [["Result" 8]]
 
-def astar start goal map findNeighbours =
+def astar start goal map findNeighbours part =
     estimates = {start: ideal(start, goal)}
     cost = {start: 0}
     cameFrom = {}
@@ -79,7 +81,9 @@ def astar start goal map findNeighbours =
         openSet = sorted(openSet, key=lambda x: estimates[x])
         next = openSet.pop(0)
         x, y = next[:2]
-        if next[:2] == goal[:2]:
+        if part == "part1" and next[:2] == goal[:2]:
+            return cost[next]
+        if part == "part2" and next[:2] == goal[:2] and next[3] > 3:
             return cost[next]
         for neighbour in findNeighbours(next, map, cameFrom):
             xN, yN = neighbour[:2]
@@ -145,7 +149,9 @@ def findNeighboursPart2 node map cameFrom =
     candidates = [up, down, left, right]
     for candidate in list(candidates):
         xc, yc = candidate[:2]
-        if candidate[3] > 3:
+        if repeatCount < 4 and candidate[3] != repeatCount+1:
+            candidates.remove(candidate)
+        elif candidate[3] > 10:
             candidates.remove(candidate)
         elif xc < 0 or yc < 0 or cameFrom.get(node, (None, None))[:2] == candidate[:2]:
             candidates.remove(candidate)
