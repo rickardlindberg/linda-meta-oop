@@ -33,8 +33,8 @@ def countColumns rows =
 
 actor ShortestPathFinder =
     "Map" .:width .:height .:map -> put(["Result" astar(
-        tuple(0 0 "-")
-        tuple(dec(width) dec(height) "-")
+        tuple(0 0)
+        tuple(dec(width) dec(height))
         map
     )])
     examples
@@ -46,8 +46,8 @@ actor ShortestPathFinder =
         ]] -> [["Result" "no path found"]]
         ["Map" 5 2 [
             [1 1 1 1 1]
-            [1 1 1 1 1]
-        ]] -> [["Result" 5]]
+            [1 1 1 9 1]
+        ]] -> [["Result" 7]]
         ["Map" 3 2 [
             [1 9 8]
             [1 1 1]
@@ -66,11 +66,11 @@ def astar start goal map =
     while openSet:
         openSet = sorted(openSet, key=lambda x: estimates[x])
         next = openSet.pop(0)
-        x, y, _ = next
+        x, y = next[:2]
         if next[:2] == goal[:2]:
             return cost[next]
         for neighbour in findNeighbours(next, map, cameFrom):
-            xN, yN, _ = neighbour
+            xN, yN = neighbour[:2]
             neighbourCost = cost[next] + map[yN][xN]
             if neighbour not in cost or neighbourCost < cost[neighbour]:
                 cameFrom[neighbour] = next
@@ -85,32 +85,30 @@ actor NeighbourFinder =
         -> put(findNeighbours(pos map cameFrom))
     examples
         ["FindNeighbour"
-            tuple(3 0 "right")
+            tuple(3 0 "up" "right" "right")
             [
                 [1 1 1 1 1]
                 [1 1 1 1 1]
             ]
             dict([
-                tuple(tuple(3 0 "right") tuple(2 0 "right"))
+                tuple(tuple(3 0 "up" "right" "right") tuple(2 0 "right"))
             ])
         ] -> [[
-            tuple(3 1 "down")
-            tuple(4 0 "right")
+            tuple(3 1 "right" "right" "down")
+            tuple(4 0 "right" "right" "right")
         ]]
 
 def findNeighbours node map cameFrom =
-    x, y, _ = node
-    up = (x, y-1, "up")
-    down = (x, y+1, "down")
-    left = (x-1, y, "left")
-    right = (x+1, y, "right")
+    x, y = node[:2]
+    up    = (x,   y-1)+node[-2:]+("up",)
+    down  = (x,   y+1)+node[-2:]+("down",)
+    left  = (x-1, y, )+node[-2:]+("left",)
+    right = (x+1, y, )+node[-2:]+("right",)
+    if len(set(node[-3:])) == 1:
+        repeatedDir = node[-1]
+    else:
+        repeatedDir = None
     candidates = [up, down, left, right]
-    path = reconstruct(node, cameFrom)
-    repeatedDir = None
-    if len(path) >= 3:
-        dirs = [dir for _, _, dir in path[-3:]]
-        if len(set(dirs)) == 1:
-            repeatedDir = dirs[0]
     if repeatedDir in ["up", "down"]:
         candidates.remove(up)
         candidates.remove(down)
@@ -118,8 +116,8 @@ def findNeighbours node map cameFrom =
         candidates.remove(left)
         candidates.remove(right)
     for candidate in list(candidates):
-        xc, yc, _ = candidate
-        if xc < 0 or yc < 0 or cameFrom.get(node, (None, None, None))[:2] == candidate[:2]:
+        xc, yc = candidate[:2]
+        if xc < 0 or yc < 0 or cameFrom.get(node, (None, None))[:2] == candidate[:2]:
             candidates.remove(candidate)
         else:
             try:
@@ -129,13 +127,13 @@ def findNeighbours node map cameFrom =
     return candidates
 
 def reconstruct node cameFrom =
-    path = [node]
+    path = [node[:2]]
     while node in cameFrom:
         node = cameFrom[node]
-        path.insert(0, node)
+        path.insert(0, node[:2])
     return path
 
 def ideal start end =
-    x1, y1, inDir1 = start
-    x2, y2, inDir2 = end
+    x1, y1 = start[:2]
+    x2, y2 = end[:2]
     return abs(x1-x2) + abs(y1-y2)
