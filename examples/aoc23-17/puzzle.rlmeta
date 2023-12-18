@@ -190,7 +190,7 @@ def findNeighboursPart1 node map cameFrom =
     candidates = [up, down, left, right]
     for candidate in list(candidates):
         xc, yc = candidate[:2]
-        if candidate[3] > 3:
+        if isForbidden1(node, candidate):
             candidates.remove(candidate)
         elif xc < 0 or yc < 0 or cameFrom.get(node, (None, None))[:2] == candidate[:2]:
             candidates.remove(candidate)
@@ -228,9 +228,7 @@ def findNeighboursPart2 node map cameFrom =
     candidates = [up, down, left, right]
     for candidate in list(candidates):
         xc, yc = candidate[:2]
-        if repeatCount < 4 and candidate[3] != repeatCount+1:
-            candidates.remove(candidate)
-        elif candidate[3] > 10:
+        if isForbidden2(node, candidate):
             candidates.remove(candidate)
         elif xc < 0 or yc < 0 or cameFrom.get(node, (None, None))[:2] == candidate[:2]:
             candidates.remove(candidate)
@@ -240,3 +238,15 @@ def findNeighboursPart2 node map cameFrom =
             except IndexError:
                 candidates.remove(candidate)
     return candidates
+
+def isForbidden1 previous next =
+    return next[3] > 3
+
+def isForbidden2 previous next =
+    if len(previous) == 4:
+        repeatedDir = previous[2]
+        repeatCount = previous[3]
+    else:
+        repeatedDir = None
+        repeatCount = 0
+    return next[3] > 10 or (repeatCount < 4 and next[3] != repeatCount+1)
