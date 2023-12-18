@@ -68,7 +68,7 @@ def astar start goal map =
         next = openSet.pop(0)
         x, y, _ = next
         if next[:2] == goal[:2]:
-            return cost[cameFrom[next]] + map[y][x]
+            return cost[next]
         for neighbour in findNeighbours(next, map, cameFrom):
             xN, yN, _ = neighbour
             neighbourCost = cost[next] + map[yN][xN]
