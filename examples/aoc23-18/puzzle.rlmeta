@@ -63,7 +63,7 @@ def negate x =
     return -1*x
 
 actor HoleCounter =
-    "Polygon" .*:xs !. -> put(["Result" pointsInside(xs 0)])
+    "Polygon" .*:xs !. -> put(["Result" pointsInside(xs)])
     examples
         ["Polygon"
             tuple(0 0) tuple(2 0)
@@ -71,16 +71,10 @@ actor HoleCounter =
             tuple(0 2)
         ] -> [["Result" 9]]
 
-def pointsInside points print =
-    if print:
-        printFn = sys.stdout.write
-    else:
-        printFn = lambda x: None
+def pointsInside points =
     count = 0
     edges = list(getEdges(points))
-    printFn("\n")
     for y in range(min(y for x, y in points), max(y for x, y in points)+1):
-        printFn("> ")
         for x in range(min(x for x, y in points), max(x for x, y in points)+1):
             insideFlag = False
             atEdge = False
@@ -95,13 +89,6 @@ def pointsInside points print =
                         atEdge = True
             if atEdge or insideFlag:
                 count += 1
-            if atEdge:
-                printFn("#")
-            elif insideFlag:
-                printFn(".")
-            else:
-                printFn(" ")
-        printFn("\n")
     return count
 
 def getEdges points =
