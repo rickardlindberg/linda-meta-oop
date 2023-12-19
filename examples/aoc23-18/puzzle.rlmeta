@@ -8,6 +8,15 @@ universe Part1 =
         ["Args" "example.txt"] -> [["Result" 62]]
         ["Args" "input.txt"] -> [["Result" 52231]]
 
+universe Part2 =
+    CLI()
+    Parser()
+    ComplexPlan()
+    Digger()
+    HoleCounter()
+    examples
+        ["Args" "example.txt"] -> [["Result" 952408144115]]
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -36,6 +45,26 @@ actor SimplePlan =
     "RawPlan" instruction*:xs !. -> put(["Plan" ~xs])
     where
         instruction = [.:x .:y] -> [x y]
+
+actor ComplexPlan =
+    "RawPlan" instruction*:xs !. -> put(["Plan" ~xs])
+    where
+        instruction = [. . [complex:x]] -> x
+        complex = '#' .:x1 .:x2 .:x3 .:x4 .:x5 dir:y !. ->
+            [y int({x1 x2 x3 x4 x5} 16)]
+        dir =
+            | '0' -> "R"
+            | '1' -> "D"
+            | '2' -> "L"
+            | '3' -> "U"
+    examples
+        ["RawPlan"
+            ["R" 9 "#70c710"]
+            ["U" 6 "#0dc571"]
+        ] -> [["Plan"
+            ["R" 461937]
+            ["D" 56407]
+        ]]
 
 actor Digger =
     "Plan" instruction*:xs !.
