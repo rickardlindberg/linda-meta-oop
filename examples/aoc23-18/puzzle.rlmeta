@@ -1,6 +1,7 @@
 universe Part1 =
     CLI()
     Parser()
+    SimplePlan()
     Digger()
     HoleCounter()
     examples
@@ -13,7 +14,7 @@ actor CLI =
 actor Parser =
     "File" [plan:x] !. -> put(x)
     where
-        plan        = instruction*:xs !.   -> ["Plan" ~xs]
+        plan        = instruction*:xs !.   -> ["RawPlan" ~xs]
         instruction =
             direction:d ' '
             number:n ' '
@@ -25,11 +26,16 @@ actor Parser =
         color       = '(' (!')' .)*:xs ')' -> { xs }
     examples
         ["File" "R 9 (#066240)\nU 6 (#113213)\n"] -> [
-            ["Plan"
+            ["RawPlan"
                 ["R" 9 "#066240"]
                 ["U" 6 "#113213"]
             ]
         ]
+
+actor SimplePlan =
+    "RawPlan" instruction*:xs !. -> put(["Plan" ~xs])
+    where
+        instruction = [.:x .:y] -> [x y]
 
 actor Digger =
     "Plan" instruction*:xs !.
@@ -43,8 +49,8 @@ actor Digger =
             | ["R" .:n] -> move(pos n         0)
     examples
         ["Plan"
-            ["R" 2 "red"]
-            ["D" 2 "green"]
+            ["R" 2]
+            ["D" 2]
         ] -> [["Polygon"
             tuple(0 0)
             tuple(2 0)
