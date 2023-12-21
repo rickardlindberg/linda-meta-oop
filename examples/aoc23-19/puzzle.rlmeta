@@ -1,0 +1,41 @@
+universe Part1 =
+    CLI()
+    Parser()
+
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [program:x] !. -> put(x)
+    where
+        program = workflow*:xs -> ["Program" ~xs]
+        workflow = name:x '{' rule:y (',' rule)*:ys '}\n' -> ["Workflow" x y ~ys]
+        rule =
+            | condition:c action:a -> ["Rule" c a]
+            | action:a                            -> ["Rule" a]
+        condition = category:c ('<' | '>'):a number:b ':' -> ["Condition" c a b]
+        number = digit:x digit*:xs -> int({ x xs })
+        digit = '0'-'9'
+        category = 'x' | 'm' | 'a' | 's'
+        action = 'A' | 'R' | name
+        name = nameChar:x nameChar*:xs -> { x xs }
+        nameChar = 'a'-'z'
+    examples
+        ["File" "px{a<2006:qkq,m>2090:A,rfg}\n\n{x=787,m=2655,a=1222,s=2876}\n"] -> [
+            ["Program"
+                ["Workflow"
+                    "px"
+                    ["Rule"
+                        ["Condition" "a" "<" 2006]
+                        "qkq"
+                    ]
+                    ["Rule"
+                        ["Condition" "m" ">" 2090]
+                        "A"
+                    ]
+                    ["Rule"
+                        "rfg"
+                    ]
+                ]
+            ]
+        ]
