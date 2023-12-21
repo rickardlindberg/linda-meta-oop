@@ -3,6 +3,7 @@ universe Part1 =
     Parser()
     SimplePlan()
     Digger()
+    PolygonMaker()
     HoleCounter()
     examples
         ["Args" "example.txt"] -> [["Result" 62]]
@@ -13,9 +14,11 @@ universe Part2 =
     Parser()
     ComplexPlan()
     Digger()
+    PolygonMaker()
     HoleCounter()
     examples
         ["Args" "example.txt"] -> [["Result" 952408144115]]
+        ["Args" "input.txt"] -> [["Result" 57196493937398]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -67,93 +70,176 @@ actor ComplexPlan =
         ]]
 
 actor Digger =
-    "Plan" instruction*:xs !.
-        -> dict([tuple("x" 0) tuple("y" 0)]):pos
-        -> put(["Polygon" render(pos) ~xs])
+    "Plan" start:dir instruction*:ys !.
+        -> pos(dir 0 0):pos
+        -> render(move(pos 1)):startPos
+        -> put(["Path" dir ~~ys])
     where
+        start =
+            | peekU -> 0
+            | peekR -> 1
+            | peekD -> 2
+            | peekL -> 3
         instruction =
-            | ["U" .:n] -> move(pos 0         negate(n))
-            | ["D" .:n] -> move(pos 0         n)
-            | ["L" .:n] -> move(pos negate(n) 0)
-            | ["R" .:n] -> move(pos n         0)
+            | moveAndTurnLeft:n  -> moveAndTurn(pos n "left")
+            | moveAndTurnRight:n -> moveAndTurn(pos n "right")
+            | [. .:n] !.         -> connectLoop(pos n startPos)
+            | [. .:n]            -> moveAndTurn(pos n "-")
+        moveAndTurnLeft =
+            | ["U" .:n] peekL -> n
+            | ["R" .:n] peekU -> n
+            | ["D" .:n] peekR -> n
+            | ["L" .:n] peekD -> n
+        moveAndTurnRight =
+            | ["U" .:n] peekR -> n
+            | ["R" .:n] peekD -> n
+            | ["D" .:n] peekL -> n
+            | ["L" .:n] peekU -> n
+        peekU = !(!(["U"]))
+        peekD = !(!(["D"]))
+        peekL = !(!(["L"]))
+        peekR = !(!(["R"]))
     examples
         ["Plan"
+            // X>>
+            // ^ V
+            // <<V
             ["R" 2]
             ["D" 2]
-        ] -> [["Polygon"
-            tuple(0 0)
-            tuple(2 0)
-            tuple(2 2)
+            ["L" 2]
+            ["U" 2]
+        ] -> [["Path"
+            1
+            2 "right"
+            2 "right"
+            2 "right"
+            2 "right"
         ]]
+        ["Plan"
+            // X^
+            // V>
+            ["D" 1]
+            ["R" 1]
+            ["U" 1]
+            ["L" 1]
+        ] -> [["Path"
+            2
+            1 "left"
+            1 "left"
+            1 "left"
+            1 "left"
+        ]]
+
+def pos dir x y =
+    return {"dir": dir, "x": x, "y": y, "trail": []}
+
+def moveAndTurn pos n dir =
+    new = turn(move(pos, n), dir)
+    pos["trail"].append((pos["x"], pos["y"]))
+    pos["dir"] = new["dir"]
+    pos["x"] = new["x"]
+    pos["y"] = new["y"]
+    return [n, dir]
+
+def trail pos =
+    return pos["trail"]+[(pos["x"], pos["y"])]
+
+def move pos n =
+    dx, dy = [
+        (0, -1),
+        (1, 0),
+        (0, 1),
+        (-1, 0),
+    ][pos["dir"]]
+    return dict(pos, x=pos["x"]+dx*n, y=pos["y"]+dy*n)
 
 def render pos =
     return (pos["x"], pos["y"])
 
-def move pos dx dy =
-    pos["x"] += dx
-    pos["y"] += dy
-    return render(pos)
+def turn pos dir =
+    if dir == "left":
+        return dict(pos, dir=(pos["dir"] + 3) % 4)
+    elif dir == "right":
+        return dict(pos, dir=turnRight(pos["dir"]))
+    else:
+        return pos
 
-def negate x =
-    return -1*x
+def turnRight dir =
+    return (dir + 1) % 4
+
+def connectLoop pos n startPos =
+    result = []
+    moved = move(pos, n)
+    for dir in ["-", "left", "right"]:
+        if render(move(turn(moved, dir), 1)) == startPos:
+            result.extend(moveAndTurn(pos, n, dir))
+            break
+    else:
+        raise ValueError(f"did not connect back to start: {pos} {moved}")
+    return result
+
+actor PolygonMaker =
+    "Path" .:dir instruction*:xs !.
+        -> startPosition(dir):left
+        -> startPosition(turnRight(dir)):right
+        -> xs
+        -> put(["Polygons" trail(left) trail(right)])
+    where
+        instruction =
+            | .:n "left"  -> moveAndTurnLeftLeft(left n)
+                          -> moveAndTurnLeftRight(right n)
+            | .:n "right" -> moveAndTurnRightLeft(left n)
+                          -> moveAndTurnRightRight(right n)
+            | .:n "-"     -> moveAndTurn(left n "-")
+                          -> moveAndTurn(right n "-")
+
+def startPosition dir =
+    return [
+        pos(dir, 0, 0),
+        pos(dir, 1, 0),
+        pos(dir, 1, 1),
+        pos(dir, 0, 1),
+    ][dir]
+
+def moveAndTurnLeftLeft pos n =
+    moveAndTurn(pos, n-1, "left")
+
+def moveAndTurnLeftRight pos n =
+    moveAndTurn(pos, n, "left")
+    moveAndTurn(pos, 1, "-")
+
+def moveAndTurnRightLeft pos n =
+    moveAndTurn(pos, n, "right")
+    moveAndTurn(pos, 1, "-")
+
+def moveAndTurnRightRight pos n =
+    moveAndTurn(pos, n-1, "right")
+
+def mymax xs =
+    return max(xs)
 
 actor HoleCounter =
-    "Polygon" .*:xs !. -> put(["Result" countPointsInside(xs)])
+    | "Polygons" polygon*:xs !. -> put(["Result" mymax(xs)])
+    | "Polygon" .*:xs !. -> put(["Result" polygonArea(xs)])
+    where
+        polygon = .:x -> polygonArea(x)
     examples
         ["Polygon"
-            tuple(0 0) tuple(2 0)
-                       tuple(2 2)
-            tuple(0 2)
-        ] -> [["Result" 9]]
+            tuple(0 0) tuple(1 0)
+                       tuple(1 1)
+            tuple(0 1)
+        ] -> [["Result" 1]]
+        ["Polygon"
+            tuple(0 0) tuple(1 0)
+        ] -> [["Result" 0]]
 
-def countPointsInside points =
-    def addRangeInner(y, start, end):
-        if y not in ranges:
-            ranges[y] = []
-        ranges[y].append((start, end))
-    ranges = {}
-    verticals = []
-    x1, y1 = points[-1]
-    for x2, y2 in points:
-        if x1 == x2:
-            start = min(y1, y2)
-            end = max(y1, y2)
-            verticals.append((x1, start, end))
-            for y in range(start, end+1):
-                addRangeInner(y, x1, x2)
-        else:
-            assert y1 == y2
-            start = min(x1, x2)
-            end = max(x1, x2)
-            addRangeInner(y1, start, end)
-        x1, y1 = x2, y2
-    verticals = sorted(verticals, key=lambda x: x[0])
-    for y in range(
-        min(y for x, y in points),
-        max(y for x, y in points)+1
-    ):
-        insideFlag = False
-        last = None
-        for at, start, stop in verticals:
-            if start < y <= stop:
-                if insideFlag:
-                    addRangeInner(y, last+1, at-1)
-                    last = None
-                else:
-                    last = at
-                insideFlag = not insideFlag
-        assert last is None
-    count = 0
-    for y, r in ranges.items():
-        last = None
-        for start, end in sorted(r, key=lambda x: x[0]):
-            if last is None:
-                count += (end - start + 1)
-                last = end
-            else:
-                if end > last:
-                    if start <= last:
-                        start = last+1
-                    count += (end - start + 1)
-                    last = end
-    return count
+def polygonArea points =
+    loop = points + [points[-1]]
+    area = 0
+    for i in range(len(loop)-1):
+        x1, y1 = loop[i]
+        x2, y2 = loop[i+1]
+        area += x1*y2
+        area -= x2*y1
+    assert area % 2 == 0
+    return int(area / 2)
