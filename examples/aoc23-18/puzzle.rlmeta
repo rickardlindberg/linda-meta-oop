@@ -3,8 +3,8 @@ universe Part1 =
     Parser()
     SimplePlan()
     Digger()
-    PolygonMaker()
-    HoleCounter()
+    LeftRightPolygonMaker()
+    MaxPolygonArea()
     examples
         ["Args" "example.txt"] -> [["Result" 62]]
         ["Args" "input.txt"] -> [["Result" 52231]]
@@ -14,8 +14,8 @@ universe Part2 =
     Parser()
     ComplexPlan()
     Digger()
-    PolygonMaker()
-    HoleCounter()
+    LeftRightPolygonMaker()
+    MaxPolygonArea()
     examples
         ["Args" "example.txt"] -> [["Result" 952408144115]]
         ["Args" "input.txt"] -> [["Result" 57196493937398]]
@@ -71,7 +71,7 @@ actor ComplexPlan =
 
 actor Digger =
     "Plan" start:dir instruction*:ys !.
-        -> pos(dir 0 0):pos
+        -> makePos(dir 0 0):pos
         -> render(move(pos 1)):startPos
         -> put(["Path" dir ~~ys])
     where
@@ -130,19 +130,19 @@ actor Digger =
             1 "left"
         ]]
 
-def pos dir x y =
+def makePos dir x y =
     return {"dir": dir, "x": x, "y": y, "trail": []}
 
 def moveAndTurn pos n dir =
     new = turn(move(pos, n), dir)
-    pos["trail"].append((pos["x"], pos["y"]))
+    pos["trail"].append(render(pos))
     pos["dir"] = new["dir"]
     pos["x"] = new["x"]
     pos["y"] = new["y"]
     return [n, dir]
 
 def trail pos =
-    return pos["trail"]+[(pos["x"], pos["y"])]
+    return pos["trail"]+[render(pos)]
 
 def move pos n =
     dx, dy = [
@@ -158,27 +158,25 @@ def render pos =
 
 def turn pos dir =
     if dir == "left":
-        return dict(pos, dir=(pos["dir"] + 3) % 4)
+        return dict(pos, dir=turnLeft(pos["dir"]))
     elif dir == "right":
         return dict(pos, dir=turnRight(pos["dir"]))
     else:
         return pos
 
+def turnLeft dir =
+    return (dir + 3) % 4
+
 def turnRight dir =
     return (dir + 1) % 4
 
 def connectLoop pos n startPos =
-    result = []
-    moved = move(pos, n)
     for dir in ["-", "left", "right"]:
-        if render(move(turn(moved, dir), 1)) == startPos:
-            result.extend(moveAndTurn(pos, n, dir))
-            break
-    else:
-        raise ValueError(f"did not connect back to start: {pos} {moved}")
-    return result
+        if render(move(turn(move(pos, n), dir), 1)) == startPos:
+            return moveAndTurn(pos, n, dir)
+    raise ValueError(f"did not connect back to start: {pos}")
 
-actor PolygonMaker =
+actor LeftRightPolygonMaker =
     "Path" .:dir instruction*:xs !.
         -> startPosition(dir):left
         -> startPosition(turnRight(dir)):right
@@ -195,10 +193,10 @@ actor PolygonMaker =
 
 def startPosition dir =
     return [
-        pos(dir, 0, 0),
-        pos(dir, 1, 0),
-        pos(dir, 1, 1),
-        pos(dir, 0, 1),
+        makePos(dir, 0, 0),
+        makePos(dir, 1, 0),
+        makePos(dir, 1, 1),
+        makePos(dir, 0, 1),
     ][dir]
 
 def moveAndTurnLeftLeft pos n =
@@ -215,30 +213,19 @@ def moveAndTurnRightLeft pos n =
 def moveAndTurnRightRight pos n =
     moveAndTurn(pos, n-1, "right")
 
+actor MaxPolygonArea =
+    "Polygons" polygon*:xs !. -> put(["Result" mymax(xs)])
+    where
+        polygon = .:x -> polygonArea(x)
+
 def mymax xs =
     return max(xs)
 
-actor HoleCounter =
-    | "Polygons" polygon*:xs !. -> put(["Result" mymax(xs)])
-    | "Polygon" .*:xs !. -> put(["Result" polygonArea(xs)])
-    where
-        polygon = .:x -> polygonArea(x)
-    examples
-        ["Polygon"
-            tuple(0 0) tuple(1 0)
-                       tuple(1 1)
-            tuple(0 1)
-        ] -> [["Result" 1]]
-        ["Polygon"
-            tuple(0 0) tuple(1 0)
-        ] -> [["Result" 0]]
-
 def polygonArea points =
-    loop = points + [points[-1]]
     area = 0
-    for i in range(len(loop)-1):
-        x1, y1 = loop[i]
-        x2, y2 = loop[i+1]
+    for i in range(len(points)-1):
+        x1, y1 = points[i]
+        x2, y2 = points[i+1]
         area += x1*y2
         area -= x2*y1
     assert area % 2 == 0
