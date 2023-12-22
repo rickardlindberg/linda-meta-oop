@@ -4,8 +4,8 @@ universe Part1 =
     Analyzer()
     Rater()
     examples
-        ["Args" "example.txt"] -> [["Result" 27957]] // too low
-    //    ["Args" "input.txt"] -> []
+        ["Args" "example.txt"] -> [["Result" 19114]]
+        //["Args" "input.txt"] -> []
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -182,7 +182,7 @@ def eval workflowName ruleNumber state condition action =
         if isValid(newCondition):
             newState = dict(state, **{slot: newCondition})
             if action == "A":
-                done.append(state)
+                done.append(newState)
             elif action != "R":
                 left.append([action, 0, newState])
         newCondition = updateConditionNegate(state[slot], comparison, number)
