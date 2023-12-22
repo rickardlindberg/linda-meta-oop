@@ -1,6 +1,7 @@
 universe Part1 =
     CLI()
     Parser()
+    Analyzer()
     //examples
     //    ["Args" "example.txt"] -> []
     //    ["Args" "input.txt"] -> []
@@ -18,7 +19,12 @@ actor Parser =
             | action:a                                     -> ["Rule" a]
         condition = category:c ('<' | '>'):a number:b ':'  -> [c a b]
         part      = '{x=' number:x ',m=' number:m
-                    ',a=' number:a ',s=' number:s '}\n'    -> ["Part" x m a s]
+                    ',a=' number:a ',s=' number:s '}\n'    -> ["Part" dict([
+                        tuple("x" x)
+                        tuple("m" m)
+                        tuple("a" a)
+                        tuple("s" s)
+                    ])]
         category =
             | 'x'
             | 'm'
@@ -46,7 +52,12 @@ actor Parser =
                         "rfg"
                     ]
                 ]
-                ["Part" 787 2655 1222 2876]
+                ["Part" dict([
+                    tuple("x" 787)
+                    tuple("m" 2655)
+                    tuple("a" 1222)
+                    tuple("s" 2876)
+                ])]
             ]
         ]
 
