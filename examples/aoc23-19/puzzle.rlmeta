@@ -20,10 +20,10 @@ actor Parser =
         part      = '{x=' number:x ',m=' number:m
                     ',a=' number:a ',s=' number:s '}\n'    -> ["Part" x m a s]
         category =
-            | 'x' -> 0
-            | 'm' -> 1
-            | 'a' -> 2
-            | 's' -> 3
+            | 'x'
+            | 'm'
+            | 'a'
+            | 's'
         action    = 'A' | 'R' | name
         number    = digit:x digit*:xs                      -> int({ x xs })
         digit     = '0'-'9'
@@ -35,11 +35,11 @@ actor Parser =
                 ["Workflow"
                     "px"
                     ["Rule"
-                        [2 "<" 2006]
+                        ["a" "<" 2006]
                         "qkq"
                     ]
                     ["Rule"
-                        [1 ">" 2090]
+                        ["m" ">" 2090]
                         "A"
                     ]
                     ["Rule"
@@ -51,14 +51,23 @@ actor Parser =
         ]
 
 actor Analyzer =
-    "Program" workflow*:xs !. -> put(analyze(dict([~~xs])))
+    | "Program" part*:xs !.
+        -> xs
+        -> put(["Analyze" ["Left" startState()] ["Done"]])
+    | "Analyze" ["Left" !.] ["Done" .*:xs]
+        -> put(["Or" ~xs])
     where
-        workflow =
-            | ["Workflow" .:name rule*:xs !.] -> [[name xs]]
-            | .                               -> []
+        part =
+            | ["Workflow" .:name rule*:xs !.]
+                -> name:name
+                -> Counter():ruleNumber
+                -> xs
+            | .
         rule =
-            | ["Rule" .:condition .:action]   -> [condition action]
-            | ["Rule"             .:action]   -> [0         action]
+            | ["Rule" .:condition .:action]
+                -> spawn(RuleEvaluator(name ruleNumber() condition action))
+            | ["Rule"             .:action]
+                -> spawn(RuleEvaluator(name ruleNumber() 0 action))
     examples
         ["Program"
             ["Workflow"
@@ -79,15 +88,26 @@ actor Analyzer =
             ]
             ["Part" 1 2 3 4]
         ] -> [
-            ["Conditions"
-                [
-                    "-" 1
-                    0   0
-                    0   0
-                    0   0
-                ]
+            ["Analyze"
+                ["Left" startState()]
+                ["Done"]
             ]
         ]
+        ["Analyze"
+            ["Left"]
+            ["Done" startState()]
+        ] -> [["Or" startState()]]
 
-def analyze workflows =
-    return ["Conditions", ["-", 1, 0, 0, 0, 0, 0, 0]]
+def startState =
+    return ["in", 0, {
+        "x": [None, None],
+        "m": [None, None],
+        "a": [None, None],
+        "s": [None, None],
+    }]
+
+actor RuleEvaluator #workflowName #ruleNumber #condition #action =
+    ["Analyze" ["Left" evaluate:x .*:xs] ["Done" .*:ys]]
+        -> put(["Analyze" ["Left" ~xs] ["Done" ~ys]])
+    where
+        evaluate = [#workflowName #ruleNumber .:state] -> "help"
