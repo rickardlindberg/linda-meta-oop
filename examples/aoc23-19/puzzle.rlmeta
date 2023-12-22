@@ -63,17 +63,17 @@ actor Parser =
 
 actor Analyzer =
     | "Program" part*:xs !.
-        -> xs
-        -> put(["Analyze" ["Left" startState()] ["Done"]])
-    | "Analyze" ["Left" !.] ["Done" .*:xs]
-        -> put(["Or" ~xs])
+        -> put(["Analyze" ["Left" startState()] ["Done"] ["Parts" ~~xs]])
+    | "Analyze" ["Left" !.] ["Done" .*:xs] ["Parts" .*:ys]
+        -> put(["Analyzed" ["Or" ~xs] ["Parts" ~ys]])
     where
         part =
             | ["Workflow" .:name rule*:xs !.]
                 -> name:name
                 -> Counter():ruleNumber
                 -> xs
-            | .
+                -> []
+            | ["Part" .:x] -> [x]
         rule =
             | ["Rule" .:action .:condition]
                 -> spawn(RuleEvaluator(name ruleNumber() condition action))
@@ -83,7 +83,8 @@ actor Analyzer =
         ["Analyze"
             ["Left"]
             ["Done" startState()]
-        ] -> [["Or" startState()]]
+            ["Parts"]
+        ] -> [["Analyzed" ["Or" startState()] ["Parts"]]]
         ["Program"
             ["Workflow"
                 "in"
@@ -94,19 +95,38 @@ actor Analyzer =
                 "qkq"
                 ["Rule" "A"]
             ]
-            ["Part" 1 2 3 4]
-        ] -> [
-            ["Or" dict([
-                tuple("x" tuple(None None))
-                tuple("m" tuple(None 2))
-                tuple("a" tuple(None None))
-                tuple("s" tuple(None None))
+            ["Part" dict([
+                tuple("x" 1)
+                tuple("m" 2)
+                tuple("a" 3)
+                tuple("s" 4)
             ])]
+        ] -> [
+            ["Analyzed"
+                ["Or" dict([
+                    tuple("x" tuple(None None))
+                    tuple("m" tuple(None 2))
+                    tuple("a" tuple(None None))
+                    tuple("s" tuple(None None))
+                ])]
+                ["Parts"
+                    dict([
+                        tuple("x" 1)
+                        tuple("m" 2)
+                        tuple("a" 3)
+                        tuple("s" 4)
+                    ])
+                ]
+            ]
         ]
 
 actor RuleEvaluator #workflowName #ruleNumber #condition #action =
-    "Analyze" ["Left" evaluate:x .*:xs] ["Done" .*:ys] !.
-        -> put(["Analyze" ["Left" ~get(x "left") ~xs] ["Done" ~get(x "done") ~ys]])
+    "Analyze" ["Left" evaluate:x .*:xs] ["Done" .*:ys] .:parts !.
+        -> put(["Analyze"
+            ["Left" ~get(x "left") ~xs]
+            ["Done" ~get(x "done") ~ys]
+            parts
+        ])
     where
         evaluate = [#workflowName #ruleNumber .:state]
             -> eval(workflowName ruleNumber state condition action)
