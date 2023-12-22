@@ -5,7 +5,7 @@ universe Part1 =
     Rater()
     examples
         ["Args" "example.txt"] -> [["Result" 19114]]
-        //["Args" "input.txt"] -> []
+        ["Args" "input.txt"] -> [["Result" 489392]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
