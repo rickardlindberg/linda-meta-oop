@@ -278,6 +278,7 @@ class Example(unittest.TestCase):
             ]))
 
 natives = {
+    "None": None,
     "dict": dict,
     "tuple": lambda *xs: tuple(xs),
     "dec": lambda x: x-1,

@@ -14,7 +14,7 @@ actor Parser =
         program   = workflow*:xs '\n' part*:ys             -> ["Program" ~xs ~ys]
         workflow  = name:x '{' rule:y (',' rule)*:ys '}\n' -> ["Workflow" x y ~ys]
         rule =
-            | condition:c action:a                         -> ["Rule" c a]
+            | condition:c action:a                         -> ["Rule" a c]
             | action:a                                     -> ["Rule" a]
         condition = category:c ('<' | '>'):a number:b ':'  -> [c a b]
         part      = '{x=' number:x ',m=' number:m
@@ -35,12 +35,12 @@ actor Parser =
                 ["Workflow"
                     "px"
                     ["Rule"
-                        ["a" "<" 2006]
                         "qkq"
+                        ["a" "<" 2006]
                     ]
                     ["Rule"
-                        ["m" ">" 2090]
                         "A"
+                        ["m" ">" 2090]
                     ]
                     ["Rule"
                         "rfg"
@@ -64,50 +64,99 @@ actor Analyzer =
                 -> xs
             | .
         rule =
-            | ["Rule" .:condition .:action]
+            | ["Rule" .:action .:condition]
                 -> spawn(RuleEvaluator(name ruleNumber() condition action))
-            | ["Rule"             .:action]
+            | ["Rule" .:action            ]
                 -> spawn(RuleEvaluator(name ruleNumber() 0 action))
     examples
-        ["Program"
-            ["Workflow"
-                "in"
-                ["Rule"
-                    [1 "<" 2]
-                    "qkq"
-                ]
-                ["Rule"
-                    "R"
-                ]
-            ]
-            ["Workflow"
-                "qkq"
-                ["Rule"
-                    "A"
-                ]
-            ]
-            ["Part" 1 2 3 4]
-        ] -> [
-            ["Analyze"
-                ["Left" startState()]
-                ["Done"]
-            ]
-        ]
         ["Analyze"
             ["Left"]
             ["Done" startState()]
         ] -> [["Or" startState()]]
+        ["Program"
+            ["Workflow"
+                "in"
+                ["Rule" "qkq" ["m" "<" 2]]
+                ["Rule" "R"]
+            ]
+            ["Workflow"
+                "qkq"
+                ["Rule" "A"]
+            ]
+            ["Part" 1 2 3 4]
+        ] -> [
+            ["Or" dict([
+                tuple("x" tuple(None None))
+                tuple("m" tuple(None 2))
+                tuple("a" tuple(None None))
+                tuple("s" tuple(None None))
+            ])]
+        ]
+
+actor RuleEvaluator #workflowName #ruleNumber #condition #action =
+    "Analyze" ["Left" evaluate:x .*:xs] ["Done" .*:ys] !.
+        -> put(["Analyze" ["Left" ~get(x "left") ~xs] ["Done" ~get(x "done") ~ys]])
+    where
+        evaluate = [#workflowName #ruleNumber .:state]
+            -> eval(workflowName ruleNumber state condition action)
 
 def startState =
     return ["in", 0, {
-        "x": [None, None],
-        "m": [None, None],
-        "a": [None, None],
-        "s": [None, None],
+        "x": (None, None),
+        "m": (None, None),
+        "a": (None, None),
+        "s": (None, None),
     }]
 
-actor RuleEvaluator #workflowName #ruleNumber #condition #action =
-    ["Analyze" ["Left" evaluate:x .*:xs] ["Done" .*:ys]]
-        -> put(["Analyze" ["Left" ~xs] ["Done" ~ys]])
-    where
-        evaluate = [#workflowName #ruleNumber .:state] -> "help"
+def get dict name =
+    return dict[name]
+
+def eval workflowName ruleNumber state condition action =
+    left = []
+    done = []
+    if condition == 0:
+        if action == "A":
+            done.append(state)
+        elif action != "R":
+            left.append([action, 0, state])
+    else:
+        slot, comparison, number = condition
+        newCondition = updateCondition(state[slot], comparison, number)
+        if isValid(newCondition):
+            newState = dict(state, **{slot: newCondition})
+            if action == "A":
+                done.append(state)
+            elif action != "R":
+                left.append([action, 0, newState])
+        newCondition = updateConditionNegate(state[slot], comparison, number)
+        if isValid(newCondition):
+            newState = dict(state, **{slot: newCondition})
+            left.append([workflowName, ruleNumber+1, newState])
+    return {
+        "left": left,
+        "done": done,
+    }
+
+def updateConditionNegate condition comparison number =
+    if comparison == "<":
+        return updateCondition(condition, ">", number-1)
+    elif comparison == ">":
+        return updateCondition(condition, "<", number+1)
+    else:
+        raise ValueError("invalid comparison")
+
+def updateCondition condition comparison number =
+    lower, upper = condition
+    if comparison == "<":
+        if upper is None or upper > number:
+            upper = number
+    elif comparison == ">":
+        if lower is None or lower < number:
+            lower = number
+    else:
+        raise ValueError("invalid comparison")
+    return lower, upper
+
+def isValid condition =
+    lower, upper = condition
+    return lower is None or upper is None or (upper - lower) > 1
