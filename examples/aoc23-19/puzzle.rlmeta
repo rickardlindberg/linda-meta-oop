@@ -1,6 +1,9 @@
 universe Part1 =
     CLI()
     Parser()
+    //examples
+    //    ["Args" "example.txt"] -> []
+    //    ["Args" "input.txt"] -> []
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -46,3 +49,45 @@ actor Parser =
                 ["Part" 787 2655 1222 2876]
             ]
         ]
+
+actor Analyzer =
+    "Program" workflow*:xs !. -> put(analyze(dict([~~xs])))
+    where
+        workflow =
+            | ["Workflow" .:name rule*:xs !.] -> [[name xs]]
+            | .                               -> []
+        rule =
+            | ["Rule" .:condition .:action]   -> [condition action]
+            | ["Rule"             .:action]   -> [0         action]
+    examples
+        ["Program"
+            ["Workflow"
+                "in"
+                ["Rule"
+                    [1 "<" 2]
+                    "qkq"
+                ]
+                ["Rule"
+                    "R"
+                ]
+            ]
+            ["Workflow"
+                "qkq"
+                ["Rule"
+                    "A"
+                ]
+            ]
+            ["Part" 1 2 3 4]
+        ] -> [
+            ["Conditions"
+                [
+                    "-" 1
+                    0   0
+                    0   0
+                    0   0
+                ]
+            ]
+        ]
+
+def analyze workflows =
+    return ["Conditions", ["-", 1, 0, 0, 0, 0, 0, 0]]
