@@ -2,8 +2,9 @@ universe Part1 =
     CLI()
     Parser()
     Analyzer()
-    //examples
-    //    ["Args" "example.txt"] -> []
+    Rater()
+    examples
+        ["Args" "example.txt"] -> [["Result" 27957]] // too low
     //    ["Args" "input.txt"] -> []
 
 actor CLI =
@@ -130,6 +131,31 @@ actor RuleEvaluator #workflowName #ruleNumber #condition #action =
     where
         evaluate = [#workflowName #ruleNumber .:state]
             -> eval(workflowName ruleNumber state condition action)
+
+actor Rater =
+    "Analyzed" ["Or" .*:xs] ["Parts" part*:ys]
+        -> xs:ors
+        -> put(["Result" sum(ys)])
+    where
+        part = .:x -> rating(x ors)
+
+def rating part ors =
+    for condition in ors:
+        for key, value in part.items():
+            if not inRange(condition[key], value):
+                break
+        else:
+            return sum(part.values())
+    return 0
+
+def inRange range value =
+    lower, upper = range
+    if lower is not None and value < (lower+1):
+        return False
+    elif upper is not None and value > (upper-1):
+        return False
+    else:
+        return True
 
 def startState =
     return ["in", 0, {
