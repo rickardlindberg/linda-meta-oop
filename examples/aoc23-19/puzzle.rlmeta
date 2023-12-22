@@ -7,6 +7,15 @@ universe Part1 =
         ["Args" "example.txt"] -> [["Result" 19114]]
         ["Args" "input.txt"] -> [["Result" 489392]]
 
+universe Part2 =
+    CLI()
+    Parser()
+    Analyzer()
+    Combinator()
+    examples
+        ["Args" "example.txt"] -> [["Result" 167409079868000]]
+        ["Args" "input.txt"] -> [["Result" 134370637448305]]
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -138,6 +147,22 @@ actor Rater =
         -> put(["Result" sum(ys)])
     where
         part = .:x -> rating(x ors)
+
+actor Combinator =
+    "Analyzed" ["Or" or*:xs]
+        -> put(["Result" sum(xs)])
+    where
+        or = .:x -> combinations(x)
+
+def combinations x =
+    result = 1
+    for lower, upper in x.values():
+        if lower is None:
+            lower = 0
+        if upper is None:
+            upper = 4001
+        result *= (upper - lower - 1)
+    return result
 
 def rating part ors =
     for condition in ors:
