@@ -12,3 +12,7 @@ Learning:
 Additional fun:
 
 * https://adventofcode.com/2022/day/7
+
+RLMeta development:
+
+* Optimize dispatcher by analyzing first constand item. AoC 19.
