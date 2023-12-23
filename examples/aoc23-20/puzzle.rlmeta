@@ -1,9 +1,15 @@
 universe Part1 =
     CLI()
     Parser()
+    examples
+        ["Args" "example.txt"] -> [["Condiguration" "broadcaster"]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
 actor Parser =
-    "File" [.:x] !. -> put(x)
+    "File" [config:x] !. -> put(x)
+    where
+        config = name:x -> ["Condiguration" x]
+        name = char:x char*:xs -> { x xs }
+        char = 'a'-'z'
