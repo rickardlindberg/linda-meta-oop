@@ -2,9 +2,9 @@ universe Part1 =
     CLI()
     Parser()
     ConjunctionAugmenter()
-    PulseCounter()
+    PulseCounter(1000)
     examples
-        ["Args" "example.txt"] -> [["Pulses" 8 4]]
+        ["Args" "example.txt"] -> [["Pulses" 8000 4000]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -66,11 +66,13 @@ actor ConjunctionAugmenter =
             ]
         ]
 
-actor PulseCounter =
+actor PulseCounter #times =
     | "Program" module*:xs !.
-        -> put(["Pulser" [["broadcaster" "low" "-"]] dict([~~xs]) 0 0])
-    | "Pulser" [!.] .:state .:low .:high !.
+        -> put(["Pulser" [["broadcaster" "low" "-"]] times dict([~~xs]) 0 0])
+    | "Pulser" [!.] 1 .:state .:low .:high !.
         -> put(["Pulses" low high])
+    | "Pulser" [!.] .:times .:state .:low .:high !.
+        -> put(["Pulser" [["broadcaster" "low" "-"]] sub(times 1) state low high])
     where
         module =
             | ["Module" .:name .:outs]
@@ -83,6 +85,9 @@ actor PulseCounter =
                 -> spawn(Conjuncitoner(name outs))
                 -> [[{"last_" name} dict(ins)]]
         in = .:x -> [x "low"]
+
+universe PulseCounterExamples =
+    PulseCounter(1)
     examples
         ["Program"
             ["Module" "broadcaster" ["a"]]
@@ -92,38 +97,42 @@ actor PulseCounter =
         ]
 
 actor FlipFlopper #name #outs =
-    | "Pulser" [[#name "low"] .*:xs] .:state .:low .:high !.
+    | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
         -> flip(state name outs):x
         -> put(["Pulser"
                [~xs ~get(x "pulses")]
+               times
                get(x "state")
                add(low 1)
                high
            ])
-    | "Pulser" [[#name "high"] .*:xs] .:state .:low .:high !.
-        -> put(["Pulser" xs state low add(high 1)])
+    | "Pulser" [[#name "high"] .*:xs] .:times .:state .:low .:high !.
+        -> put(["Pulser" xs times state low add(high 1)])
 
 actor Forwarder #name #outs =
-    | "Pulser" [[#name "low"] .*:xs] .:state .:low .:high !.
+    | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
         -> put(["Pulser"
                [~xs ~pulseOut(outs "low" name)]
+               times
                state
                add(low 1)
                high
            ])
-    | "Pulser" [[#name "high"] .*:xs] .:state .:low .:high !.
+    | "Pulser" [[#name "high"] .*:xs] .:times .:state .:low .:high !.
         -> put(["Pulser"
                [~xs ~pulseOut(outs "high" name)]
+               times
                state
                low
                add(high 1)
            ])
 
 actor Conjuncitoner #name #outs =
-    | "Pulser" [[#name .:pulse .:sender] .*:xs] .:state .:low .:high !.
+    | "Pulser" [[#name .:pulse .:sender] .*:xs] .:times .:state .:low .:high !.
         -> conjure(state name outs sender pulse):x
         -> put(["Pulser"
                [~xs ~get(x "pulses")]
+               times
                get(x "state")
                add(low get(x "lowCount"))
                add(high get(x "highCount"))
@@ -152,6 +161,9 @@ def conjure state name outs sender pulse =
 
 def add x y =
     return x + y
+
+def sub x y =
+    return x - y
 
 def flip state name outs =
     key = f"onoff_{name}"
