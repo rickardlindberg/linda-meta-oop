@@ -63,6 +63,83 @@ actor ConjunctionAugmenter =
             ]
         ]
 
+actor PulseCounter =
+    | "Program" module*:xs !.
+        -> xs
+        -> put(["Pulser" [["broadcaster" "low"]] 1 0])
+    | "Pulser" [!.] .:low .:high !.
+        -> put(["Pulses" low high])
+    where
+        module =
+            | ["Module" .:name .:outs]
+                -> spawn(Forwarder(name outs))
+            | ["FlipFlop" .:name .:outs]
+                -> spawn(FlipFlopper(name outs dict([["state" "low"]])))
+            | ["Conjunction" .:name ["In" .*:ins] ["Out" .*:outs]]
+    examples
+        ["Program"
+            ["Module" "broadcaster" ["a"]]
+            ["FlipFlop" "a" ["a"]]
+        ] -> [
+            ["Pulses" 2 1]
+        ]
+
+actor FlipFlopper #name #outs #state =
+    | "Pulser" [[#name "low"] .*:xs] .:low .:high !.
+        -> flip(get(state "state") name outs):x
+        -> set(state "state" get(x "state"))
+        -> put(["Pulser"
+               [~xs ~get(x "pulses")]
+               add(low get(x "lowCount"))
+               add(high get(x "highCount"))
+           ])
+    | "Pulser" [[#name "high"] .*:xs] .:low .:high !.
+        -> put(["Pulser" xs low high])
+
+actor Forwarder #name #outs =
+    | "Pulser" [[#name "low"] .*:xs] .:low .:high !.
+        -> put(["Pulser"
+               [~xs ~pulseOut(outs "low")]
+               add(low 1)
+               high
+           ])
+    | "Pulser" [[#name "high"] .*:xs] .:low .:high !.
+        -> put(["Pulser"
+               [~xs ~pulseOut(outs "high")]
+               low
+               add(high 1)
+           ])
+
+def add x y =
+    return x + y
+
+def flip state name outs =
+    lowCount = 0
+    highCount = 0
+    if state == "low":
+        flipped = "high"
+        highCount += 1
+    elif state == "high":
+        flipped = "low"
+        lowCount += 1
+    else:
+        raise ValueError("invalid state")
+    return {
+        "state": flipped,
+        "lowCount": lowCount,
+        "highCount": highCount,
+        "pulses": pulseOut(outs, flipped),
+    }
+
+def pulseOut outs pulse =
+    return [[out, pulse] for out in outs]
+
+def get dict name =
+    return dict[name]
+
+def set dict name value =
+    dict[name] = value
+
 def readIn ins name =
     if name not in ins:
         ins[name] = []
