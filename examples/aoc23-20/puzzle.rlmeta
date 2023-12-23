@@ -1,11 +1,12 @@
 universe Part1 =
     CLI()
     Parser()
-    ConjunctionAugmenter()
+    Augmenter()
     PulseCounter(1000)
     Summer()
     examples
         ["Args" "example.txt"] -> [["Result" 32000000]]
+        ["Args" "example2.txt"] -> [["Result" 11687500]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -38,18 +39,24 @@ actor Parser =
             ["Conjunction" "inv" ["a"]]
         ]]
 
-actor ConjunctionAugmenter =
+actor Augmenter =
     "Configuration" module*:xs
         -> dict():ins
-        -> put(["Program" ~xs])
+        -> []:present
+        -> []:empties
+        -> put(["Program" ~xs ~generateEmpties(present empties)])
     where
         module =
             | ["Conjunction":type .:name .:out]
+                -> append(present name)
+                -> extend(empties out)
                 -> [type name ["In" ~readIn(ins name)] ["Out" ~out]]
             | [.:type .:name [out*:outs]]
+                -> append(present name)
                 -> name:fromName
                 -> [type name outs]
         out = .:toName
+            -> append(empties toName)
             -> registerTransition(ins fromName toName)
             -> toName
     examples
@@ -64,6 +71,16 @@ actor ConjunctionAugmenter =
                 ["FlipFlop" "a" ["b"]]
                 ["FlipFlop" "b" ["inv"]]
                 ["Conjunction" "inv" ["In" "b"] ["Out" "a"]]
+            ]
+        ]
+        ["Configuration"
+            ["Module" "broadcaster" ["a" "b"]]
+            ["FlipFlop" "a" ["b"]]
+        ] -> [
+            ["Program"
+                ["Module" "broadcaster" ["a" "b"]]
+                ["FlipFlop" "a" ["b"]]
+                ["Empty" "b"]
             ]
         ]
 
@@ -85,6 +102,9 @@ actor PulseCounter #times =
             | ["Conjunction" .:name ["In" in*:ins] ["Out" .*:outs]]
                 -> spawn(Conjuncitoner(name outs))
                 -> [[{"last_" name} dict(ins)]]
+            | ["Empty" .:name]
+                -> spawn(Empty(name))
+                -> []
         in = .:x -> [x "low"]
 
 universe PulseCounterExamples =
@@ -128,6 +148,24 @@ actor Forwarder #name #outs =
                add(high 1)
            ])
 
+actor Empty #name =
+    | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
+        -> put(["Pulser"
+               xs
+               times
+               state
+               add(low 1)
+               high
+           ])
+    | "Pulser" [[#name "high"] .*:xs] .:times .:state .:low .:high !.
+        -> put(["Pulser"
+               xs
+               times
+               state
+               low
+               add(high 1)
+           ])
+
 actor Conjuncitoner #name #outs =
     | "Pulser" [[#name .:pulse .:sender] .*:xs] .:times .:state .:low .:high !.
         -> conjure(state name outs sender pulse):x
@@ -141,6 +179,18 @@ actor Conjuncitoner #name #outs =
 
 actor Summer =
     "Pulses" .:low .:high -> put(["Result" mul(low high)])
+
+def generateEmpties present empties =
+    return [
+        ["Empty", x]
+        for x in set(empties) if x not in present
+    ]
+
+def append list item =
+    list.append(item)
+
+def extend list item =
+    list.extend(item)
 
 def conjure state name outs sender pulse =
     key = f"last_{name}"
