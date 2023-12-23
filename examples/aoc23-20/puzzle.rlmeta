@@ -1,0 +1,9 @@
+universe Part1 =
+    CLI()
+    Parser()
+
+actor CLI =
+    "Args" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [.:x] !. -> put(x)
