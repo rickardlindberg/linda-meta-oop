@@ -1,6 +1,7 @@
 universe Part1 =
     CLI()
     Parser()
+    ConjunctionAugmenter()
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -32,3 +33,42 @@ actor Parser =
             ["FlipFlop" "c" ["inv"]]
             ["Conjunction" "inv" ["a"]]
         ]]
+
+actor ConjunctionAugmenter =
+    "Configuration" module*:xs
+        -> dict():ins
+        -> put(["Program" ~xs])
+    where
+        module =
+            | ["Conjunction":type .:name .:out]
+                -> [type name ["In" ~readIn(ins name)] ["Out" ~out]]
+            | [.:type .:name [out*:outs]]
+                -> name:fromName
+                -> [type name outs]
+        out = .:toName
+            -> registerTransition(ins fromName toName)
+            -> toName
+    examples
+        ["Configuration"
+            ["Module" "broadcaster" ["a" "b"]]
+            ["FlipFlop" "a" ["b"]]
+            ["FlipFlop" "b" ["inv"]]
+            ["Conjunction" "inv" ["a"]]
+        ] -> [
+            ["Program"
+                ["Module" "broadcaster" ["a" "b"]]
+                ["FlipFlop" "a" ["b"]]
+                ["FlipFlop" "b" ["inv"]]
+                ["Conjunction" "inv" ["In" "b"] ["Out" "a"]]
+            ]
+        ]
+
+def readIn ins name =
+    if name not in ins:
+        ins[name] = []
+    return ins[name]
+
+def registerTransition ins fromName toName =
+    if toName not in ins:
+        ins[toName] = []
+    ins[toName].append(fromName)
