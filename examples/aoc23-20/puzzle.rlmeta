@@ -3,8 +3,8 @@ universe Part1 =
     Parser()
     ConjunctionAugmenter()
     PulseCounter()
-    //examples
-    //    ["Args" "example.txt"] -> [["Pulses" 8 4]]
+    examples
+        ["Args" "example.txt"] -> [["Pulses" 8 4]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -68,7 +68,7 @@ actor ConjunctionAugmenter =
 
 actor PulseCounter =
     | "Program" module*:xs !.
-        -> put(["Pulser" [["broadcaster" "low" "-"]] dict([~~xs]) 1 0])
+        -> put(["Pulser" [["broadcaster" "low" "-"]] dict([~~xs]) 0 0])
     | "Pulser" [!.] .:state .:low .:high !.
         -> put(["Pulses" low high])
     where
@@ -80,6 +80,7 @@ actor PulseCounter =
                 -> spawn(FlipFlopper(name outs))
                 -> [[{"onoff_" name} "off"]]
             | ["Conjunction" .:name ["In" in*:ins] ["Out" .*:outs]]
+                -> spawn(Conjuncitoner(name outs))
                 -> [[{"last_" name} dict(ins)]]
         in = .:x -> [x "low"]
     examples
@@ -96,60 +97,82 @@ actor FlipFlopper #name #outs =
         -> put(["Pulser"
                [~xs ~get(x "pulses")]
                get(x "state")
-               add(low get(x "lowCount"))
-               add(high get(x "highCount"))
+               add(low 1)
+               high
            ])
     | "Pulser" [[#name "high"] .*:xs] .:state .:low .:high !.
-        -> put(["Pulser" xs state low high])
+        -> put(["Pulser" xs state low add(high 1)])
 
 actor Forwarder #name #outs =
     | "Pulser" [[#name "low"] .*:xs] .:state .:low .:high !.
         -> put(["Pulser"
-               [~xs ~pulseOut(outs "low")]
+               [~xs ~pulseOut(outs "low" name)]
                state
                add(low 1)
                high
            ])
     | "Pulser" [[#name "high"] .*:xs] .:state .:low .:high !.
         -> put(["Pulser"
-               [~xs ~pulseOut(outs "high")]
+               [~xs ~pulseOut(outs "high" name)]
                state
                low
                add(high 1)
            ])
 
+actor Conjuncitoner #name #outs =
+    | "Pulser" [[#name .:pulse .:sender] .*:xs] .:state .:low .:high !.
+        -> conjure(state name outs sender pulse):x
+        -> put(["Pulser"
+               [~xs ~get(x "pulses")]
+               get(x "state")
+               add(low get(x "lowCount"))
+               add(high get(x "highCount"))
+           ])
+
+def conjure state name outs sender pulse =
+    key = f"last_{name}"
+    newLast = dict(state[key], **{sender: pulse})
+    lowCount = 0
+    highCount = 0
+    if pulse == "high":
+        highCount = 1
+    else:
+        assert pulse == "low"
+        lowCount = 1
+    if set(newLast.values()) == {"high"}:
+        newPulse = "low"
+    else:
+        newPulse = "high"
+    return {
+        "state": dict(state, **{key: newLast}),
+        "lowCount": lowCount,
+        "highCount": highCount,
+        "pulses": pulseOut(outs, newPulse, name),
+    }
+
 def add x y =
     return x + y
 
 def flip state name outs =
-    lowCount = 0
-    highCount = 0
     key = f"onoff_{name}"
     if state[key] == "on":
         pulse = "low"
         flipped = "off"
-        lowCount += 1
     elif state[key] == "off":
         pulse = "high"
         flipped = "on"
-        highCount += 1
     else:
         raise ValueError("invalid state")
     return {
         "state": dict(state, **{key: flipped}),
-        "lowCount": lowCount,
-        "highCount": highCount,
-        "pulses": pulseOut(outs, pulse),
+        "pulses": pulseOut(outs, pulse, name),
     }
 
-def pulseOut outs pulse =
-    return [[out, pulse] for out in outs]
+def pulseOut outs pulse sender =
+    return [[out, pulse, sender] for out in outs]
 
 def get dict name =
     return dict[name]
-
-def set dict name value =
-    dict[name] = value
 
 def readIn ins name =
     if name not in ins:
