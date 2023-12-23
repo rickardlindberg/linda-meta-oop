@@ -3,8 +3,9 @@ universe Part1 =
     Parser()
     ConjunctionAugmenter()
     PulseCounter(1000)
+    Summer()
     examples
-        ["Args" "example.txt"] -> [["Pulses" 8000 4000]]
+        ["Args" "example.txt"] -> [["Result" 32000000]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -138,6 +139,9 @@ actor Conjuncitoner #name #outs =
                add(high get(x "highCount"))
            ])
 
+actor Summer =
+    "Pulses" .:low .:high -> put(["Result" mul(low high)])
+
 def conjure state name outs sender pulse =
     key = f"last_{name}"
     newLast = dict(state[key], **{sender: pulse})
@@ -164,6 +168,9 @@ def add x y =
 
 def sub x y =
     return x - y
+
+def mul x y =
+    return x * y
 
 def flip state name outs =
     key = f"onoff_{name}"
