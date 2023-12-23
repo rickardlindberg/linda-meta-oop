@@ -2,6 +2,9 @@ universe Part1 =
     CLI()
     Parser()
     ConjunctionAugmenter()
+    PulseCounter()
+    //examples
+    //    ["Args" "example.txt"] -> [["Pulses" 8 4]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -65,17 +68,20 @@ actor ConjunctionAugmenter =
 
 actor PulseCounter =
     | "Program" module*:xs !.
-        -> xs
-        -> put(["Pulser" [["broadcaster" "low"]] 1 0])
-    | "Pulser" [!.] .:low .:high !.
+        -> put(["Pulser" [["broadcaster" "low" "-"]] dict([~~xs]) 1 0])
+    | "Pulser" [!.] .:state .:low .:high !.
         -> put(["Pulses" low high])
     where
         module =
             | ["Module" .:name .:outs]
                 -> spawn(Forwarder(name outs))
+                -> []
             | ["FlipFlop" .:name .:outs]
-                -> spawn(FlipFlopper(name outs dict([["state" "low"]])))
-            | ["Conjunction" .:name ["In" .*:ins] ["Out" .*:outs]]
+                -> spawn(FlipFlopper(name outs))
+                -> [[{"onoff_" name} "off"]]
+            | ["Conjunction" .:name ["In" in*:ins] ["Out" .*:outs]]
+                -> [[{"last_" name} dict(ins)]]
+        in = .:x -> [x "low"]
     examples
         ["Program"
             ["Module" "broadcaster" ["a"]]
@@ -84,28 +90,30 @@ actor PulseCounter =
             ["Pulses" 2 1]
         ]
 
-actor FlipFlopper #name #outs #state =
-    | "Pulser" [[#name "low"] .*:xs] .:low .:high !.
-        -> flip(get(state "state") name outs):x
-        -> set(state "state" get(x "state"))
+actor FlipFlopper #name #outs =
+    | "Pulser" [[#name "low"] .*:xs] .:state .:low .:high !.
+        -> flip(state name outs):x
         -> put(["Pulser"
                [~xs ~get(x "pulses")]
+               get(x "state")
                add(low get(x "lowCount"))
                add(high get(x "highCount"))
            ])
-    | "Pulser" [[#name "high"] .*:xs] .:low .:high !.
-        -> put(["Pulser" xs low high])
+    | "Pulser" [[#name "high"] .*:xs] .:state .:low .:high !.
+        -> put(["Pulser" xs state low high])
 
 actor Forwarder #name #outs =
-    | "Pulser" [[#name "low"] .*:xs] .:low .:high !.
+    | "Pulser" [[#name "low"] .*:xs] .:state .:low .:high !.
         -> put(["Pulser"
                [~xs ~pulseOut(outs "low")]
+               state
                add(low 1)
                high
            ])
-    | "Pulser" [[#name "high"] .*:xs] .:low .:high !.
+    | "Pulser" [[#name "high"] .*:xs] .:state .:low .:high !.
         -> put(["Pulser"
                [~xs ~pulseOut(outs "high")]
+               state
                low
                add(high 1)
            ])
@@ -116,19 +124,22 @@ def add x y =
 def flip state name outs =
     lowCount = 0
     highCount = 0
-    if state == "low":
-        flipped = "high"
-        highCount += 1
-    elif state == "high":
-        flipped = "low"
+    key = f"onoff_{name}"
+    if state[key] == "on":
+        pulse = "low"
+        flipped = "off"
         lowCount += 1
+    elif state[key] == "off":
+        pulse = "high"
+        flipped = "on"
+        highCount += 1
     else:
         raise ValueError("invalid state")
     return {
-        "state": flipped,
+        "state": dict(state, **{key: flipped}),
         "lowCount": lowCount,
         "highCount": highCount,
-        "pulses": pulseOut(outs, flipped),
+        "pulses": pulseOut(outs, pulse),
     }
 
 def pulseOut outs pulse =
