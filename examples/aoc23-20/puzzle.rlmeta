@@ -1,15 +1,34 @@
 universe Part1 =
     CLI()
     Parser()
-    examples
-        ["Args" "example.txt"] -> [["Condiguration" "broadcaster"]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
 actor Parser =
-    "File" [config:x] !. -> put(x)
+    "File" [config:x !.] !. -> put(x)
     where
-        config = name:x -> ["Condiguration" x]
-        name = char:x char*:xs -> { x xs }
-        char = 'a'-'z'
+        config  = module*:xs             -> ["Configuration" ~xs]
+        module  = type:t name:x ' -> '
+                  targets:xs '\n'        -> [t x xs]
+        targets = name:x (', ' name)*:xs -> [x ~xs]
+        name    = char:x char*:xs        -> { x xs }
+        char    = 'a'-'z'
+        type    =
+            | '%' -> "FlipFlop"
+            | '&' -> "Conjunction"
+            |     -> "Module"
+    examples
+        ["File" {
+            "broadcaster -> a, b, c\n"
+            "%a -> b\n"
+            "%b -> c\n"
+            "%c -> inv\n"
+            "&inv -> a\n"
+        }] -> [["Configuration"
+            ["Module" "broadcaster" ["a" "b" "c"]]
+            ["FlipFlop" "a" ["b"]]
+            ["FlipFlop" "b" ["c"]]
+            ["FlipFlop" "c" ["inv"]]
+            ["Conjunction" "inv" ["a"]]
+        ]]
