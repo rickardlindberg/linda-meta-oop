@@ -99,10 +99,10 @@ actor PulseCounter #times =
                 -> []
             | ["FlipFlop" .:name .:outs]
                 -> spawn(FlipFlopper(name outs))
-                -> [[{"onoff_" name} "off"]]
+                -> [[name "off"]]
             | ["Conjunction" .:name ["In" in*:ins] ["Out" .*:outs]]
                 -> spawn(Conjuncitoner(name outs))
-                -> [[{"last_" name} dict(ins)]]
+                -> [[name dict(ins)]]
             | ["Empty" .:name]
                 -> spawn(Empty(name))
                 -> []
@@ -194,8 +194,7 @@ def extend list item =
     list.extend(item)
 
 def conjure state name outs sender pulse =
-    key = f"last_{name}"
-    newLast = dict(state[key], **{sender: pulse})
+    newLast = dict(state[name], **{sender: pulse})
     lowCount = 0
     highCount = 0
     if pulse == "high":
@@ -208,7 +207,7 @@ def conjure state name outs sender pulse =
     else:
         newPulse = "high"
     return {
-        "state": dict(state, **{key: newLast}),
+        "state": dict(state, **{name: newLast}),
         "lowCount": lowCount,
         "highCount": highCount,
         "pulses": pulseOut(outs, newPulse, name),
@@ -224,17 +223,16 @@ def mul x y =
     return x * y
 
 def flip state name outs =
-    key = f"onoff_{name}"
-    if state[key] == "on":
+    if state[name] == "on":
         pulse = "low"
         flipped = "off"
-    elif state[key] == "off":
+    elif state[name] == "off":
         pulse = "high"
         flipped = "on"
     else:
         raise ValueError("invalid state")
     return {
-        "state": dict(state, **{key: flipped}),
+        "state": dict(state, **{name: flipped}),
         "pulses": pulseOut(outs, pulse, name),
     }
 
