@@ -88,7 +88,7 @@ actor Augmenter =
 actor PulseCounter #times =
     | "Program" module*:xs !.
         -> put(["Pulser" [["broadcaster" "low" "-"]] times dict([~~xs]) 0 0])
-    | "Pulser" [!.] 1 .:state .:low .:high !.
+    | "Pulser" [!.] 1       .:state .:low .:high !.
         -> put(["Pulses" low high])
     | "Pulser" [!.] .:times .:state .:low .:high !.
         -> put(["Pulser" [["broadcaster" "low" "-"]] sub(times 1) state low high])
@@ -101,35 +101,21 @@ actor PulseCounter #times =
                 -> spawn(FlipFlopper(name outs))
                 -> [[name "off"]]
             | ["Conjunction" .:name ["In" in*:ins] ["Out" .*:outs]]
-                -> spawn(Conjuncitoner(name outs))
+                -> spawn(Conjunctitoner(name outs))
                 -> [[name dict(ins)]]
             | ["Empty" .:name]
-                -> spawn(Empty(name))
+                -> spawn(Emptier(name))
                 -> []
         in = .:x -> [x "low"]
-
-universe PulseCounterExamples =
-    PulseCounter(1)
-    examples
-        ["Program"
-            ["Module" "broadcaster" ["a"]]
-            ["FlipFlop" "a" ["a"]]
-        ] -> [
-            ["Pulses" 2 1]
-        ]
-
-actor FlipFlopper #name #outs =
-    | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
-        -> flip(state name outs):x
-        -> put(["Pulser"
-               [~xs ~get(x "pulses")]
-               times
-               get(x "state")
-               add(low 1)
-               high
-           ])
-    | "Pulser" [[#name "high"] .*:xs] .:times .:state .:low .:high !.
-        -> put(["Pulser" xs times state low add(high 1)])
+    universe PulseCounter1 =
+        PulseCounter(1)
+        examples
+            ["Program"
+                ["Module" "broadcaster" ["a"]]
+                ["FlipFlop" "a" ["a"]]
+            ] -> [
+                ["Pulses" 2 1]
+            ]
 
 actor Forwarder #name #outs =
     | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
@@ -149,7 +135,31 @@ actor Forwarder #name #outs =
                add(high 1)
            ])
 
-actor Empty #name =
+actor FlipFlopper #name #outs =
+    | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
+        -> flip(state name outs):x
+        -> put(["Pulser"
+               [~xs ~get(x "pulses")]
+               times
+               get(x "state")
+               add(low 1)
+               high
+           ])
+    | "Pulser" [[#name "high"] .*:xs] .:times .:state .:low .:high !.
+        -> put(["Pulser" xs times state low add(high 1)])
+
+actor Conjunctitoner #name #outs =
+    | "Pulser" [[#name .:pulse .:sender] .*:xs] .:times .:state .:low .:high !.
+        -> conjure(state name outs sender pulse):x
+        -> put(["Pulser"
+               [~xs ~get(x "pulses")]
+               times
+               get(x "state")
+               add(low get(x "lowCount"))
+               add(high get(x "highCount"))
+           ])
+
+actor Emptier #name =
     | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
         -> put(["Pulser"
                xs
@@ -165,17 +175,6 @@ actor Empty #name =
                state
                low
                add(high 1)
-           ])
-
-actor Conjuncitoner #name #outs =
-    | "Pulser" [[#name .:pulse .:sender] .*:xs] .:times .:state .:low .:high !.
-        -> conjure(state name outs sender pulse):x
-        -> put(["Pulser"
-               [~xs ~get(x "pulses")]
-               times
-               get(x "state")
-               add(low get(x "lowCount"))
-               add(high get(x "highCount"))
            ])
 
 actor Summer =
