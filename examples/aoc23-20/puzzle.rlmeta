@@ -2,7 +2,7 @@ universe Part1 =
     CLI()
     Parser()
     Augmenter()
-    PulseCounter(1000)
+    PythonPulseCounter()
     Summer()
     examples
         ["Args" "example.txt"] -> [["Result" 32000000]]
@@ -79,6 +79,90 @@ actor Augmenter =
                 ["Empty"    "b"           ["broadcaster" "a"] []]
             ]
         ]
+
+actor PythonPulseCounter =
+    | "Program" .*:xs !. -> put(doPythonPulse(xs))
+
+def doPythonPulse modules =
+    flipFlopStates = {}
+    conjunctionValues = {}
+    byName = {}
+    for type, name, ins, outs in modules:
+        byName[name] = {
+            "name": name,
+            "type": type,
+            "ins": ins,
+            "outs": outs,
+        }
+        if type == "FlipFlop":
+            flipFlopStates[name] = "off"
+        elif type == "Conjunction":
+            conjunctionValues[name] = dict((x, "low") for x in ins)
+    for name in byName:
+        byName[name]["states"] = findStates(name, byName)
+    sumLow = 0
+    sumHigh = 0
+    for i in range(1000):
+        signals = [("-", "low", "broadcaster")]
+        while signals:
+            fromNode, value, toNode = signals.pop(0)
+            lowCount, highCount, newSignals = evalSignal(
+                byName[toNode],
+                value,
+                fromNode,
+                flipFlopStates,
+                conjunctionValues
+            )
+            sumLow += lowCount
+            sumHigh += highCount
+            signals.extend(newSignals)
+    return ["Result", sumLow*sumHigh]
+
+def evalSignal module signal fromNode flipFlopStates conjunctionValues =
+    assert signal in ["low", "high"]
+    newSignals = []
+    if signal == "high":
+        lowCount = 0
+        highCount = 1
+    else:
+        highCount = 0
+        lowCount = 1
+    if module["type"] == "Module":
+        newSignals = [(module["name"], signal, x) for x in module["outs"]]
+    elif module["type"] == "FlipFlop":
+        if signal == "low":
+            if flipFlopStates[module["name"]] == "on":
+                newSignal = "low"
+                flipFlopStates[module["name"]] = "off"
+            else:
+                assert flipFlopStates[module["name"]] == "off"
+                newSignal = "high"
+                flipFlopStates[module["name"]] = "on"
+            newSignals = [(module["name"], newSignal, x) for x in module["outs"]]
+    elif module["type"] == "Conjunction":
+        conjunctionValues[module["name"]][fromNode] = signal
+        if set(conjunctionValues[module["name"]].values()) == {"high"}:
+            newSignal = "low"
+        else:
+            newSignal = "high"
+        newSignals = [(module["name"], newSignal, x) for x in module["outs"]]
+    else:
+        assert module["type"] == "Empty"
+    return (lowCount, highCount, newSignals)
+
+def findStates name byName =
+    visited = set()
+    states = set()
+    toVisit = set([name])
+    while toVisit:
+        name = toVisit.pop()
+        visited.add(name)
+        if byName[name]["type"] == "FlipFlop":
+            states.add(name)
+        for x in byName[name]["outs"]:
+            if x not in visited:
+                toVisit.add(x)
+    return list(states)
 
 actor PulseCounter #times =
     | "Program" module*:xs !.
