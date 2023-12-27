@@ -129,22 +129,6 @@ def doPythonPulse part modules =
         return ["Result", sumLow*sumHigh]
     else:
         return ["Result", 0]
-        pushes = 0
-        while True:
-            pushes += 1
-            signals = [("-", "low", "broadcaster")]
-            while signals:
-                fromNode, value, toNode = signals.pop(0)
-                if value == "low" and toNode == "rx":
-                    return ["Result", pushes]
-                lowCount, highCount, newSignals = evalSignal(
-                    byName[toNode],
-                    value,
-                    fromNode,
-                    flipFlopStates,
-                    conjunctionValues
-                )
-                signals.extend(newSignals)
 
 def evalSignal module signal fromNode flipFlopStates conjunctionValues =
     assert signal in ["low", "high"]
