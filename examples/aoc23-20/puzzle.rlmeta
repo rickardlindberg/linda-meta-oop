@@ -9,6 +9,11 @@ universe Part1 =
         ["Args" "example2.txt"] -> [["Result" 11687500]]
         ["Args" "input.txt"] -> [["Result" 856482136]]
 
+universe Part2 =
+    CLI()
+    Parser()
+    Augmenter()
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -45,17 +50,12 @@ actor Augmenter =
         -> dict():ins
         -> []:present
         -> []:empties
-        -> put(["Program" ~xs ~generateEmpties(present empties)])
+        -> put(["Program" ~xs ~generateEmpties(present empties ins)])
     where
-        module =
-            | ["Conjunction":type .:name .:out]
-                -> append(present name)
-                -> extend(empties out)
-                -> [type name ["In" ~readIn(ins name)] ["Out" ~out]]
-            | [.:type .:name [out*:outs]]
-                -> append(present name)
-                -> name:fromName
-                -> [type name outs]
+        module = [.:type .:name [out*:outs]]
+            -> append(present name)
+            -> name:fromName
+            -> [type name readIn(ins name) outs]
         out = .:toName
             -> append(empties toName)
             -> registerTransition(ins fromName toName)
@@ -68,10 +68,10 @@ actor Augmenter =
             ["Conjunction" "inv" ["a"]]
         ] -> [
             ["Program"
-                ["Module" "broadcaster" ["a" "b"]]
-                ["FlipFlop" "a" ["b"]]
-                ["FlipFlop" "b" ["inv"]]
-                ["Conjunction" "inv" ["In" "b"] ["Out" "a"]]
+                ["Module"      "broadcaster" []                    ["a" "b"]]
+                ["FlipFlop"    "a"           ["broadcaster" "inv"] ["b"]]
+                ["FlipFlop"    "b"           ["broadcaster" "a"]   ["inv"]]
+                ["Conjunction" "inv"         ["b"]                 ["a"]]
             ]
         ]
         ["Configuration"
@@ -79,9 +79,9 @@ actor Augmenter =
             ["FlipFlop" "a" ["b"]]
         ] -> [
             ["Program"
-                ["Module" "broadcaster" ["a" "b"]]
-                ["FlipFlop" "a" ["b"]]
-                ["Empty" "b"]
+                ["Module"   "broadcaster" []                  ["a" "b"]]
+                ["FlipFlop" "a"           ["broadcaster"]     ["b"]]
+                ["Empty"    "b"           ["broadcaster" "a"] []]
             ]
         ]
 
@@ -94,13 +94,13 @@ actor PulseCounter #times =
         -> put(["Pulser" [["broadcaster" "low" "-"]] sub(times 1) state low high])
     where
         module =
-            | ["Module" .:name .:outs]
+            | ["Module" .:name . .:outs]
                 -> spawn(Forwarder(name outs))
                 -> []
-            | ["FlipFlop" .:name .:outs]
+            | ["FlipFlop" .:name . .:outs]
                 -> spawn(FlipFlopper(name outs))
                 -> [[name "off"]]
-            | ["Conjunction" .:name ["In" in*:ins] ["Out" .*:outs]]
+            | ["Conjunction" .:name [in*:ins] .:outs]
                 -> spawn(Conjunctitoner(name outs))
                 -> [[name dict(ins)]]
             | ["Empty" .:name]
@@ -111,8 +111,8 @@ actor PulseCounter #times =
         PulseCounter(1)
         examples
             ["Program"
-                ["Module" "broadcaster" ["a"]]
-                ["FlipFlop" "a" ["a"]]
+                ["Module" "broadcaster" [] ["a"]]
+                ["FlipFlop" "a" ["broadcaster"] ["a"]]
             ] -> [
                 ["Pulses" 2 1]
             ]
@@ -180,9 +180,9 @@ actor Emptier #name =
 actor Summer =
     "Pulses" .:low .:high -> put(["Result" mul(low high)])
 
-def generateEmpties present empties =
+def generateEmpties present empties ins =
     return [
-        ["Empty", x]
+        ["Empty", x, readIn(ins, x), []]
         for x in set(empties) if x not in present
     ]
 
