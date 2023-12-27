@@ -109,9 +109,9 @@ def doPythonPulse part modules =
             conjunctionValues[name] = dict((x, "low") for x in ins)
     for name in byName:
         byName[name]["states"] = findStates(name, byName)
-    sumLow = 0
-    sumHigh = 0
     if part == 1:
+        sumLow = 0
+        sumHigh = 0
         for i in range(1000):
             signals = [("-", "low", "broadcaster")]
             while signals:
@@ -129,6 +129,22 @@ def doPythonPulse part modules =
         return ["Result", sumLow*sumHigh]
     else:
         return ["Result", 0]
+        pushes = 0
+        while True:
+            pushes += 1
+            signals = [("-", "low", "broadcaster")]
+            while signals:
+                fromNode, value, toNode = signals.pop(0)
+                if value == "low" and toNode == "rx":
+                    return ["Result", pushes]
+                lowCount, highCount, newSignals = evalSignal(
+                    byName[toNode],
+                    value,
+                    fromNode,
+                    flipFlopStates,
+                    conjunctionValues
+                )
+                signals.extend(newSignals)
 
 def evalSignal module signal fromNode flipFlopStates conjunctionValues =
     assert signal in ["low", "high"]
