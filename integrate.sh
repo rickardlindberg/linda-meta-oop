@@ -9,6 +9,6 @@ fi
 
 git clean -f -d -x
 
-./make.sh
+time ./make.sh
 
 git push
