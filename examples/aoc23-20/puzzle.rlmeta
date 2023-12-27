@@ -180,17 +180,20 @@ def evalSignal module signal fromNode flipFlopStates conjunctionValues =
 
 def findStates name byName =
     visited = set()
-    states = set()
+    flipFlops = set()
+    conjunctions = set()
     toVisit = set([name])
     while toVisit:
         name = toVisit.pop()
         visited.add(name)
         if byName[name]["type"] == "FlipFlop":
-            states.add(name)
+            flipFlops.add(name)
+        elif byName[name]["type"] == "Conjunction":
+            conjunctions.add(name)
         for x in byName[name]["outs"]:
             if x not in visited:
                 toVisit.add(x)
-    return list(states)
+    return {"flipFlops": flipFlops, "conjunctions": conjunctions}
 
 actor PulseCounter #times =
     | "Program" module*:xs !.
