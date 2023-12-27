@@ -9,14 +9,6 @@ universe Part1 =
         ["Args" "example2.txt"] -> [["Result" 11687500]]
         ["Args" "input.txt"] -> [["Result" 856482136]]
 
-universe Part2 =
-    CLI()
-    Parser()
-    Augmenter()
-    ExpressionExtractor()
-    examples
-        ["Args" "input.txt"] -> [["Result" "th"]]
-
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -180,23 +172,6 @@ actor Emptier #name =
                add(high 1)
            ])
 
-actor ExpressionExtractor =
-    | "Program" module*:xs !.
-        -> dict():modules
-        -> xs
-        -> put(["Extract" "rx" [] modules])
-    | "Extract" .:name [!.] .:modules !.
-        -> put(["Extract" name get(modules name) modules])
-    | "Extract" .:name [toExpr:e] .:modules !.
-        -> put(["Result" e])
-    where
-        module = [.:type .:name .:ins .:outs]
-                -> dictSet(modules name [type ~ins])
-        toExpr =
-            | "Conjunction" .:ins -> ["NAND" ~ins]
-            | "FlipFlop"    .:ins -> ["NOT" ["XOR" ~ins]]
-            | .             .:ins -> ins
-
 actor Summer =
     "Pulses" .:low .:high -> put(["Result" mul(low high)])
 
@@ -208,12 +183,6 @@ def generateEmpties present empties ins =
 
 def append list item =
     list.append(item)
-
-def extend list item =
-    list.extend(item)
-
-def dictSet dict name value =
-    dict[name] = value
 
 def conjure state name outs sender pulse =
     newLast = dict(state[name], **{sender: pulse})
