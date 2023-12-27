@@ -2,12 +2,21 @@ universe Part1 =
     CLI()
     Parser()
     Augmenter()
-    PythonPulseCounter()
+    PythonPulseCounter(1)
     Summer()
     examples
         ["Args" "example.txt"] -> [["Result" 32000000]]
         ["Args" "example2.txt"] -> [["Result" 11687500]]
         ["Args" "input.txt"] -> [["Result" 856482136]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    Augmenter()
+    PythonPulseCounter(2)
+    Summer()
+    examples
+        ["Args" "input.txt"] -> [["Result" 0]]
 
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
@@ -80,10 +89,10 @@ actor Augmenter =
             ]
         ]
 
-actor PythonPulseCounter =
-    | "Program" .*:xs !. -> put(doPythonPulse(xs))
+actor PythonPulseCounter #part =
+    | "Program" .*:xs !. -> put(doPythonPulse(part xs))
 
-def doPythonPulse modules =
+def doPythonPulse part modules =
     flipFlopStates = {}
     conjunctionValues = {}
     byName = {}
@@ -102,21 +111,24 @@ def doPythonPulse modules =
         byName[name]["states"] = findStates(name, byName)
     sumLow = 0
     sumHigh = 0
-    for i in range(1000):
-        signals = [("-", "low", "broadcaster")]
-        while signals:
-            fromNode, value, toNode = signals.pop(0)
-            lowCount, highCount, newSignals = evalSignal(
-                byName[toNode],
-                value,
-                fromNode,
-                flipFlopStates,
-                conjunctionValues
-            )
-            sumLow += lowCount
-            sumHigh += highCount
-            signals.extend(newSignals)
-    return ["Result", sumLow*sumHigh]
+    if part == 1:
+        for i in range(1000):
+            signals = [("-", "low", "broadcaster")]
+            while signals:
+                fromNode, value, toNode = signals.pop(0)
+                lowCount, highCount, newSignals = evalSignal(
+                    byName[toNode],
+                    value,
+                    fromNode,
+                    flipFlopStates,
+                    conjunctionValues
+                )
+                sumLow += lowCount
+                sumHigh += highCount
+                signals.extend(newSignals)
+        return ["Result", sumLow*sumHigh]
+    else:
+        return ["Result", 0]
 
 def evalSignal module signal fromNode flipFlopStates conjunctionValues =
     assert signal in ["low", "high"]
