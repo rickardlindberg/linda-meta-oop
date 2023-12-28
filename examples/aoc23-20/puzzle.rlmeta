@@ -106,7 +106,8 @@ def doPythonPulse part modules =
         if type == "FlipFlop":
             flipFlopStates[name] = "off"
         elif type == "Conjunction":
-            conjunctionValues[name] = dict((x, "low") for x in ins)
+            for inName in ins:
+                conjunctionValues[(name, inName)] = "low"
     if part == 1:
         sumLow = 0
         sumHigh = 0
@@ -150,8 +151,11 @@ def evalSignal module signal fromNode flipFlopStates conjunctionValues =
                 flipFlopStates[module["name"]] = "on"
             newSignals = [(module["name"], newSignal, x) for x in module["outs"]]
     elif module["type"] == "Conjunction":
-        conjunctionValues[module["name"]][fromNode] = signal
-        if set(conjunctionValues[module["name"]].values()) == {"high"}:
+        conjunctionValues[(module["name"], fromNode)] = signal
+        if set([
+            conjunctionValues[(module["name"], inName)]
+            for inName in module["ins"]
+        ]) == {"high"}:
             newSignal = "low"
         else:
             newSignal = "high"
