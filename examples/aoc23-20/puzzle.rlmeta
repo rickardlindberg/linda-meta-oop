@@ -112,57 +112,61 @@ def doPythonPulse part modules =
         sumLow = 0
         sumHigh = 0
         for i in range(1000):
-            signals = [("-", "low", "broadcaster")]
-            while signals:
-                fromNode, value, toNode = signals.pop(0)
-                lowCount, highCount, newSignals = evalSignal(
-                    byName[toNode],
-                    value,
-                    fromNode,
-                    flipFlopStates,
-                    conjunctionValues
-                )
-                sumLow += lowCount
-                sumHigh += highCount
-                signals.extend(newSignals)
+            for statement in compileProgram(
+                [("-", "low", "broadcaster")],
+                byName,
+                flipFlopStates,
+                conjunctionValues
+            ):
+                if statement == ["IncHighCount"]:
+                    sumHigh += 1
+                elif statement == ["IncLowCount"]:
+                    sumLow += 1
         return ["Result", sumLow*sumHigh]
     else:
         return ["Result", 0]
 
-def evalSignal module signal fromNode flipFlopStates conjunctionValues =
-    assert signal in ["low", "high"]
-    newSignals = []
-    if signal == "high":
-        lowCount = 0
-        highCount = 1
-    else:
-        highCount = 0
-        lowCount = 1
-    if module["type"] == "Module":
-        newSignals = [(module["name"], signal, x) for x in module["outs"]]
-    elif module["type"] == "FlipFlop":
-        if signal == "low":
-            if flipFlopStates[module["name"]] == "on":
-                newSignal = "low"
-                flipFlopStates[module["name"]] = "off"
-            else:
-                assert flipFlopStates[module["name"]] == "off"
-                newSignal = "high"
-                flipFlopStates[module["name"]] = "on"
-            newSignals = [(module["name"], newSignal, x) for x in module["outs"]]
-    elif module["type"] == "Conjunction":
-        conjunctionValues[(module["name"], fromNode)] = signal
-        if set([
-            conjunctionValues[(module["name"], inName)]
-            for inName in module["ins"]
-        ]) == {"high"}:
-            newSignal = "low"
+def compileProgram signals byName flipFlopStates conjunctionValues =
+    statements = list(signals)
+    while signals:
+        fromNode, signal, toNode = signals.pop(0)
+        assert signal in ["low", "high"]
+        if signal == "high":
+            statements.append(["IncHighCount"])
         else:
-            newSignal = "high"
-        newSignals = [(module["name"], newSignal, x) for x in module["outs"]]
-    else:
-        assert module["type"] == "Empty"
-    return (lowCount, highCount, newSignals)
+            statements.append(["IncLowCount"])
+        module = byName[toNode]
+        if module["type"] == "Module":
+            for outName in module["outs"]:
+                signals.append((module["name"], signal, outName))
+        elif module["type"] == "FlipFlop":
+            if signal == "low":
+                if module["name"] in flipFlopStates:
+                    if flipFlopStates[module["name"]] == "on":
+                        newSignal = "low"
+                        flipFlopStates[module["name"]] = "off"
+                    else:
+                        assert flipFlopStates[module["name"]] == "off"
+                        newSignal = "high"
+                        flipFlopStates[module["name"]] = "on"
+                    for outName in module["outs"]:
+                        signals.append((module["name"], newSignal, outName))
+                else:
+                    raise ValueError("no flipflop not supported")
+        elif module["type"] == "Conjunction":
+            conjunctionValues[(module["name"], fromNode)] = signal
+            if set([
+                conjunctionValues[(module["name"], inName)]
+                for inName in module["ins"]
+            ]) == {"high"}:
+                newSignal = "low"
+            else:
+                newSignal = "high"
+            for outName in module["outs"]:
+                signals.append((module["name"], newSignal, outName))
+        else:
+            assert module["type"] == "Empty"
+    return statements
 
 actor PulseCounter #times =
     | "Program" module*:xs !.
