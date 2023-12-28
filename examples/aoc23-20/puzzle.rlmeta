@@ -112,29 +112,40 @@ def doPythonPulse part modules =
         sumLow = 0
         sumHigh = 0
         for i in range(1000):
-            for statement in compileProgram(
-                [("-", "low", "broadcaster")],
-                byName,
+            sumLowX, sumHighX = evalStatements(
+                compileProgram(
+                    [("-", "low", "broadcaster")],
+                    byName,
+                    flipFlopStates,
+                    conjunctionValues
+                ),
                 flipFlopStates,
                 conjunctionValues
-            ):
-                if statement == ["IncHighCount"]:
-                    sumHigh += 1
-                elif statement == ["IncLowCount"]:
-                    sumLow += 1
+            )
+            sumLow += sumLowX
+            sumHigh += sumHighX
         return ["Result", sumLow*sumHigh]
     else:
         return ["Result", 0]
+
+def evalStatements statements flipFlopStates conjunctionValues =
+    sumLow = 0
+    sumHigh = 0
+    for statement in statements:
+        if statement[0] == "Send":
+            _, signal, toNode = statement
+            if signal == "high":
+                sumHigh += 1
+            else:
+                sumLow += 1
+    return (sumLow, sumHigh)
 
 def compileProgram signals byName flipFlopStates conjunctionValues =
     statements = list(signals)
     while signals:
         fromNode, signal, toNode = signals.pop(0)
         assert signal in ["low", "high"]
-        if signal == "high":
-            statements.append(["IncHighCount"])
-        else:
-            statements.append(["IncLowCount"])
+        statements.append(["Send", signal, toNode])
         module = byName[toNode]
         if module["type"] == "Module":
             for outName in module["outs"]:
