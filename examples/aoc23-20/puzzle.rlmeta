@@ -133,9 +133,30 @@ def evalStatements statements flipFlopStates conjunctionValues runtime =
                 runtime["sumHigh"] += 1
             else:
                 runtime["sumLow"] += 1
+        elif statement[0] == "IfOn":
+            _, name, onBranch, offBranch = statement
+            if flipFlopStates[name] == "on":
+                evalStatements(onBranch, flipFlopStates, conjunctionValues, runtime)
+            else:
+                evalStatements(offBranch, flipFlopStates, conjunctionValues, runtime)
+        elif statement[0] == "SetFlipFlop":
+            _, name, value
+            flipFlopStates[name] == value
+        elif statement[0] == "IfAllHigh":
+            _, names, allHighBranch, someLowBranch = statement
+            if set(conjunctionValues[x] for x in names) == {"high"}:
+                evalStatements(allHighBranch, flipFlopStates, conjunctionValues, runtime)
+            else:
+                evalStatements(someLowBranch, flipFlopStates, conjunctionValues, runtime)
+        elif statement[0] == "RegisterConjunction":
+            _, name, value
+            conjunctionValues[name] == value
+        else:
+            raise ValueError(f"invalid statement {statement}")
 
 def compileProgram signals byName flipFlopStates conjunctionValues =
-    statements = list(signals)
+    signals = list(signals)
+    statements = []
     while signals:
         fromNode, signal, toNode = signals.pop(0)
         assert signal in ["low", "high"]
