@@ -108,11 +108,10 @@ def doPythonPulse part modules =
         elif type == "Conjunction":
             for inName in ins:
                 conjunctionValues[(name, inName)] = "low"
+    runtime = {"sumLow": 0, "sumHigh": 0}
     if part == 1:
-        sumLow = 0
-        sumHigh = 0
         for i in range(1000):
-            sumLowX, sumHighX = evalStatements(
+            evalStatements(
                 compileProgram(
                     [("-", "low", "broadcaster")],
                     byName,
@@ -120,25 +119,21 @@ def doPythonPulse part modules =
                     conjunctionValues
                 ),
                 flipFlopStates,
-                conjunctionValues
+                conjunctionValues,
+                runtime
             )
-            sumLow += sumLowX
-            sumHigh += sumHighX
-        return ["Result", sumLow*sumHigh]
+        return ["Result", runtime["sumLow"]*runtime["sumHigh"]]
     else:
         return ["Result", 0]
 
-def evalStatements statements flipFlopStates conjunctionValues =
-    sumLow = 0
-    sumHigh = 0
+def evalStatements statements flipFlopStates conjunctionValues runtime =
     for statement in statements:
         if statement[0] == "Send":
             _, signal, toNode = statement
             if signal == "high":
-                sumHigh += 1
+                runtime["sumHigh"] += 1
             else:
-                sumLow += 1
-    return (sumLow, sumHigh)
+                runtime["sumLow"] += 1
 
 def compileProgram signals byName flipFlopStates conjunctionValues =
     statements = list(signals)
