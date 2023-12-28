@@ -182,6 +182,8 @@ def compileProgram signals byName flipFlopStates conjunctionValues =
                 else:
                     raise ValueError("no flipflop not supported")
         elif module["type"] == "Conjunction":
+            statements.append(["RegisterConjunction", (module["name"], fromNode), signal])
+            conjunctionValues = dict(conjunctionValues)
             conjunctionValues[(module["name"], fromNode)] = signal
             if set([
                 conjunctionValues[(module["name"], inName)]
