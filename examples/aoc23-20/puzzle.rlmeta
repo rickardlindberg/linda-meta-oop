@@ -140,8 +140,8 @@ def evalStatements statements flipFlopStates conjunctionValues runtime =
             else:
                 evalStatements(offBranch, flipFlopStates, conjunctionValues, runtime)
         elif statement[0] == "SetFlipFlop":
-            _, name, value
-            flipFlopStates[name] == value
+            _, name, value = statement
+            flipFlopStates[name] = value
         elif statement[0] == "IfAllHigh":
             _, names, allHighBranch, someLowBranch = statement
             if set(conjunctionValues[x] for x in names) == {"high"}:
@@ -149,8 +149,8 @@ def evalStatements statements flipFlopStates conjunctionValues runtime =
             else:
                 evalStatements(someLowBranch, flipFlopStates, conjunctionValues, runtime)
         elif statement[0] == "RegisterConjunction":
-            _, name, value
-            conjunctionValues[name] == value
+            _, name, value = statement
+            conjunctionValues[name] = value
         else:
             raise ValueError(f"invalid statement {statement}")
 
@@ -170,11 +170,13 @@ def compileProgram signals byName flipFlopStates conjunctionValues =
                 if module["name"] in flipFlopStates:
                     if flipFlopStates[module["name"]] == "on":
                         newSignal = "low"
-                        flipFlopStates[module["name"]] = "off"
+                        flipFlopStates = dict(flipFlopStates, **{module["name"]: "off"})
+                        statements.append(["SetFlipFlop", module["name"], "off"])
                     else:
                         assert flipFlopStates[module["name"]] == "off"
                         newSignal = "high"
-                        flipFlopStates[module["name"]] = "on"
+                        flipFlopStates = dict(flipFlopStates, **{module["name"]: "on"})
+                        statements.append(["SetFlipFlop", module["name"], "on"])
                     for outName in module["outs"]:
                         signals.append((module["name"], newSignal, outName))
                 else:
