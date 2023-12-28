@@ -129,8 +129,7 @@ def doPythonPulse part modules =
 def evalStatements statements flipFlopStates conjunctionValues runtime =
     for statement in statements:
         if statement[0] == "Send":
-            _, signal, toNode = statement
-            if signal == "high":
+            if statement[1] == "high":
                 runtime["sumHigh"] += 1
             else:
                 runtime["sumLow"] += 1
