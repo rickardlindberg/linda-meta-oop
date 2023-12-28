@@ -107,57 +107,23 @@ def doPythonPulse part modules =
             flipFlopStates[name] = "off"
         elif type == "Conjunction":
             conjunctionValues[name] = dict((x, "low") for x in ins)
-    for name in byName:
-        byName[name]["states"] = findStates(name, byName)
     if part == 1:
-        cache = {}
         sumLow = 0
         sumHigh = 0
         for i in range(1000):
             signals = [("-", "low", "broadcaster")]
-            candidates = {}
             while signals:
-                keyParts = []
-                keyParts.append(tuple(signals))
-                flipFlops = set()
-                conjunctions = set()
-                for fromNode, value, toNode in signals:
-                    for flipFlop in byName[toNode]["states"]["flipFlops"]:
-                        flipFlops.add((flipFlop, flipFlopStates[flipFlop]))
-                    for conjunction in byName[toNode]["states"]["conjunctions"]:
-                        for inName in byName[conjunction]["ins"]:
-                            conjunctions.add((conjunction, inName, conjunctionValues[conjunction][inName]))
-                keyParts.append(tuple(sorted(flipFlops)))
-                keyParts.append(tuple(sorted(conjunctions)))
-                key = tuple(keyParts)
-                if key in cache:
-                    for x, value in cache[key]["newFlipFlops"]:
-                        flipFlopStates[x] = value
-                    for (x, y), value in cache[key]["newConjunctions"]:
-                        conjunctionValues[x][y] = value
-                    sumLow += cache[key]["lowCount"]
-                    sumHigh += cache[key]["highCount"]
-                    signals.clear()
-                else:
-                    candidates[key] = {"sumLow": sumLow, "sumHigh": sumHigh}
-                    fromNode, value, toNode = signals.pop(0)
-                    lowCount, highCount, newSignals = evalSignal(
-                        byName[toNode],
-                        value,
-                        fromNode,
-                        flipFlopStates,
-                        conjunctionValues
-                    )
-                    sumLow += lowCount
-                    sumHigh += highCount
-                    signals.extend(newSignals)
-            for key, value in candidates.items():
-                cache[key] = {
-                    "lowCount": sumLow - value["sumLow"],
-                    "highCount": sumHigh - value["sumHigh"],
-                    "newFlipFlops": [(x, flipFlopStates[x]) for x, value in key[1]],
-                    "newConjunctions": [((x, y), conjunctionValues[x][y]) for x, y, value in key[2]],
-                }
+                fromNode, value, toNode = signals.pop(0)
+                lowCount, highCount, newSignals = evalSignal(
+                    byName[toNode],
+                    value,
+                    fromNode,
+                    flipFlopStates,
+                    conjunctionValues
+                )
+                sumLow += lowCount
+                sumHigh += highCount
+                signals.extend(newSignals)
         return ["Result", sumLow*sumHigh]
     else:
         return ["Result", 0]
@@ -193,23 +159,6 @@ def evalSignal module signal fromNode flipFlopStates conjunctionValues =
     else:
         assert module["type"] == "Empty"
     return (lowCount, highCount, newSignals)
-
-def findStates name byName =
-    visited = set()
-    flipFlops = set()
-    conjunctions = set()
-    toVisit = set([name])
-    while toVisit:
-        name = toVisit.pop()
-        visited.add(name)
-        if byName[name]["type"] == "FlipFlop":
-            flipFlops.add(name)
-        elif byName[name]["type"] == "Conjunction":
-            conjunctions.add(name)
-        for x in byName[name]["outs"]:
-            if x not in visited:
-                toVisit.add(x)
-    return {"flipFlops": flipFlops, "conjunctions": conjunctions}
 
 actor PulseCounter #times =
     | "Program" module*:xs !.
