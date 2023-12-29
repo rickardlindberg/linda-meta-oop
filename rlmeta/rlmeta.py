@@ -3817,7 +3817,4 @@ class StdoutWriter:
         return stream.with_scope(self._matcher_6)
 natives['StdoutWriter'] = StdoutWriter
 if __name__ == "__main__":
-    run_simulation(
-        natives["Main"](),
-        {},
-    )
+    run_simulation(natives["Main"]())

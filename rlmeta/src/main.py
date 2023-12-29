@@ -1,5 +1,2 @@
 if __name__ == "__main__":
-    run_simulation(
-        natives["Main"](),
-        {},
-    )
+    run_simulation(natives["Main"]())
