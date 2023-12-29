@@ -289,7 +289,7 @@ class Cli:
         self._state = {}
         self._rules = {
             '_main': self._matcher_15,
-            'arg': self._matcher_40,
+            'arg': self._matcher_44,
         }
         self._main = self._rules.pop('_main')
     def run(self, stream):
@@ -474,11 +474,33 @@ class Cli:
     def _matcher_39(self, stream):
         return stream.with_scope(self._matcher_38)
     def _matcher_40(self, stream):
+        return stream.match(lambda item: item == '--main', "'--main'")
+    def _matcher_41(self, stream):
+        return stream.action(lambda self: self.lookup('put')(
+            self.lookup('concat')([
+                self.lookup('splice')(0, 'Part'),
+                self.lookup('splice')(0, self.lookup('next')(
+                
+                )),
+                self.lookup('splice')(0, self.lookup('join')([
+                    'if __name__ == "__main__":\n    run_simulation(natives["Main"]())\n'
+                ]))
+            ])
+        ))
+    def _matcher_42(self, stream):
+        return stream.operator_and([
+            self._matcher_40,
+            self._matcher_41
+        ])
+    def _matcher_43(self, stream):
+        return stream.with_scope(self._matcher_42)
+    def _matcher_44(self, stream):
         return stream.operator_or([
             self._matcher_19,
             self._matcher_25,
             self._matcher_33,
-            self._matcher_39
+            self._matcher_39,
+            self._matcher_43
         ])
 natives['Cli'] = Cli
 natives['Main'] = lambda: [

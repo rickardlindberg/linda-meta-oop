@@ -35,7 +35,7 @@ def compile_rlmeta(rlmeta):
         "--compile", "src/optimizer.rlmeta",
         "--compile", "src/codegenerator.rlmeta",
         "--compile", "src/stdlib.rlmeta",
-        "--copy", "src/main.py",
+        "--main",
     ])
 
 def test(rlmeta):

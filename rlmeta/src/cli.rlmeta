@@ -9,6 +9,7 @@ actor Cli =
             | "--copy"    .:x     -> put(["Part"       next() read(x)])
             | "--embed"   .:x .:y -> put(["Part"       next() {"natives[" repr(x) "] = " repr(read(y)) "\n"}])
             | "--compile" .:x     -> put(["SourceCode" next() read(x)])
+            | "--main"            -> put(["Part"       next() {"if __name__ == \"__main__\":\n    run_simulation(natives[\"Main\"]())\n"}])
 
 universe Main =
     Cli()
