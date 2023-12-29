@@ -195,6 +195,8 @@ def run_simulation(actors, extra={}, messages=[], debug=False, fail=True):
             return f"{x[:n]} ..."
         else:
             return x
+    if not isinstance(actors, list):
+        actors = [actors]
     if not messages:
         messages.append(["Args"]+sys.argv[1:])
     iteration = 0
@@ -257,8 +259,6 @@ class Example(unittest.TestCase):
 
     def check_example(self, actors, in_message, expected_out_messages):
         log = []
-        if not isinstance(actors, list):
-            actors = [actors]
         actual_out_messages = run_simulation(
             actors=actors,
             extra={},
