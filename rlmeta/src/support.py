@@ -278,6 +278,7 @@ class Example(unittest.TestCase):
             ]))
 
 natives = {
+    "selftest": lambda: unittest.main(argv=[sys.argv[0]]),
     "None": None,
     "dict": dict,
     "tuple": lambda *xs: tuple(xs),

@@ -1,25 +1,27 @@
+actor Main = "Args" -> selftest()
+
 universe Part1 =
-    CLI()
+    Reader()
     Parser()
     Augmenter()
     PythonPulseCounter(1)
     Summer()
     examples
-        ["Args" "example.txt"] -> [["Result" 32000000]]
-        ["Args" "example2.txt"] -> [["Result" 11687500]]
-        ["Args" "input.txt"] -> [["Result" 856482136]]
+        ["Read" "example.txt"] -> [["Result" 32000000]]
+        ["Read" "example2.txt"] -> [["Result" 11687500]]
+        ["Read" "input.txt"] -> [["Result" 856482136]]
 
 universe Part2 =
-    CLI()
+    Reader()
     Parser()
     Augmenter()
     PythonPulseCounter(2)
     Summer()
     examples
-        ["Args" "input.txt"] -> [["Result" 0]]
+        ["Read" "input.txt"] -> [["Result" 0]]
 
-actor CLI =
-    "Args" .:input !. -> put(["File" read(input)])
+actor Reader =
+    "Read" .:input !. -> put(["File" read(input)])
 
 actor Parser =
     "File" [config:x !.] !. -> put(x)
