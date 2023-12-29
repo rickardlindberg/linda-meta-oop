@@ -9,3 +9,11 @@ actor Cli =
             | "--copy"    .:x     -> put(["Part"       next() read(x)])
             | "--embed"   .:x .:y -> put(["Part"       next() {x " = " repr(read(y)) "\n"}])
             | "--compile" .:x     -> put(["SourceCode" next() read(x)])
+
+
+universe Main =
+    Cli()
+    Parser()
+    Optimizer()
+    CodeGenerator()
+    StdoutWriter()

@@ -478,6 +478,23 @@ class Cli:
             self._matcher_39
         ])
 natives['Cli'] = Cli
+natives['Main'] = lambda: [
+    SemanticAction({}, lambda self: self.lookup('Cli')(
+    
+    )).eval(Runtime(None, natives)),
+    SemanticAction({}, lambda self: self.lookup('Parser')(
+    
+    )).eval(Runtime(None, natives)),
+    SemanticAction({}, lambda self: self.lookup('Optimizer')(
+    
+    )).eval(Runtime(None, natives)),
+    SemanticAction({}, lambda self: self.lookup('CodeGenerator')(
+    
+    )).eval(Runtime(None, natives)),
+    SemanticAction({}, lambda self: self.lookup('StdoutWriter')(
+    
+    )).eval(Runtime(None, natives))
+]
 class Parser:
     def __init__(self):
         self._state = {}
@@ -3798,15 +3815,8 @@ class StdoutWriter:
 natives['StdoutWriter'] = StdoutWriter
 if __name__ == "__main__":
     run_simulation(
-        [
-            Cli(),
-            Parser(),
-            Optimizer(),
-            CodeGenerator(),
-            StdoutWriter(),
-        ],
+        natives["Main"](),
         {
             "SUPPORT": SUPPORT,
-            "PartCollector": PartCollector,
         },
     )

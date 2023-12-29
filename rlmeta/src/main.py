@@ -1,14 +1,7 @@
 if __name__ == "__main__":
     run_simulation(
-        [
-            Cli(),
-            Parser(),
-            Optimizer(),
-            CodeGenerator(),
-            StdoutWriter(),
-        ],
+        natives["Main"](),
         {
             "SUPPORT": SUPPORT,
-            "PartCollector": PartCollector,
         },
     )
