@@ -28,8 +28,8 @@ def meta_compile_rlmeta():
 def compile_rlmeta(rlmeta):
     log("Compiling rlmeta using {}".format(rlmeta))
     return run_rlmeta(rlmeta, [
-        "--embed", "SUPPORT", "src/support.py",
         "--support",
+        "--embed", "SUPPORT", "src/support.py",
         "--compile", "src/cli.rlmeta",
         "--compile", "src/parser.rlmeta",
         "--compile", "src/optimizer.rlmeta",

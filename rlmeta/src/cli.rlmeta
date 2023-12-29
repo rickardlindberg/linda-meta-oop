@@ -7,7 +7,7 @@ actor Cli =
         arg =
             | "--support"         -> put(["Part"       next() SUPPORT])
             | "--copy"    .:x     -> put(["Part"       next() read(x)])
-            | "--embed"   .:x .:y -> put(["Part"       next() {x " = " repr(read(y)) "\n"}])
+            | "--embed"   .:x .:y -> put(["Part"       next() {"natives[" repr(x) "] = " repr(read(y)) "\n"}])
             | "--compile" .:x     -> put(["SourceCode" next() read(x)])
 
 
