@@ -20,6 +20,14 @@ universe Grapher =
     examples
         ["Read" "input.txt"] -> []
 
+universe Part2Check =
+    Reader()
+    Parser()
+    Augmenter()
+    SubVerifier()
+    examples
+        ["Read" "input.txt"] -> [["Verified" "zl" "xf" "qn" "xn"]]
+
 actor Reader =
     "Read" .:input !. -> put(["File" read(input)])
 
@@ -115,6 +123,28 @@ actor Augmenter =
                 ["Empty"    "b"           ["broadcaster" "a"] []]
             ]
         ]
+
+actor SubVerifier =
+    "Program" module*:xs !. -> put(["Verified" ~verifySub(dict(xs) ["zl" "xf" "qn" "xn"])])
+    where
+        module = [.:type .:name .:ins .:outs !.] -> tuple(name ins)
+
+def verifySub modules ends =
+    subs = []
+    for end in ends:
+        subs.append(set())
+        toVisit = [end]
+        while toVisit:
+            x = toVisit.pop(0)
+            subs[-1].add(x)
+            for parent in modules[x]:
+                if parent not in subs[-1]:
+                    toVisit.append(parent)
+    for x in subs:
+        for y in subs:
+            if x != y:
+                assert x.intersection(y) == {"broadcaster"}
+    return ends
 
 actor Compiler =
     "Program" module*:xs !.
