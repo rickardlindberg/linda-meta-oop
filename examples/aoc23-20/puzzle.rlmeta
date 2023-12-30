@@ -4,21 +4,12 @@ universe Part1 =
     Reader()
     Parser()
     Augmenter()
-    PythonPulseCounter(1)
+    PythonPulseCounter()
     Summer()
     examples
         ["Read" "example.txt"] -> [["Result" 32000000]]
         ["Read" "example2.txt"] -> [["Result" 11687500]]
         ["Read" "input.txt"] -> [["Result" 856482136]]
-
-universe Part2 =
-    Reader()
-    Parser()
-    Augmenter()
-    PythonPulseCounter(2)
-    Summer()
-    examples
-        ["Read" "input.txt"] -> [["Result" 0]]
 
 actor Reader =
     "Read" .:input !. -> put(["File" read(input)])
@@ -91,10 +82,10 @@ actor Augmenter =
             ]
         ]
 
-actor PythonPulseCounter #part =
-    | "Program" .*:xs !. -> put(doPythonPulse(part xs))
+actor PythonPulseCounter =
+    | "Program" .*:xs !. -> put(doPythonPulse(xs))
 
-def doPythonPulse part modules =
+def doPythonPulse modules =
     flipFlopStates = {}
     conjunctionValues = {}
     byName = {}
@@ -111,22 +102,19 @@ def doPythonPulse part modules =
             for inName in ins:
                 conjunctionValues[(name, inName)] = "low"
     runtime = {"sumLow": 0, "sumHigh": 0}
-    if part == 1:
-        for i in range(1000):
-            evalStatements(
-                compileProgram(
-                    [("-", "low", "broadcaster")],
-                    byName,
-                    flipFlopStates,
-                    conjunctionValues
-                ),
+    for i in range(1000):
+        evalStatements(
+            compileProgram(
+                [("-", "low", "broadcaster")],
+                byName,
                 flipFlopStates,
-                conjunctionValues,
-                runtime
-            )
-        return ["Result", runtime["sumLow"]*runtime["sumHigh"]]
-    else:
-        return ["Result", 0]
+                conjunctionValues
+            ),
+            flipFlopStates,
+            conjunctionValues,
+            runtime
+        )
+    return ["Result", runtime["sumLow"]*runtime["sumHigh"]]
 
 def evalStatements statements flipFlopStates conjunctionValues runtime =
     for statement in statements:
