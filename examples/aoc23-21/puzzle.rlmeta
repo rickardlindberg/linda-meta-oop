@@ -1,0 +1,60 @@
+actor Main = "Args" -> selftest()
+
+universe Part1 =
+    Reader()
+    Parser()
+    Mover()
+    examples
+        ["Read" "example.txt"] -> [["Result" 42]]
+        ["Read" "input.txt"] -> [["Result" 3598]]
+
+actor Reader =
+    "Read" .:input !. -> put(["File" read(input)])
+
+actor Parser =
+    "File" [map:x !.] !. -> put(x)
+    where
+        map = row*:xs
+            -> Counter():nextRow
+            -> dict([~~~xs]):map
+            -> ["Map" get(map "start") mover(map)]
+        row = col*:xs '\n'
+            -> nextRow():row
+            -> Counter():nextCol
+            -> xs
+        col = type:x
+            -> nextCol():col
+            -> x
+        type =
+            | 'S'           -> [tuple(tuple(row col) ".") tuple("start" tuple(row col))]
+            | ('.' | '#'):x -> [tuple(tuple(row col) x)]
+
+def mover map =
+    def move(position):
+        row, col = position
+        return [
+            pos
+            for pos in [
+                (row-1, col),
+                (row+1, col),
+                (row, col-1),
+                (row, col+1),
+            ]
+            if map.get(pos, None) == "."
+        ]
+    return move
+
+def get dict name =
+    return dict[name]
+
+actor Mover =
+    "Map" .:start .:move !. -> put(["Result" walk64(start move)])
+
+def walk64 start move =
+    positions = set([start])
+    for i in range(64):
+        newPositions = set()
+        for position in positions:
+            newPositions.update(move(position))
+        positions = newPositions
+    return len(positions)
