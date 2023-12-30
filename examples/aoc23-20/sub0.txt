@@ -1,0 +1,16 @@
+%cv -> xz
+%kt -> qx, rz
+%cb -> kt
+%bf -> qx, pf
+%xz -> jd
+%jd -> qx, vm
+%bx -> qx, qp
+broadcaster -> bx
+&qx -> cb, cv, bx, xz, vm, zl
+&zl -> th
+%cl -> qx, bf
+%vm -> cl
+%qp -> cb, qx
+%pf -> qx
+%rz -> qx, cv
+zl -> end

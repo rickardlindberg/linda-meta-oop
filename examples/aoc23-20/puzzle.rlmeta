@@ -28,6 +28,45 @@ universe Part2Check =
     examples
         ["Read" "input.txt"] -> [["Verified" "zl" "xf" "qn" "xn"]]
 
+universe Part2Sub0 =
+    Reader()
+    Parser()
+    Augmenter()
+    Compiler()
+    IterationCounter("zl")
+    examples
+        ["Read" "sub0.txt"] -> [["Iterations" 3739]]
+
+universe Part2Sub1 =
+    Reader()
+    Parser()
+    Augmenter()
+    Compiler()
+    IterationCounter("xf")
+    examples
+        ["Read" "sub1.txt"] -> [["Iterations" 3923]]
+
+universe Part2Sub2 =
+    Reader()
+    Parser()
+    Augmenter()
+    Compiler()
+    IterationCounter("qn")
+    examples
+        ["Read" "sub2.txt"] -> [["Iterations" 3793]]
+
+universe Part2Sub3 =
+    Reader()
+    Parser()
+    Augmenter()
+    Compiler()
+    IterationCounter("xn")
+    examples
+        ["Read" "sub3.txt"] -> [["Iterations" 4027]]
+
+// >>> math.lcm(3739, 3923, 3793, 4027)
+// 224046542165867
+
 actor Reader =
     "Read" .:input !. -> put(["File" read(input)])
 
@@ -144,6 +183,9 @@ def verifySub modules ends =
         for y in subs:
             if x != y:
                 assert x.intersection(y) == {"broadcaster"}
+    for n, x in enumerate(subs):
+        pipe = "\\|"
+        print(f"cat input.txt | grep '\\({pipe.join(x)}\\)' > sub{n}.txt")
     return ends
 
 actor Compiler =
@@ -171,6 +213,9 @@ actor Compiler =
 actor PulseCounter =
     "Compiled" .:modules .:state -> put(["Pulses" ~countPulses(modules state)])
 
+actor IterationCounter #which =
+    "Compiled" .:modules .:state -> put(["Iterations" ~countIterations(modules state which)])
+
 actor Summer =
     "Pulses" .:low .:high -> put(["Result" mul(low high)])
 
@@ -187,6 +232,22 @@ def countPulses modules state =
                 highCount += 1
             modules[destination](pulse, source, state, pulses)
     return [lowCount, highCount]
+
+def countIterations modules state which =
+    initialState = dict(state)
+    count = 1
+    lows = []
+    while True:
+        pulses = [("-", "low", "broadcaster")]
+        while pulses:
+            source, pulse, destination = pulses.pop(0)
+            if source == which and pulse == "low" and destination == "end":
+                lows.append(count)
+            modules[destination](pulse, source, state, pulses)
+        count += 1
+        if state == initialState:
+            break
+    return lows
 
 def evalModule name outs =
     def eval(pulse, source, state, pulses):

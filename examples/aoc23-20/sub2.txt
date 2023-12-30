@@ -1,0 +1,16 @@
+%vz -> cr, vc
+%gx -> cd
+&qn -> th
+%qk -> vc
+%sb -> ks, vc
+broadcaster -> hd
+%cr -> gx, vc
+%lr -> sb
+%hv -> lr
+%pm -> vc, qk
+&vc -> lr, hd, ks, qn, gx, nh, hv
+%nh -> hv
+%ks -> vz
+%cd -> pm, vc
+%hd -> vc, nh
+qn -> end

@@ -1,0 +1,16 @@
+%zd -> ln, gf
+%qq -> qm, gf
+&xn -> th
+%fn -> pr, gf
+%tj -> lc, gf
+%ln -> gf, qq
+broadcaster -> sr
+%vl -> gf, fj
+%sr -> gf, vl
+%lc -> gf, fn
+%gm -> tj, gf
+%qm -> gm
+%fj -> zd
+&gf -> fj, qm, xn, sr
+%pr -> gf
+xn -> end

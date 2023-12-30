@@ -1,0 +1,16 @@
+%pl -> sf, db
+%xm -> db
+%nn -> ff, db
+&xf -> th
+%qj -> xm, db
+%sf -> bp
+%mc -> ds, db
+%jz -> qj, db
+broadcaster -> ch
+%ch -> db, mc
+%ds -> cc
+%bp -> db, jz
+&db -> ff, ds, sf, ch, cc, xf
+%cc -> nn
+%ff -> pl
+xf -> end
