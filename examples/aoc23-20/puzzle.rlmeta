@@ -4,7 +4,8 @@ universe Part1 =
     Reader()
     Parser()
     Augmenter()
-    PythonPulseCounter()
+    Compiler()
+    PulseCounter()
     Summer()
     examples
         ["Read" "example.txt"] -> [["Result" 32000000]]
@@ -82,209 +83,86 @@ actor Augmenter =
             ]
         ]
 
-actor PythonPulseCounter =
-    | "Program" .*:xs !. -> put(doPythonPulse(xs))
-
-def dictSet dict name value =
-    dict[name] = value
-
-def doPythonPulse modules =
-    flipFlopStates = {}
-    conjunctionValues = {}
-    byName = {}
-    for type, name, ins, outs in modules:
-        byName[name] = {
-            "name": name,
-            "type": type,
-            "ins": ins,
-            "outs": outs,
-        }
-        if type == "FlipFlop":
-            flipFlopStates[name] = "off"
-        elif type == "Conjunction":
-            for inName in ins:
-                conjunctionValues[(name, inName)] = "low"
-    runtime = {"sumLow": 0, "sumHigh": 0}
-    for i in range(1000):
-        evalStatements(
-            compileProgram(
-                [("-", "low", "broadcaster")],
-                byName,
-                flipFlopStates,
-                conjunctionValues
-            ),
-            flipFlopStates,
-            conjunctionValues,
-            runtime
-        )
-    return ["Result", runtime["sumLow"]*runtime["sumHigh"]]
-
-def evalStatements statements flipFlopStates conjunctionValues runtime =
-    for statement in statements:
-        if statement[0] == "Send":
-            if statement[1] == "high":
-                runtime["sumHigh"] += 1
-            else:
-                runtime["sumLow"] += 1
-        elif statement[0] == "IfOn":
-            _, name, onBranch, offBranch = statement
-            if flipFlopStates[name] == "on":
-                evalStatements(onBranch, flipFlopStates, conjunctionValues, runtime)
-            else:
-                evalStatements(offBranch, flipFlopStates, conjunctionValues, runtime)
-        elif statement[0] == "SetFlipFlop":
-            _, name, value = statement
-            flipFlopStates[name] = value
-        elif statement[0] == "IfAllHigh":
-            _, names, allHighBranch, someLowBranch = statement
-            if set(conjunctionValues[x] for x in names) == {"high"}:
-                evalStatements(allHighBranch, flipFlopStates, conjunctionValues, runtime)
-            else:
-                evalStatements(someLowBranch, flipFlopStates, conjunctionValues, runtime)
-        elif statement[0] == "RegisterConjunction":
-            _, name, value = statement
-            conjunctionValues[name] = value
-        else:
-            raise ValueError(f"invalid statement {statement}")
-
-def compileProgram signals byName flipFlopStates conjunctionValues =
-    signals = list(signals)
-    statements = []
-    while signals:
-        fromNode, signal, toNode = signals.pop(0)
-        assert signal in ["low", "high"]
-        statements.append(["Send", signal, toNode])
-        module = byName[toNode]
-        if module["type"] == "Module":
-            for outName in module["outs"]:
-                signals.append((module["name"], signal, outName))
-        elif module["type"] == "FlipFlop":
-            if signal == "low":
-                if module["name"] in flipFlopStates:
-                    if flipFlopStates[module["name"]] == "on":
-                        newSignal = "low"
-                        flipFlopStates = dict(flipFlopStates, **{module["name"]: "off"})
-                        statements.append(["SetFlipFlop", module["name"], "off"])
-                    else:
-                        assert flipFlopStates[module["name"]] == "off"
-                        newSignal = "high"
-                        flipFlopStates = dict(flipFlopStates, **{module["name"]: "on"})
-                        statements.append(["SetFlipFlop", module["name"], "on"])
-                    for outName in module["outs"]:
-                        signals.append((module["name"], newSignal, outName))
-                else:
-                    raise ValueError("no flipflop not supported")
-        elif module["type"] == "Conjunction":
-            statements.append(["RegisterConjunction", (module["name"], fromNode), signal])
-            conjunctionValues = dict(conjunctionValues)
-            conjunctionValues[(module["name"], fromNode)] = signal
-            if set([
-                conjunctionValues[(module["name"], inName)]
-                for inName in module["ins"]
-            ]) == {"high"}:
-                newSignal = "low"
-            else:
-                newSignal = "high"
-            for outName in module["outs"]:
-                signals.append((module["name"], newSignal, outName))
-        else:
-            assert module["type"] == "Empty"
-    return statements
-
-actor PulseCounter #times =
-    | "Program" module*:xs !.
-        -> put(["Pulser" [["broadcaster" "low" "-"]] times dict([~~xs]) 0 0])
-    | "Pulser" [!.] 1       .:state .:low .:high !.
-        -> put(["Pulses" low high])
-    | "Pulser" [!.] .:times .:state .:low .:high !.
-        -> put(["Pulser" [["broadcaster" "low" "-"]] sub(times 1) state low high])
+actor Compiler =
+    "Program" module*:xs !.
+        -> dict():state
+        -> dict():modules
+        -> xs
+        -> put(["Compiled" modules state])
     where
         module =
-            | ["Module" .:name . .:outs]
-                -> spawn(Forwarder(name outs))
-                -> []
-            | ["FlipFlop" .:name . .:outs]
-                -> spawn(FlipFlopper(name outs))
-                -> [[name "off"]]
+            | ["Module"      .:name .:ins .:outs]
+                -> dictSet(modules name evalModule(name outs))
+            | ["FlipFlop"    .:name .:ins .:outs]
+                -> dictSet(state name "off")
+                -> dictSet(modules name evalFlipFlop(name outs))
             | ["Conjunction" .:name [in*:ins] .:outs]
-                -> spawn(Conjunctitoner(name outs))
-                -> [[name dict(ins)]]
-            | ["Empty" .:name]
-                -> spawn(Emptier(name))
-                -> []
-        in = .:x -> [x "low"]
-    universe PulseCounter1 =
-        PulseCounter(1)
-        examples
-            ["Program"
-                ["Module" "broadcaster" [] ["a"]]
-                ["FlipFlop" "a" ["broadcaster"] ["a"]]
-            ] -> [
-                ["Pulses" 2 1]
-            ]
+                -> name:name
+                -> dictSet(modules name evalConjunction(name ins outs))
+            | ["Empty"       .:name .:ins .:outs]
+                -> dictSet(modules name evalEmpty())
+        in = .:x
+            -> dictSet(state tuple(name x) "low")
+            -> tuple(name x)
 
-actor Forwarder #name #outs =
-    | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
-        -> put(["Pulser"
-               [~xs ~pulseOut(outs "low" name)]
-               times
-               state
-               add(low 1)
-               high
-           ])
-    | "Pulser" [[#name "high"] .*:xs] .:times .:state .:low .:high !.
-        -> put(["Pulser"
-               [~xs ~pulseOut(outs "high" name)]
-               times
-               state
-               low
-               add(high 1)
-           ])
-
-actor FlipFlopper #name #outs =
-    | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
-        -> flip(state name outs):x
-        -> put(["Pulser"
-               [~xs ~get(x "pulses")]
-               times
-               get(x "state")
-               add(low 1)
-               high
-           ])
-    | "Pulser" [[#name "high"] .*:xs] .:times .:state .:low .:high !.
-        -> put(["Pulser" xs times state low add(high 1)])
-
-actor Conjunctitoner #name #outs =
-    | "Pulser" [[#name .:pulse .:sender] .*:xs] .:times .:state .:low .:high !.
-        -> conjure(state name outs sender pulse):x
-        -> put(["Pulser"
-               [~xs ~get(x "pulses")]
-               times
-               get(x "state")
-               add(low get(x "lowCount"))
-               add(high get(x "highCount"))
-           ])
-
-actor Emptier #name =
-    | "Pulser" [[#name "low"] .*:xs] .:times .:state .:low .:high !.
-        -> put(["Pulser"
-               xs
-               times
-               state
-               add(low 1)
-               high
-           ])
-    | "Pulser" [[#name "high"] .*:xs] .:times .:state .:low .:high !.
-        -> put(["Pulser"
-               xs
-               times
-               state
-               low
-               add(high 1)
-           ])
+actor PulseCounter =
+    "Compiled" .:modules .:state -> put(["Pulses" ~countPulses(modules state)])
 
 actor Summer =
     "Pulses" .:low .:high -> put(["Result" mul(low high)])
+
+def countPulses modules state =
+    lowCount = 0
+    highCount = 0
+    for i in range(1000):
+        pulses = [("-", "low", "broadcaster")]
+        while pulses:
+            source, pulse, destination = pulses.pop(0)
+            if pulse == "low":
+                lowCount += 1
+            else:
+                highCount += 1
+            modules[destination](pulse, source, state, pulses)
+    return [lowCount, highCount]
+
+def evalModule name outs =
+    def eval(pulse, source, state, pulses):
+        for out in outs:
+            pulses.append((name, pulse, out))
+    return eval
+
+def evalFlipFlop name outs =
+    def eval(pulse, source, state, pulses):
+        if pulse == "low":
+            if state[name] == "on":
+                newPulse = "low"
+                state[name] = "off"
+            else:
+                assert state[name] == "off"
+                newPulse = "high"
+                state[name] = "on"
+            for out in outs:
+                pulses.append((name, newPulse, out))
+    return eval
+
+def evalConjunction name ins outs =
+    def eval(pulse, source, state, pulses):
+        state[(name, source)] = pulse
+        if set(state[x] for x in ins) == {"high"}:
+            newPulse = "low"
+        else:
+            newPulse = "high"
+        for out in outs:
+            pulses.append((name, newPulse, out))
+    return eval
+
+def evalEmpty =
+    def eval(pulse, source, state, pulses):
+        pass
+    return eval
+
+def dictSet dict name value =
+    dict[name] = value
 
 def generateEmpties present empties ins =
     return [
@@ -295,54 +173,8 @@ def generateEmpties present empties ins =
 def append list item =
     list.append(item)
 
-def conjure state name outs sender pulse =
-    newLast = dict(state[name], **{sender: pulse})
-    lowCount = 0
-    highCount = 0
-    if pulse == "high":
-        highCount = 1
-    else:
-        assert pulse == "low"
-        lowCount = 1
-    if set(newLast.values()) == {"high"}:
-        newPulse = "low"
-    else:
-        newPulse = "high"
-    return {
-        "state": dict(state, **{name: newLast}),
-        "lowCount": lowCount,
-        "highCount": highCount,
-        "pulses": pulseOut(outs, newPulse, name),
-    }
-
-def add x y =
-    return x + y
-
-def sub x y =
-    return x - y
-
 def mul x y =
     return x * y
-
-def flip state name outs =
-    if state[name] == "on":
-        pulse = "low"
-        flipped = "off"
-    elif state[name] == "off":
-        pulse = "high"
-        flipped = "on"
-    else:
-        raise ValueError("invalid state")
-    return {
-        "state": dict(state, **{name: flipped}),
-        "pulses": pulseOut(outs, pulse, name),
-    }
-
-def pulseOut outs pulse sender =
-    return [[out, pulse, sender] for out in outs]
-
-def get dict name =
-    return dict[name]
 
 def readIn ins name =
     if name not in ins:
