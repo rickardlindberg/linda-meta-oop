@@ -1,0 +1,170 @@
+digraph {
+    cv [color=orange]
+    cv -> xz
+    kt [color=orange]
+    kt -> qx
+    kt -> rz
+    cb [color=orange]
+    cb -> kt
+    pl [color=orange]
+    pl -> sf
+    pl -> db
+    zd [color=orange]
+    zd -> ln
+    zd -> gf
+    bf [color=orange]
+    bf -> qx
+    bf -> pf
+    xz [color=orange]
+    xz -> jd
+    xm [color=orange]
+    xm -> db
+    vz [color=orange]
+    vz -> cr
+    vz -> vc
+    qq [color=orange]
+    qq -> qm
+    qq -> gf
+    xn [color=red]
+    xn -> th
+    nn [color=orange]
+    nn -> ff
+    nn -> db
+    gx [color=orange]
+    gx -> cd
+    qn [color=red]
+    qn -> th
+    qk [color=orange]
+    qk -> vc
+    xf [color=red]
+    xf -> th
+    qj [color=orange]
+    qj -> xm
+    qj -> db
+    fn [color=orange]
+    fn -> pr
+    fn -> gf
+    sf [color=orange]
+    sf -> bp
+    jd [color=orange]
+    jd -> qx
+    jd -> vm
+    mc [color=orange]
+    mc -> ds
+    mc -> db
+    tj [color=orange]
+    tj -> lc
+    tj -> gf
+    jz [color=orange]
+    jz -> qj
+    jz -> db
+    sb [color=orange]
+    sb -> ks
+    sb -> vc
+    ln [color=orange]
+    ln -> gf
+    ln -> qq
+    bx [color=orange]
+    bx -> qx
+    bx -> qp
+    broadcaster [color=green]
+    broadcaster -> sr
+    broadcaster -> ch
+    broadcaster -> hd
+    broadcaster -> bx
+    ch [color=orange]
+    ch -> db
+    ch -> mc
+    ds [color=orange]
+    ds -> cc
+    qx [color=red]
+    qx -> cb
+    qx -> cv
+    qx -> bx
+    qx -> xz
+    qx -> vm
+    qx -> zl
+    bp [color=orange]
+    bp -> db
+    bp -> jz
+    zl [color=red]
+    zl -> th
+    vl [color=orange]
+    vl -> gf
+    vl -> fj
+    db [color=red]
+    db -> ff
+    db -> ds
+    db -> sf
+    db -> ch
+    db -> cc
+    db -> xf
+    th [color=red]
+    th -> rx
+    cr [color=orange]
+    cr -> gx
+    cr -> vc
+    sr [color=orange]
+    sr -> gf
+    sr -> vl
+    lr [color=orange]
+    lr -> sb
+    hv [color=orange]
+    hv -> lr
+    cl [color=orange]
+    cl -> qx
+    cl -> bf
+    lc [color=orange]
+    lc -> gf
+    lc -> fn
+    pm [color=orange]
+    pm -> vc
+    pm -> qk
+    cc [color=orange]
+    cc -> nn
+    gm [color=orange]
+    gm -> tj
+    gm -> gf
+    vm [color=orange]
+    vm -> cl
+    ff [color=orange]
+    ff -> pl
+    qp [color=orange]
+    qp -> cb
+    qp -> qx
+    pf [color=orange]
+    pf -> qx
+    vc [color=red]
+    vc -> lr
+    vc -> hd
+    vc -> ks
+    vc -> qn
+    vc -> gx
+    vc -> nh
+    vc -> hv
+    qm [color=orange]
+    qm -> gm
+    nh [color=orange]
+    nh -> hv
+    rz [color=orange]
+    rz -> qx
+    rz -> cv
+    ks [color=orange]
+    ks -> vz
+    fj [color=orange]
+    fj -> zd
+    gf [color=red]
+    gf -> fj
+    gf -> qm
+    gf -> xn
+    gf -> sr
+    pr [color=orange]
+    pr -> gf
+    cd [color=orange]
+    cd -> pm
+    cd -> vc
+    hd [color=orange]
+    hd -> vc
+    hd -> nh
+
+}

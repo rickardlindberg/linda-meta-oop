@@ -12,8 +12,23 @@ universe Part1 =
         ["Read" "example2.txt"] -> [["Result" 11687500]]
         ["Read" "input.txt"] -> [["Result" 856482136]]
 
+universe Grapher =
+    Reader()
+    Parser()
+    Graphviz()
+    Writer()
+    examples
+        ["Read" "input.txt"] -> []
+
 actor Reader =
     "Read" .:input !. -> put(["File" read(input)])
+
+actor Writer =
+    "Write" .:path .:input !. -> write(path input)
+
+def write path text =
+    with open(path, "w") as f:
+        f.write(text)
 
 actor Parser =
     "File" [config:x !.] !. -> put(x)
@@ -42,6 +57,24 @@ actor Parser =
             ["FlipFlop" "c" ["inv"]]
             ["Conjunction" "inv" ["a"]]
         ]]
+
+actor Graphviz =
+    "Configuration" module*:xs !. -> put(["Write" "graph.dot" {
+        "digraph {\n" indent({ xs }) "\n}"
+    }])
+    where
+        module =
+            | ["Module" .:name outs:outs]
+                -> name:name
+                -> { name " [color=green]\n" outs }
+            | ["FlipFlop" .:name outs:outs]
+                -> name:name
+                -> { name " [color=orange]\n" outs }
+            | ["Conjunction" .:name outs:outs]
+                -> name:name
+                -> { name " [color=red]\n" outs }
+        outs = [out*:xs !.] -> xs
+        out = .:x -> { name " -> " x "\n" }
 
 actor Augmenter =
     "Configuration" module*:xs
