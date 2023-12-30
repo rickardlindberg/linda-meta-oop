@@ -82,8 +82,57 @@ actor Augmenter =
             ]
         ]
 
+actor ExecutionPreparer =
+    | "Program" initModule*:xs !.
+        -> dict():modules
+        -> dict():state
+        -> xs
+        -> put(["Execution"
+            state
+            0
+            0
+            0
+            modules
+        ])
+    where
+        initModule =
+            | ["Module" .:name . .:outs]
+                -> dictSet(modules name ["Module" outs])
+            | ["FlipFlop" .:name . .:outs]
+                -> dictSet(modules name ["FlipFlop" outs])
+                -> dictSet(state name "off")
+            | ["Conjunction" .:name [initIn*:ins] .:outs]
+                -> dictSet(modules name ["Conjunction" outs])
+                -> name:name
+                -> ins
+            | ["Empty" .:name]
+                -> dictSet(modules name ["Empty" []])
+        initIn = .:x -> dictSet(state tuple([name x]) "low")
+    examples
+        ["Program"
+            ["Module"   "broadcaster" []                  ["a" "b"]]
+            ["FlipFlop" "a"           ["broadcaster"]     ["b"]]
+            ["Empty"    "b"           ["broadcaster" "a"] []]
+        ] -> [[
+            "Execution"
+            dict([
+                ["a" "off"]
+            ])
+            0
+            0
+            0
+            dict([
+                ["broadcaster" ["Module" ["a" "b"]]]
+                ["a"           ["FlipFlop" ["b"]]]
+                ["b"           ["Empty" []]]
+            ])
+        ]]
+
 actor PythonPulseCounter =
     | "Program" .*:xs !. -> put(doPythonPulse(xs))
+
+def dictSet dict name value =
+    dict[name] = value
 
 def doPythonPulse modules =
     flipFlopStates = {}
