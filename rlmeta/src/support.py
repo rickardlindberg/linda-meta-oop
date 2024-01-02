@@ -282,6 +282,7 @@ natives = {
     "None": None,
     "dict": dict,
     "abs": abs,
+    "min": min,
     "tuple": lambda *xs: tuple(xs),
     "dec": lambda x: x-1,
 }
