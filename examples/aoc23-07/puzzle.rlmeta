@@ -1,3 +1,42 @@
+actor Main = "Args" -> selftest()
+
+universe Partial =
+    CLI()
+    HandParser()
+    CardRanker()
+    CardSorter()
+    examples
+        ["Args" "example.txt"] -> [["SortedHands"
+            ["RankedHand" 765 1 3 2 10 3 13]
+            ["RankedHand" 220 2 13 10 11 11 10]
+            ["RankedHand" 28 2 13 13 6 7 7]
+            ["RankedHand" 684 3 10 5 5 11 5]
+            ["RankedHand" 483 3 12 12 12 11 14]
+        ]]
+
+universe Part1 =
+    CLI()
+    HandParser()
+    CardRanker()
+    CardSorter()
+    CalculateWinnings()
+    examples
+        ["Args" "example.txt"] -> [["Result" 6440]]
+        ["Args" "input.txt"] -> [["Result" 253910319]]
+
+universe Part2 =
+    CLI()
+    HandParser()
+    CardRankerJoker()
+    CardSorter()
+    CalculateWinnings()
+    examples
+        ["Args" "example.txt"] -> [["Result" 5905]]
+        ["Args" "input.txt"] -> [["Result" 254083736]]
+
+def mul x y =
+    return x*y
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
