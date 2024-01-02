@@ -1,3 +1,25 @@
+actor Main = "Args" -> selftest()
+
+universe Part1 =
+    CLI()
+    Parser()
+    Flattener()
+    StepMaximizer()
+    examples
+        ["Args" "input.txt"] -> [["Result" 6786]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    Flattener()
+    TileCounter()
+    examples
+        ["Args" "example2.txt"] -> [["Result" 1]]
+        ["Args" "example3.txt"] -> [["Result" 4]]
+        ["Args" "example4.txt"] -> [["Result" 8]]
+        //TODO: fix so that is not so slow
+        //["Args" "input.txt"] -> [["Result" 495]]
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -20,6 +42,13 @@ actor Parser =
             | 'F' -> [pos(increment(posX) posY) pos(posX increment(posY))]
             | '.' -> []
             | 'S' -> ["START"]
+    examples
+        ["File" "S7\nLJ\n"] -> [["Map"
+            ["Node" 0 0 "START"]
+            ["Node" 1 0 tuple(0 0) tuple(1 1)]
+            ["Node" 0 1 tuple(0 0) tuple(1 1)]
+            ["Node" 1 1 tuple(1 0) tuple(0 1)]
+        ]]
 
 actor Flattener =
     "Map" node*:xs !. -> put(["Grid" dict(xs)])
@@ -27,6 +56,18 @@ actor Flattener =
         node =
             | ["Node" .:x .:y "START" !.] -> [pos(x y) "START"]
             | ["Node" .:x .:y .*:zs   !.] -> [pos(x y) zs]
+    examples
+        ["Map"
+            ["Node" 0 0 "START"]
+            ["Node" 1 0 tuple(0 0) tuple(1 1)]
+            ["Node" 0 1 tuple(0 0) tuple(1 1)]
+            ["Node" 1 1 tuple(1 0) tuple(0 1)]
+        ] -> [["Grid" dict([
+            tuple(tuple(0 0) "START")
+            tuple(tuple(1 0) [tuple(0 0) tuple(1 1)])
+            tuple(tuple(0 1) [tuple(0 0) tuple(1 1)])
+            tuple(tuple(1 1) [tuple(1 0) tuple(0 1)])
+        ])]]
 
 def pos x y =
     return (x, y)
