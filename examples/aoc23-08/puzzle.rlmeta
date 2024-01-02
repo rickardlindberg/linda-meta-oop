@@ -1,3 +1,20 @@
+actor Main = "Args" -> selftest()
+
+universe Part1 =
+    Puzzle()
+    PrepareSolver1()
+    examples
+        ["Args" "example.txt"] -> [["Result" 2]]
+        ["Args" "example2.txt"] -> [["Result" 6]]
+        ["Args" "input.txt"] -> [["Result" 17263]]
+
+universe Part2 =
+    Puzzle()
+    PrepareSolver2()
+    examples
+        ["Args" "example3.txt"] -> [["Result" 6]]
+        //["Args" "input.txt"] -> [["Result" 0]]
+
 actor Puzzle =
     | "Args" .:input !. -> put(["File" read(input)])
     | "File" [map:x] !. -> put(x)
