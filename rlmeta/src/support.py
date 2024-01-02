@@ -281,6 +281,7 @@ natives = {
     "selftest": lambda: unittest.main(argv=[sys.argv[0]]),
     "None": None,
     "dict": dict,
+    "abs": abs,
     "tuple": lambda *xs: tuple(xs),
     "dec": lambda x: x-1,
 }

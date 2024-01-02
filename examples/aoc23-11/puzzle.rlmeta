@@ -1,3 +1,71 @@
+actor Main = "Args" -> selftest()
+
+universe CliParser =
+    CLI()
+    Parser()
+    examples
+        ["Args" "example.txt"] -> [["Universe"
+            tuple(3 0)
+            tuple(7 1)
+            tuple(0 2)
+            tuple(6 4)
+            tuple(1 5)
+            tuple(9 6)
+            tuple(7 8)
+            tuple(0 9)
+            tuple(4 9)
+        ]]
+
+universe CliParserExapnder =
+    CLI()
+    Parser()
+    Expander(1)
+    examples
+        ["Args" "example.txt"] -> [["ExpandedUniverse"
+            tuple(4 0)
+            tuple(9 1)
+            tuple(0 2)
+            tuple(8 5)
+            tuple(1 6)
+            tuple(12 7)
+            tuple(9 10)
+            tuple(0 11)
+            tuple(5 11)
+        ]]
+
+universe Part1 =
+    CLI()
+    Parser()
+    Expander(1)
+    Pairer()
+    ShortestPathSummer()
+    examples
+        ["Args" "input.txt"] -> [["Result" 9521550]]
+
+universe Part2Example =
+    CLI()
+    Parser()
+    Expander(sub(10 1))
+    Pairer()
+    ShortestPathSummer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 1030]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    Expander(sub(1000000 1))
+    Pairer()
+    ShortestPathSummer()
+    examples
+        ["Args" "input.txt"] -> [["Result" 298932923702]]
+
+def add x y =
+    return x + y
+
+def sub x y =
+    return x - y
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
