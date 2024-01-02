@@ -1,3 +1,5 @@
+actor Main = "Args" -> selftest()
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
