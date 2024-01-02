@@ -1,3 +1,23 @@
+universe Part1 =
+    CLI()
+    Parser()
+    ForwardExtrapolator()
+    Summer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 114]]
+        ["Args" "input.txt"] -> [["Result" 1916822650]]
+
+universe Part2 =
+    CLI()
+    Parser()
+    BackwardsExtrapolator()
+    Summer()
+    examples
+        ["Args" "example.txt"] -> [["Result" 2]]
+        ["Args" "input.txt"] -> [["Result" 966]]
+
+actor Main = "Args" -> selftest()
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
