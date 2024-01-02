@@ -1,3 +1,5 @@
+actor Main = "Args" -> selftest()
+
 universe Part1 =
     CLI()
     Parser()
