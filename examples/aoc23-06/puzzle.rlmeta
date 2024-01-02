@@ -1,3 +1,41 @@
+actor Main = "Args" -> selftest()
+
+universe ParseTest =
+    CLI()
+    RecordParser()
+    examples
+        ["Args" "example.txt"] -> [["Records"
+            ["Record" 7 9] ["Record" 15 40] ["Record" 30 200]
+        ]]
+
+universe MarginTest =
+    CLI()
+    RecordParser()
+    MarginCalculator()
+    examples
+        ["Args" "example.txt"] -> [["Margins" 4 8 9]]
+
+universe Part1 =
+    CLI()
+    RecordParser()
+    MarginCalculator()
+    MarginProduct()
+    examples
+        ["Args" "example.txt"] -> [["Result" 288]]
+        ["Args" "input.txt"] -> [["Result" 303600]]
+
+def mul x y =
+    return x*y
+
+universe Part2 =
+    CLI()
+    RecordParserBetterKerning()
+    MarginCalculator()
+    MarginProduct()
+    examples
+        ["Args" "example.txt"] -> [["Result" 71503]]
+        ["Args" "input.txt"] -> [["Result" 23654842]]
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
