@@ -1,3 +1,27 @@
+actor Main = "Args" -> selftest()
+
+universe Part1 =
+    CLI()
+    Solver()
+    Lines()
+    Numbers()
+    examples
+        ["Args" "example1.txt"] -> [["Result" 142]]
+        ["Args" "input.txt"] -> [["Result" 54388]]
+
+universe Part2 =
+    CLI()
+    Solver2()
+    Lines()
+    Numbers()
+    examples
+        ["File" "843329\n"] -> [["Result" 89]]
+        ["File" "5oneightfg\n"] -> [["Result" 58]]
+        ["File" "one\n"] -> [["Result" 11]]
+        ["File" "oneight\n"] -> [["Result" 18]]
+        ["Args" "example2.txt"] -> [["Result" 281]]
+        ["Args" "input.txt"] -> [["Result" 53515]]
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
