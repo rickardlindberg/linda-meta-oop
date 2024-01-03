@@ -61,6 +61,7 @@ actor CodeGenerator =
         ListItem      = repr:x ast:y               -> { "self.lookup('splice')(" x ", " y ")"      }
         Format        = astList:x                  -> { "self.lookup('join')([" x "])"             }
         Call          = ast:x astList:y            -> { x "(" y ")"                                }
+        Get           = ast:x repr:y               -> { x "[" y "]"                                }
         Lookup        = repr:x                     -> { "self.lookup(" x ")"                       }
         astList       = ast*:xs                    -> { "\n" indent(join(xs ",\n")) "\n"           }
         matcher       =                            -> { "_matcher_" nextid()                       }:id ->

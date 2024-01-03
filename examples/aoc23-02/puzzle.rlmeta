@@ -49,16 +49,14 @@ actor GameParser =
 actor GameMaxer =
     "Games" game*:xs !. -> put(["MaxedGames" ~xs])
     where
-        game   = ["Game" .:id subset*:xs !.] -> [0]:r
-                                             -> [0]:g
-                                             -> [0]:b
-                                             -> xs
-                                             -> ["Game" id max(r) max(g) max(b)]
+        game   = ["Game" .:id subset*:xs !.] -> collectDictList([~~xs]):result
+                                             -> ["Game" id
+                                                    max(result.red)
+                                                    max(result.green)
+                                                    max(result.blue)
+                                                ]
         subset = ["Subset" cubes*:xs !.]     -> xs
-        cubes  =
-            | ["Cubes" .:n "red"   !.] -> append(r n)
-            | ["Cubes" .:n "green" !.] -> append(g n)
-            | ["Cubes" .:n "blue"  !.] -> append(b n)
+        cubes  = ["Cubes" .:n .:color !.]    -> tuple(color n)
     examples
         ["Games"
             ["Game" 1
@@ -92,9 +90,6 @@ actor GamePower =
 
 actor FilterSummary =
     "FilteredGames" .*:xs -> put(["Result" sum(xs)])
-
-def append list thing =
-    list.append(thing)
 
 def mul x y =
     return x*y

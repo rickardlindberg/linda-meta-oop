@@ -168,6 +168,14 @@ class Runtime:
     def concat(self, lists):
         return [x for xs in lists for x in xs]
 
+    def collectDictList(self, tuples):
+        result = {}
+        for key, value in tuples:
+            if key not in result:
+                result[key] = []
+            result[key].append(value)
+        return result
+
 class Counter:
 
     def __init__(self):

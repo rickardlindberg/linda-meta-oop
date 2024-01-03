@@ -65,6 +65,7 @@ actor Parser =
             | '[' ^hostListItem*:xs ^']'                 -> ["List" ~xs]
             | '{' ^hostExpr*:xs ^'}'                     -> ["Format" ~xs]
             | var:x ^'(' ^hostExpr*:ys ^')'              -> ["Call" x ~ys]
+            | var:x '.' name:y                           -> ["Get" x y]
             | var
         hostListItem =
             | '~'*:ys hostExpr:x                         -> ["ListItem" len(ys) x]

@@ -168,6 +168,14 @@ class Runtime:
     def concat(self, lists):
         return [x for xs in lists for x in xs]
 
+    def collectDictList(self, tuples):
+        result = {}
+        for key, value in tuples:
+            if key not in result:
+                result[key] = []
+            result[key].append(value)
+        return result
+
 class Counter:
 
     def __init__(self):
@@ -287,7 +295,7 @@ natives = {
     "tuple": lambda *xs: tuple(xs),
     "dec": lambda x: x-1,
 }
-natives['SUPPORT'] = 'import sys\nimport unittest\n\nclass Stream:\n\n    def __init__(self, items):\n        self.items = items\n        self.index = 0\n        self.latest_error = None\n        self.scope = None\n\n    def operator_or(self, matchers):\n        for matcher in matchers:\n            backtrack_index = self.index\n            try:\n                return matcher(self)\n            except MatchError:\n                self.index = backtrack_index\n        self.error("no or match")\n\n    def operator_and(self, matchers):\n        result = self.action()\n        for matcher in matchers:\n            result = matcher(self)\n        return result\n\n    def operator_star(self, matcher):\n        results = []\n        while True:\n            backtrack_index = self.index\n            try:\n                results.append(matcher(self))\n            except MatchError:\n                self.index = backtrack_index\n                return self.action(lambda self: [x.eval(self.runtime) for x in results])\n\n    def operator_not(self, matcher):\n        backtrack_index = self.index\n        try:\n            matcher(self)\n        except MatchError:\n            return self.action()\n        finally:\n            self.index = backtrack_index\n        self.error("not matched")\n\n    def action(self, fn=lambda self: None):\n        return SemanticAction(self.scope, fn)\n\n    def with_scope(self, matcher):\n        current_scope = self.scope\n        self.scope = {}\n        try:\n            return matcher(self)\n        finally:\n            self.scope = current_scope\n\n    def bind(self, name, semantic_action):\n        self.scope[name] = semantic_action\n        return semantic_action\n\n    def match_list(self, matcher):\n        if self.index < len(self.items):\n            items, index = self.items, self.index\n            try:\n                self.items = self.items[self.index]\n                self.index = 0\n                result = matcher(self)\n                index += 1\n            finally:\n                self.items, self.index = items, index\n            return result\n        self.error("no list found")\n\n    def match_call_rule(self, rules):\n        name = str(self.items[self.index])\n        if name in rules:\n            matcher = rules[name]\n            self.index += 1\n            return matcher(self)\n        else:\n            self.error(f"Unknown rule {name}.")\n\n    def match(self, fn, description):\n        if self.index < len(self.items):\n            item = self.items[self.index]\n            if fn(item):\n                self.index += 1\n                return self.action(lambda self: item)\n        self.error(f"expected {description}")\n\n    def error(self, name):\n        if not self.latest_error or self.index > self.latest_error[2]:\n            self.latest_error = (name, self.items, self.index)\n        raise MatchError(*self.latest_error)\n\nclass MatchError(Exception):\n\n    def __init__(self, name, items, index):\n        Exception.__init__(self, name)\n        self.items = items\n        self.index = index\n\nclass SemanticAction:\n\n    def __init__(self, scope, fn):\n        self.scope = scope\n        self.fn = fn\n\n    def eval(self, runtime):\n        self.runtime = runtime\n        return self.fn(self)\n\n    def bind(self, name, value, continuation):\n        self.runtime = self.runtime.bind(name, value)\n        return continuation()\n\n    def lookup(self, name):\n        if name in self.scope:\n            return self.scope[name].eval(self.runtime)\n        else:\n            return self.runtime.lookup(name)\n\nclass Runtime:\n\n    def __init__(self, actor, extra={}):\n        self.vars = extra\n        self.actor = actor\n\n    def bind(self, name, value):\n        return Runtime(self.actor, dict(self.vars, **{name: value}))\n\n    def lookup(self, name):\n        if name in self.vars:\n            return self.vars[name]\n        elif self.actor and name in self.actor._state:\n            return self.actor._state[name]\n        else:\n            return getattr(self, name)\n\n    def increment(self, number):\n        return number + 1\n\n    def decrement(self, number):\n        return number - 1\n\n    def collector(self):\n        class collector(list):\n            def __call__(self, item):\n                self.append(item)\n        return collector()\n\n    def join(self, items, delimiter=""):\n        return delimiter.join(\n            self.join(item, delimiter) if isinstance(item, list) else str(item)\n            for item in items\n        )\n\n    def indent(self, text, prefix="    "):\n        return "".join(prefix+line for line in text.splitlines(True))\n\n    def splice(self, depth, item):\n        if depth == 0:\n            return [item]\n        else:\n            return self.concat([self.splice(depth-1, subitem) for subitem in item])\n\n    def concat(self, lists):\n        return [x for xs in lists for x in xs]\n\nclass Counter:\n\n    def __init__(self):\n        self.number = 0\n\n    def __call__(self):\n        result = self.number\n        self.number += 1\n        return result\n\ndef run_simulation(actors, extra={}, messages=[], debug=False, fail=True):\n    def debug_log(text):\n        if callable(debug):\n            debug(text)\n        elif debug:\n            sys.stderr.write(f"{text}\\n")\n    def read(path):\n        if path == "-":\n            return sys.stdin.read()\n        with open(path) as f:\n            return f.read()\n    def trunc(thing, n):\n        x = repr(thing)\n        if len(x) > n:\n            return f"{x[:n]} ..."\n        else:\n            return x\n    if not isinstance(actors, list):\n        actors = [actors]\n    if not messages:\n        messages.append(["Args"]+sys.argv[1:])\n    iteration = 0\n    while messages:\n        debug_log(f"Iteration {iteration}")\n        for index, actor in enumerate(actors):\n            debug_log(f"  Actor   {actor.__class__.__name__} {trunc(actor._state, 60)}")\n        for index, message in enumerate(messages):\n            debug_log(f"  Message {trunc(message, 60)}")\n        debug_log("")\n        next_messages = []\n        x = {\n            "put": next_messages.append,\n            "spawn": actors.append,\n            "write": sys.stdout.write,\n            "repr": repr,\n            "read": read,\n            "len": len,\n            "repr": repr,\n            "int": int,\n            "sum": sum,\n            "Counter": Counter,\n        }\n        for name, native in natives.items():\n            x[name] = native\n        for key, value in extra.items():\n            x[key] = value\n        processed = False\n        errors = []\n        for message in messages:\n            for actor in list(actors):\n                try:\n                    actor.run(Stream(message)).eval(Runtime(actor, x).bind(\n                        "kill",\n                        lambda: actors.remove(actor)\n                    ))\n                except MatchError as e:\n                    errors.append((actor, e))\n                else:\n                    processed = True\n                    break\n            else:\n                next_messages.append(message)\n        if not processed:\n            if fail:\n                for actor, error in sorted(errors, key=lambda x: x[1].index):\n                    sys.stderr.write(f"{actor.__class__.__name__} {trunc(actor._state, 60)}\\n")\n                    sys.stderr.write(f"  {error} at {error.index}\\n")\n                    sys.stderr.write(f"  {trunc(error.items, 60)}\\n")\n                    sys.stderr.write("\\n")\n                sys.exit("No message processed.")\n            else:\n                break\n        messages = next_messages\n        iteration += 1\n    debug_log("Simulation done!")\n    return messages\n\nclass Example(unittest.TestCase):\n\n    def check_example(self, actors, in_message, expected_out_messages):\n        log = []\n        actual_out_messages = run_simulation(\n            actors=actors,\n            extra={},\n            debug=log.append,\n            fail=False,\n            messages=[in_message]\n        )\n        if actual_out_messages != expected_out_messages:\n            self.fail("\\n".join([\n                f"Example failed.",\n                f"",\n            ]+log+[\n                f"",\n                f"Message:  {in_message!r}",\n                f"Expected: {expected_out_messages!r}",\n                f"Actual:   {actual_out_messages!r}",\n            ]))\n\nnatives = {\n    "selftest": lambda: unittest.main(argv=[sys.argv[0]]),\n    "None": None,\n    "dict": dict,\n    "abs": abs,\n    "min": min,\n    "max": max,\n    "tuple": lambda *xs: tuple(xs),\n    "dec": lambda x: x-1,\n}\n'
+natives['SUPPORT'] = 'import sys\nimport unittest\n\nclass Stream:\n\n    def __init__(self, items):\n        self.items = items\n        self.index = 0\n        self.latest_error = None\n        self.scope = None\n\n    def operator_or(self, matchers):\n        for matcher in matchers:\n            backtrack_index = self.index\n            try:\n                return matcher(self)\n            except MatchError:\n                self.index = backtrack_index\n        self.error("no or match")\n\n    def operator_and(self, matchers):\n        result = self.action()\n        for matcher in matchers:\n            result = matcher(self)\n        return result\n\n    def operator_star(self, matcher):\n        results = []\n        while True:\n            backtrack_index = self.index\n            try:\n                results.append(matcher(self))\n            except MatchError:\n                self.index = backtrack_index\n                return self.action(lambda self: [x.eval(self.runtime) for x in results])\n\n    def operator_not(self, matcher):\n        backtrack_index = self.index\n        try:\n            matcher(self)\n        except MatchError:\n            return self.action()\n        finally:\n            self.index = backtrack_index\n        self.error("not matched")\n\n    def action(self, fn=lambda self: None):\n        return SemanticAction(self.scope, fn)\n\n    def with_scope(self, matcher):\n        current_scope = self.scope\n        self.scope = {}\n        try:\n            return matcher(self)\n        finally:\n            self.scope = current_scope\n\n    def bind(self, name, semantic_action):\n        self.scope[name] = semantic_action\n        return semantic_action\n\n    def match_list(self, matcher):\n        if self.index < len(self.items):\n            items, index = self.items, self.index\n            try:\n                self.items = self.items[self.index]\n                self.index = 0\n                result = matcher(self)\n                index += 1\n            finally:\n                self.items, self.index = items, index\n            return result\n        self.error("no list found")\n\n    def match_call_rule(self, rules):\n        name = str(self.items[self.index])\n        if name in rules:\n            matcher = rules[name]\n            self.index += 1\n            return matcher(self)\n        else:\n            self.error(f"Unknown rule {name}.")\n\n    def match(self, fn, description):\n        if self.index < len(self.items):\n            item = self.items[self.index]\n            if fn(item):\n                self.index += 1\n                return self.action(lambda self: item)\n        self.error(f"expected {description}")\n\n    def error(self, name):\n        if not self.latest_error or self.index > self.latest_error[2]:\n            self.latest_error = (name, self.items, self.index)\n        raise MatchError(*self.latest_error)\n\nclass MatchError(Exception):\n\n    def __init__(self, name, items, index):\n        Exception.__init__(self, name)\n        self.items = items\n        self.index = index\n\nclass SemanticAction:\n\n    def __init__(self, scope, fn):\n        self.scope = scope\n        self.fn = fn\n\n    def eval(self, runtime):\n        self.runtime = runtime\n        return self.fn(self)\n\n    def bind(self, name, value, continuation):\n        self.runtime = self.runtime.bind(name, value)\n        return continuation()\n\n    def lookup(self, name):\n        if name in self.scope:\n            return self.scope[name].eval(self.runtime)\n        else:\n            return self.runtime.lookup(name)\n\nclass Runtime:\n\n    def __init__(self, actor, extra={}):\n        self.vars = extra\n        self.actor = actor\n\n    def bind(self, name, value):\n        return Runtime(self.actor, dict(self.vars, **{name: value}))\n\n    def lookup(self, name):\n        if name in self.vars:\n            return self.vars[name]\n        elif self.actor and name in self.actor._state:\n            return self.actor._state[name]\n        else:\n            return getattr(self, name)\n\n    def increment(self, number):\n        return number + 1\n\n    def decrement(self, number):\n        return number - 1\n\n    def collector(self):\n        class collector(list):\n            def __call__(self, item):\n                self.append(item)\n        return collector()\n\n    def join(self, items, delimiter=""):\n        return delimiter.join(\n            self.join(item, delimiter) if isinstance(item, list) else str(item)\n            for item in items\n        )\n\n    def indent(self, text, prefix="    "):\n        return "".join(prefix+line for line in text.splitlines(True))\n\n    def splice(self, depth, item):\n        if depth == 0:\n            return [item]\n        else:\n            return self.concat([self.splice(depth-1, subitem) for subitem in item])\n\n    def concat(self, lists):\n        return [x for xs in lists for x in xs]\n\n    def collectDictList(self, tuples):\n        result = {}\n        for key, value in tuples:\n            if key not in result:\n                result[key] = []\n            result[key].append(value)\n        return result\n\nclass Counter:\n\n    def __init__(self):\n        self.number = 0\n\n    def __call__(self):\n        result = self.number\n        self.number += 1\n        return result\n\ndef run_simulation(actors, extra={}, messages=[], debug=False, fail=True):\n    def debug_log(text):\n        if callable(debug):\n            debug(text)\n        elif debug:\n            sys.stderr.write(f"{text}\\n")\n    def read(path):\n        if path == "-":\n            return sys.stdin.read()\n        with open(path) as f:\n            return f.read()\n    def trunc(thing, n):\n        x = repr(thing)\n        if len(x) > n:\n            return f"{x[:n]} ..."\n        else:\n            return x\n    if not isinstance(actors, list):\n        actors = [actors]\n    if not messages:\n        messages.append(["Args"]+sys.argv[1:])\n    iteration = 0\n    while messages:\n        debug_log(f"Iteration {iteration}")\n        for index, actor in enumerate(actors):\n            debug_log(f"  Actor   {actor.__class__.__name__} {trunc(actor._state, 60)}")\n        for index, message in enumerate(messages):\n            debug_log(f"  Message {trunc(message, 60)}")\n        debug_log("")\n        next_messages = []\n        x = {\n            "put": next_messages.append,\n            "spawn": actors.append,\n            "write": sys.stdout.write,\n            "repr": repr,\n            "read": read,\n            "len": len,\n            "repr": repr,\n            "int": int,\n            "sum": sum,\n            "Counter": Counter,\n        }\n        for name, native in natives.items():\n            x[name] = native\n        for key, value in extra.items():\n            x[key] = value\n        processed = False\n        errors = []\n        for message in messages:\n            for actor in list(actors):\n                try:\n                    actor.run(Stream(message)).eval(Runtime(actor, x).bind(\n                        "kill",\n                        lambda: actors.remove(actor)\n                    ))\n                except MatchError as e:\n                    errors.append((actor, e))\n                else:\n                    processed = True\n                    break\n            else:\n                next_messages.append(message)\n        if not processed:\n            if fail:\n                for actor, error in sorted(errors, key=lambda x: x[1].index):\n                    sys.stderr.write(f"{actor.__class__.__name__} {trunc(actor._state, 60)}\\n")\n                    sys.stderr.write(f"  {error} at {error.index}\\n")\n                    sys.stderr.write(f"  {trunc(error.items, 60)}\\n")\n                    sys.stderr.write("\\n")\n                sys.exit("No message processed.")\n            else:\n                break\n        messages = next_messages\n        iteration += 1\n    debug_log("Simulation done!")\n    return messages\n\nclass Example(unittest.TestCase):\n\n    def check_example(self, actors, in_message, expected_out_messages):\n        log = []\n        actual_out_messages = run_simulation(\n            actors=actors,\n            extra={},\n            debug=log.append,\n            fail=False,\n            messages=[in_message]\n        )\n        if actual_out_messages != expected_out_messages:\n            self.fail("\\n".join([\n                f"Example failed.",\n                f"",\n            ]+log+[\n                f"",\n                f"Message:  {in_message!r}",\n                f"Expected: {expected_out_messages!r}",\n                f"Actual:   {actual_out_messages!r}",\n            ]))\n\nnatives = {\n    "selftest": lambda: unittest.main(argv=[sys.argv[0]]),\n    "None": None,\n    "dict": dict,\n    "abs": abs,\n    "min": min,\n    "max": max,\n    "tuple": lambda *xs: tuple(xs),\n    "dec": lambda x: x-1,\n}\n'
 class Cli:
     def __init__(self):
         self._state = {}
@@ -546,27 +554,27 @@ class Parser:
             'matchChar': self._matcher_315,
             'maybeAction': self._matcher_323,
             'actionExpr': self._matcher_353,
-            'hostExpr': self._matcher_402,
-            'hostListItem': self._matcher_411,
-            'var': self._matcher_421,
-            'restLine': self._matcher_434,
-            'indented': self._matcher_440,
-            'string': self._matcher_454,
-            'char': self._matcher_464,
-            'innerChar': self._matcher_471,
-            'escape': self._matcher_488,
-            'number': self._matcher_496,
-            'name': self._matcher_506,
-            'reserved': self._matcher_517,
-            'keyDef': self._matcher_524,
-            'keyActor': self._matcher_533,
-            'keyWhere': self._matcher_542,
-            'keyUniverse': self._matcher_554,
-            'keyExamples': self._matcher_566,
-            'nameStart': self._matcher_571,
-            'nameChar': self._matcher_578,
-            'space': self._matcher_587,
-            'comment': self._matcher_599,
+            'hostExpr': self._matcher_410,
+            'hostListItem': self._matcher_419,
+            'var': self._matcher_429,
+            'restLine': self._matcher_442,
+            'indented': self._matcher_448,
+            'string': self._matcher_462,
+            'char': self._matcher_472,
+            'innerChar': self._matcher_479,
+            'escape': self._matcher_496,
+            'number': self._matcher_504,
+            'name': self._matcher_514,
+            'reserved': self._matcher_525,
+            'keyDef': self._matcher_532,
+            'keyActor': self._matcher_541,
+            'keyWhere': self._matcher_550,
+            'keyUniverse': self._matcher_562,
+            'keyExamples': self._matcher_574,
+            'nameStart': self._matcher_579,
+            'nameChar': self._matcher_586,
+            'space': self._matcher_595,
+            'comment': self._matcher_607,
         }
         self._main = self._rules.pop('_main')
     def run(self, stream):
@@ -1900,31 +1908,57 @@ class Parser:
     def _matcher_400(self, stream):
         return self._rules['var'](stream)
     def _matcher_401(self, stream):
-        return stream.with_scope(self._matcher_400)
+        return stream.bind('x', self._matcher_400(stream))
     def _matcher_402(self, stream):
+        return stream.match(lambda item: item == '.', "'.'")
+    def _matcher_403(self, stream):
+        return self._rules['name'](stream)
+    def _matcher_404(self, stream):
+        return stream.bind('y', self._matcher_403(stream))
+    def _matcher_405(self, stream):
+        return stream.action(lambda self: self.lookup('concat')([
+            self.lookup('splice')(0, 'Get'),
+            self.lookup('splice')(0, self.lookup('x')),
+            self.lookup('splice')(0, self.lookup('y'))
+        ]))
+    def _matcher_406(self, stream):
+        return stream.operator_and([
+            self._matcher_401,
+            self._matcher_402,
+            self._matcher_404,
+            self._matcher_405
+        ])
+    def _matcher_407(self, stream):
+        return stream.with_scope(self._matcher_406)
+    def _matcher_408(self, stream):
+        return self._rules['var'](stream)
+    def _matcher_409(self, stream):
+        return stream.with_scope(self._matcher_408)
+    def _matcher_410(self, stream):
         return stream.operator_or([
             self._matcher_358,
             self._matcher_363,
             self._matcher_374,
             self._matcher_385,
             self._matcher_399,
-            self._matcher_401
+            self._matcher_407,
+            self._matcher_409
         ])
-    def _matcher_403(self, stream):
+    def _matcher_411(self, stream):
         return stream.match(lambda item: item == '~', "'~'")
-    def _matcher_404(self, stream):
+    def _matcher_412(self, stream):
         return stream.operator_and([
-            self._matcher_403
+            self._matcher_411
         ])
-    def _matcher_405(self, stream):
-        return stream.operator_star(self._matcher_404)
-    def _matcher_406(self, stream):
-        return stream.bind('ys', self._matcher_405(stream))
-    def _matcher_407(self, stream):
+    def _matcher_413(self, stream):
+        return stream.operator_star(self._matcher_412)
+    def _matcher_414(self, stream):
+        return stream.bind('ys', self._matcher_413(stream))
+    def _matcher_415(self, stream):
         return self._rules['hostExpr'](stream)
-    def _matcher_408(self, stream):
-        return stream.bind('x', self._matcher_407(stream))
-    def _matcher_409(self, stream):
+    def _matcher_416(self, stream):
+        return stream.bind('x', self._matcher_415(stream))
+    def _matcher_417(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'ListItem'),
             self.lookup('splice')(0, self.lookup('len')(
@@ -1932,221 +1966,199 @@ class Parser:
             )),
             self.lookup('splice')(0, self.lookup('x'))
         ]))
-    def _matcher_410(self, stream):
-        return stream.operator_and([
-            self._matcher_406,
-            self._matcher_408,
-            self._matcher_409
-        ])
-    def _matcher_411(self, stream):
-        return stream.with_scope(self._matcher_410)
-    def _matcher_412(self, stream):
-        return self._rules['name'](stream)
-    def _matcher_413(self, stream):
-        return stream.bind('x', self._matcher_412(stream))
-    def _matcher_414(self, stream):
-        return self._rules['space'](stream)
-    def _matcher_415(self, stream):
-        return stream.match(lambda item: item == '=', "'='")
-    def _matcher_416(self, stream):
-        return stream.operator_and([
-            self._matcher_415
-        ])
-    def _matcher_417(self, stream):
+    def _matcher_418(self, stream):
         return stream.operator_and([
             self._matcher_414,
-            self._matcher_416
+            self._matcher_416,
+            self._matcher_417
         ])
-    def _matcher_418(self, stream):
-        return stream.operator_not(self._matcher_417)
     def _matcher_419(self, stream):
+        return stream.with_scope(self._matcher_418)
+    def _matcher_420(self, stream):
+        return self._rules['name'](stream)
+    def _matcher_421(self, stream):
+        return stream.bind('x', self._matcher_420(stream))
+    def _matcher_422(self, stream):
+        return self._rules['space'](stream)
+    def _matcher_423(self, stream):
+        return stream.match(lambda item: item == '=', "'='")
+    def _matcher_424(self, stream):
+        return stream.operator_and([
+            self._matcher_423
+        ])
+    def _matcher_425(self, stream):
+        return stream.operator_and([
+            self._matcher_422,
+            self._matcher_424
+        ])
+    def _matcher_426(self, stream):
+        return stream.operator_not(self._matcher_425)
+    def _matcher_427(self, stream):
         return stream.action(lambda self: self.lookup('concat')([
             self.lookup('splice')(0, 'Lookup'),
             self.lookup('splice')(0, self.lookup('x'))
         ]))
-    def _matcher_420(self, stream):
-        return stream.operator_and([
-            self._matcher_413,
-            self._matcher_418,
-            self._matcher_419
-        ])
-    def _matcher_421(self, stream):
-        return stream.with_scope(self._matcher_420)
-    def _matcher_422(self, stream):
-        return stream.match(lambda item: item == '\n', "'\\n'")
-    def _matcher_423(self, stream):
-        return stream.operator_and([
-            self._matcher_422
-        ])
-    def _matcher_424(self, stream):
-        return stream.operator_not(self._matcher_423)
-    def _matcher_425(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_426(self, stream):
-        return stream.operator_and([
-            self._matcher_424,
-            self._matcher_425
-        ])
-    def _matcher_427(self, stream):
-        return stream.with_scope(self._matcher_426)
     def _matcher_428(self, stream):
-        return stream.operator_or([
+        return stream.operator_and([
+            self._matcher_421,
+            self._matcher_426,
             self._matcher_427
         ])
     def _matcher_429(self, stream):
-        return stream.operator_star(self._matcher_428)
+        return stream.with_scope(self._matcher_428)
     def _matcher_430(self, stream):
-        return stream.bind('xs', self._matcher_429(stream))
-    def _matcher_431(self, stream):
         return stream.match(lambda item: item == '\n', "'\\n'")
+    def _matcher_431(self, stream):
+        return stream.operator_and([
+            self._matcher_430
+        ])
     def _matcher_432(self, stream):
+        return stream.operator_not(self._matcher_431)
+    def _matcher_433(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_434(self, stream):
+        return stream.operator_and([
+            self._matcher_432,
+            self._matcher_433
+        ])
+    def _matcher_435(self, stream):
+        return stream.with_scope(self._matcher_434)
+    def _matcher_436(self, stream):
+        return stream.operator_or([
+            self._matcher_435
+        ])
+    def _matcher_437(self, stream):
+        return stream.operator_star(self._matcher_436)
+    def _matcher_438(self, stream):
+        return stream.bind('xs', self._matcher_437(stream))
+    def _matcher_439(self, stream):
+        return stream.match(lambda item: item == '\n', "'\\n'")
+    def _matcher_440(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             self.lookup('xs'),
             '\n'
         ]))
-    def _matcher_433(self, stream):
+    def _matcher_441(self, stream):
         return stream.operator_and([
-            self._matcher_430,
-            self._matcher_431,
-            self._matcher_432
+            self._matcher_438,
+            self._matcher_439,
+            self._matcher_440
         ])
-    def _matcher_434(self, stream):
-        return stream.with_scope(self._matcher_433)
-    def _matcher_435(self, stream):
+    def _matcher_442(self, stream):
+        return stream.with_scope(self._matcher_441)
+    def _matcher_443(self, stream):
         return stream.match(lambda item: item == ' ', "' '")
-    def _matcher_436(self, stream):
+    def _matcher_444(self, stream):
         return self._rules['restLine'](stream)
-    def _matcher_437(self, stream):
-        return stream.bind('x', self._matcher_436(stream))
-    def _matcher_438(self, stream):
+    def _matcher_445(self, stream):
+        return stream.bind('x', self._matcher_444(stream))
+    def _matcher_446(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             ' ',
             self.lookup('x')
         ]))
-    def _matcher_439(self, stream):
-        return stream.operator_and([
-            self._matcher_435,
-            self._matcher_437,
-            self._matcher_438
-        ])
-    def _matcher_440(self, stream):
-        return stream.with_scope(self._matcher_439)
-    def _matcher_441(self, stream):
-        return stream.match(lambda item: item == '"', '\'"\'')
-    def _matcher_442(self, stream):
-        return stream.match(lambda item: item == '"', '\'"\'')
-    def _matcher_443(self, stream):
-        return stream.operator_and([
-            self._matcher_442
-        ])
-    def _matcher_444(self, stream):
-        return stream.operator_not(self._matcher_443)
-    def _matcher_445(self, stream):
-        return self._rules['innerChar'](stream)
-    def _matcher_446(self, stream):
-        return stream.operator_and([
-            self._matcher_444,
-            self._matcher_445
-        ])
     def _matcher_447(self, stream):
-        return stream.with_scope(self._matcher_446)
-    def _matcher_448(self, stream):
-        return stream.operator_or([
-            self._matcher_447
+        return stream.operator_and([
+            self._matcher_443,
+            self._matcher_445,
+            self._matcher_446
         ])
+    def _matcher_448(self, stream):
+        return stream.with_scope(self._matcher_447)
     def _matcher_449(self, stream):
-        return stream.operator_star(self._matcher_448)
-    def _matcher_450(self, stream):
-        return stream.bind('xs', self._matcher_449(stream))
-    def _matcher_451(self, stream):
         return stream.match(lambda item: item == '"', '\'"\'')
+    def _matcher_450(self, stream):
+        return stream.match(lambda item: item == '"', '\'"\'')
+    def _matcher_451(self, stream):
+        return stream.operator_and([
+            self._matcher_450
+        ])
     def _matcher_452(self, stream):
+        return stream.operator_not(self._matcher_451)
+    def _matcher_453(self, stream):
+        return self._rules['innerChar'](stream)
+    def _matcher_454(self, stream):
+        return stream.operator_and([
+            self._matcher_452,
+            self._matcher_453
+        ])
+    def _matcher_455(self, stream):
+        return stream.with_scope(self._matcher_454)
+    def _matcher_456(self, stream):
+        return stream.operator_or([
+            self._matcher_455
+        ])
+    def _matcher_457(self, stream):
+        return stream.operator_star(self._matcher_456)
+    def _matcher_458(self, stream):
+        return stream.bind('xs', self._matcher_457(stream))
+    def _matcher_459(self, stream):
+        return stream.match(lambda item: item == '"', '\'"\'')
+    def _matcher_460(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             self.lookup('xs')
         ]))
-    def _matcher_453(self, stream):
-        return stream.operator_and([
-            self._matcher_441,
-            self._matcher_450,
-            self._matcher_451,
-            self._matcher_452
-        ])
-    def _matcher_454(self, stream):
-        return stream.with_scope(self._matcher_453)
-    def _matcher_455(self, stream):
-        return stream.match(lambda item: item == "'", '"\'"')
-    def _matcher_456(self, stream):
-        return stream.match(lambda item: item == "'", '"\'"')
-    def _matcher_457(self, stream):
-        return stream.operator_and([
-            self._matcher_456
-        ])
-    def _matcher_458(self, stream):
-        return stream.operator_not(self._matcher_457)
-    def _matcher_459(self, stream):
-        return self._rules['innerChar'](stream)
-    def _matcher_460(self, stream):
-        return stream.bind('x', self._matcher_459(stream))
     def _matcher_461(self, stream):
-        return stream.match(lambda item: item == "'", '"\'"')
-    def _matcher_462(self, stream):
-        return stream.action(lambda self: self.lookup('x'))
-    def _matcher_463(self, stream):
         return stream.operator_and([
-            self._matcher_455,
+            self._matcher_449,
             self._matcher_458,
-            self._matcher_460,
-            self._matcher_461,
-            self._matcher_462
+            self._matcher_459,
+            self._matcher_460
         ])
+    def _matcher_462(self, stream):
+        return stream.with_scope(self._matcher_461)
+    def _matcher_463(self, stream):
+        return stream.match(lambda item: item == "'", '"\'"')
     def _matcher_464(self, stream):
-        return stream.with_scope(self._matcher_463)
+        return stream.match(lambda item: item == "'", '"\'"')
     def _matcher_465(self, stream):
-        return stream.match(lambda item: item == '\\', "'\\\\'")
-    def _matcher_466(self, stream):
-        return self._rules['escape'](stream)
-    def _matcher_467(self, stream):
         return stream.operator_and([
-            self._matcher_465,
-            self._matcher_466
+            self._matcher_464
         ])
+    def _matcher_466(self, stream):
+        return stream.operator_not(self._matcher_465)
+    def _matcher_467(self, stream):
+        return self._rules['innerChar'](stream)
     def _matcher_468(self, stream):
-        return stream.with_scope(self._matcher_467)
+        return stream.bind('x', self._matcher_467(stream))
     def _matcher_469(self, stream):
-        return stream.match(lambda item: True, 'any')
+        return stream.match(lambda item: item == "'", '"\'"')
     def _matcher_470(self, stream):
-        return stream.with_scope(self._matcher_469)
+        return stream.action(lambda self: self.lookup('x'))
     def _matcher_471(self, stream):
-        return stream.operator_or([
+        return stream.operator_and([
+            self._matcher_463,
+            self._matcher_466,
             self._matcher_468,
+            self._matcher_469,
             self._matcher_470
         ])
     def _matcher_472(self, stream):
-        return stream.match(lambda item: item == '\\', "'\\\\'")
+        return stream.with_scope(self._matcher_471)
     def _matcher_473(self, stream):
-        return stream.action(lambda self: '\\')
+        return stream.match(lambda item: item == '\\', "'\\\\'")
     def _matcher_474(self, stream):
-        return stream.operator_and([
-            self._matcher_472,
-            self._matcher_473
-        ])
+        return self._rules['escape'](stream)
     def _matcher_475(self, stream):
-        return stream.with_scope(self._matcher_474)
-    def _matcher_476(self, stream):
-        return stream.match(lambda item: item == "'", '"\'"')
-    def _matcher_477(self, stream):
-        return stream.action(lambda self: "'")
-    def _matcher_478(self, stream):
         return stream.operator_and([
-            self._matcher_476,
-            self._matcher_477
+            self._matcher_473,
+            self._matcher_474
         ])
+    def _matcher_476(self, stream):
+        return stream.with_scope(self._matcher_475)
+    def _matcher_477(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_478(self, stream):
+        return stream.with_scope(self._matcher_477)
     def _matcher_479(self, stream):
-        return stream.with_scope(self._matcher_478)
+        return stream.operator_or([
+            self._matcher_476,
+            self._matcher_478
+        ])
     def _matcher_480(self, stream):
-        return stream.match(lambda item: item == '"', '\'"\'')
+        return stream.match(lambda item: item == '\\', "'\\\\'")
     def _matcher_481(self, stream):
-        return stream.action(lambda self: '"')
+        return stream.action(lambda self: '\\')
     def _matcher_482(self, stream):
         return stream.operator_and([
             self._matcher_480,
@@ -2155,9 +2167,9 @@ class Parser:
     def _matcher_483(self, stream):
         return stream.with_scope(self._matcher_482)
     def _matcher_484(self, stream):
-        return stream.match(lambda item: item == 'n', "'n'")
+        return stream.match(lambda item: item == "'", '"\'"')
     def _matcher_485(self, stream):
-        return stream.action(lambda self: '\n')
+        return stream.action(lambda self: "'")
     def _matcher_486(self, stream):
         return stream.operator_and([
             self._matcher_484,
@@ -2166,317 +2178,339 @@ class Parser:
     def _matcher_487(self, stream):
         return stream.with_scope(self._matcher_486)
     def _matcher_488(self, stream):
-        return stream.operator_or([
-            self._matcher_475,
-            self._matcher_479,
-            self._matcher_483,
-            self._matcher_487
-        ])
+        return stream.match(lambda item: item == '"', '\'"\'')
     def _matcher_489(self, stream):
-        return stream.match(lambda item: '0' <= item <= '9', "'0'-'9'")
+        return stream.action(lambda self: '"')
     def _matcher_490(self, stream):
-        return stream.bind('x', self._matcher_489(stream))
+        return stream.operator_and([
+            self._matcher_488,
+            self._matcher_489
+        ])
     def _matcher_491(self, stream):
-        return stream.match(lambda item: '0' <= item <= '9', "'0'-'9'")
+        return stream.with_scope(self._matcher_490)
     def _matcher_492(self, stream):
-        return stream.operator_star(self._matcher_491)
+        return stream.match(lambda item: item == 'n', "'n'")
     def _matcher_493(self, stream):
-        return stream.bind('xs', self._matcher_492(stream))
+        return stream.action(lambda self: '\n')
     def _matcher_494(self, stream):
+        return stream.operator_and([
+            self._matcher_492,
+            self._matcher_493
+        ])
+    def _matcher_495(self, stream):
+        return stream.with_scope(self._matcher_494)
+    def _matcher_496(self, stream):
+        return stream.operator_or([
+            self._matcher_483,
+            self._matcher_487,
+            self._matcher_491,
+            self._matcher_495
+        ])
+    def _matcher_497(self, stream):
+        return stream.match(lambda item: '0' <= item <= '9', "'0'-'9'")
+    def _matcher_498(self, stream):
+        return stream.bind('x', self._matcher_497(stream))
+    def _matcher_499(self, stream):
+        return stream.match(lambda item: '0' <= item <= '9', "'0'-'9'")
+    def _matcher_500(self, stream):
+        return stream.operator_star(self._matcher_499)
+    def _matcher_501(self, stream):
+        return stream.bind('xs', self._matcher_500(stream))
+    def _matcher_502(self, stream):
         return stream.action(lambda self: self.lookup('int')(
             self.lookup('join')([
                 self.lookup('x'),
                 self.lookup('xs')
             ])
         ))
-    def _matcher_495(self, stream):
-        return stream.operator_and([
-            self._matcher_490,
-            self._matcher_493,
-            self._matcher_494
-        ])
-    def _matcher_496(self, stream):
-        return stream.with_scope(self._matcher_495)
-    def _matcher_497(self, stream):
-        return self._rules['reserved'](stream)
-    def _matcher_498(self, stream):
-        return stream.operator_not(self._matcher_497)
-    def _matcher_499(self, stream):
-        return self._rules['nameStart'](stream)
-    def _matcher_500(self, stream):
-        return stream.bind('x', self._matcher_499(stream))
-    def _matcher_501(self, stream):
-        return self._rules['nameChar'](stream)
-    def _matcher_502(self, stream):
-        return stream.operator_star(self._matcher_501)
     def _matcher_503(self, stream):
-        return stream.bind('xs', self._matcher_502(stream))
+        return stream.operator_and([
+            self._matcher_498,
+            self._matcher_501,
+            self._matcher_502
+        ])
     def _matcher_504(self, stream):
+        return stream.with_scope(self._matcher_503)
+    def _matcher_505(self, stream):
+        return self._rules['reserved'](stream)
+    def _matcher_506(self, stream):
+        return stream.operator_not(self._matcher_505)
+    def _matcher_507(self, stream):
+        return self._rules['nameStart'](stream)
+    def _matcher_508(self, stream):
+        return stream.bind('x', self._matcher_507(stream))
+    def _matcher_509(self, stream):
+        return self._rules['nameChar'](stream)
+    def _matcher_510(self, stream):
+        return stream.operator_star(self._matcher_509)
+    def _matcher_511(self, stream):
+        return stream.bind('xs', self._matcher_510(stream))
+    def _matcher_512(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             self.lookup('x'),
             self.lookup('xs')
         ]))
-    def _matcher_505(self, stream):
-        return stream.operator_and([
-            self._matcher_498,
-            self._matcher_500,
-            self._matcher_503,
-            self._matcher_504
-        ])
-    def _matcher_506(self, stream):
-        return stream.with_scope(self._matcher_505)
-    def _matcher_507(self, stream):
-        return self._rules['keyDef'](stream)
-    def _matcher_508(self, stream):
-        return stream.with_scope(self._matcher_507)
-    def _matcher_509(self, stream):
-        return self._rules['keyActor'](stream)
-    def _matcher_510(self, stream):
-        return stream.with_scope(self._matcher_509)
-    def _matcher_511(self, stream):
-        return self._rules['keyWhere'](stream)
-    def _matcher_512(self, stream):
-        return stream.with_scope(self._matcher_511)
     def _matcher_513(self, stream):
-        return self._rules['keyUniverse'](stream)
+        return stream.operator_and([
+            self._matcher_506,
+            self._matcher_508,
+            self._matcher_511,
+            self._matcher_512
+        ])
     def _matcher_514(self, stream):
         return stream.with_scope(self._matcher_513)
     def _matcher_515(self, stream):
-        return self._rules['keyExamples'](stream)
+        return self._rules['keyDef'](stream)
     def _matcher_516(self, stream):
         return stream.with_scope(self._matcher_515)
     def _matcher_517(self, stream):
-        return stream.operator_or([
-            self._matcher_508,
-            self._matcher_510,
-            self._matcher_512,
-            self._matcher_514,
-            self._matcher_516
-        ])
+        return self._rules['keyActor'](stream)
     def _matcher_518(self, stream):
-        return stream.match(lambda item: item == 'd', "'d'")
+        return stream.with_scope(self._matcher_517)
     def _matcher_519(self, stream):
-        return stream.match(lambda item: item == 'e', "'e'")
+        return self._rules['keyWhere'](stream)
     def _matcher_520(self, stream):
-        return stream.match(lambda item: item == 'f', "'f'")
+        return stream.with_scope(self._matcher_519)
     def _matcher_521(self, stream):
-        return self._rules['nameChar'](stream)
+        return self._rules['keyUniverse'](stream)
     def _matcher_522(self, stream):
-        return stream.operator_not(self._matcher_521)
+        return stream.with_scope(self._matcher_521)
     def _matcher_523(self, stream):
-        return stream.operator_and([
-            self._matcher_518,
-            self._matcher_519,
-            self._matcher_520,
-            self._matcher_522
-        ])
+        return self._rules['keyExamples'](stream)
     def _matcher_524(self, stream):
         return stream.with_scope(self._matcher_523)
     def _matcher_525(self, stream):
-        return stream.match(lambda item: item == 'a', "'a'")
+        return stream.operator_or([
+            self._matcher_516,
+            self._matcher_518,
+            self._matcher_520,
+            self._matcher_522,
+            self._matcher_524
+        ])
     def _matcher_526(self, stream):
-        return stream.match(lambda item: item == 'c', "'c'")
+        return stream.match(lambda item: item == 'd', "'d'")
     def _matcher_527(self, stream):
-        return stream.match(lambda item: item == 't', "'t'")
+        return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_528(self, stream):
-        return stream.match(lambda item: item == 'o', "'o'")
+        return stream.match(lambda item: item == 'f', "'f'")
     def _matcher_529(self, stream):
-        return stream.match(lambda item: item == 'r', "'r'")
-    def _matcher_530(self, stream):
         return self._rules['nameChar'](stream)
+    def _matcher_530(self, stream):
+        return stream.operator_not(self._matcher_529)
     def _matcher_531(self, stream):
-        return stream.operator_not(self._matcher_530)
-    def _matcher_532(self, stream):
         return stream.operator_and([
-            self._matcher_525,
             self._matcher_526,
             self._matcher_527,
             self._matcher_528,
-            self._matcher_529,
-            self._matcher_531
+            self._matcher_530
         ])
+    def _matcher_532(self, stream):
+        return stream.with_scope(self._matcher_531)
     def _matcher_533(self, stream):
-        return stream.with_scope(self._matcher_532)
+        return stream.match(lambda item: item == 'a', "'a'")
     def _matcher_534(self, stream):
-        return stream.match(lambda item: item == 'w', "'w'")
+        return stream.match(lambda item: item == 'c', "'c'")
     def _matcher_535(self, stream):
-        return stream.match(lambda item: item == 'h', "'h'")
+        return stream.match(lambda item: item == 't', "'t'")
     def _matcher_536(self, stream):
-        return stream.match(lambda item: item == 'e', "'e'")
+        return stream.match(lambda item: item == 'o', "'o'")
     def _matcher_537(self, stream):
         return stream.match(lambda item: item == 'r', "'r'")
     def _matcher_538(self, stream):
-        return stream.match(lambda item: item == 'e', "'e'")
-    def _matcher_539(self, stream):
         return self._rules['nameChar'](stream)
+    def _matcher_539(self, stream):
+        return stream.operator_not(self._matcher_538)
     def _matcher_540(self, stream):
-        return stream.operator_not(self._matcher_539)
-    def _matcher_541(self, stream):
         return stream.operator_and([
+            self._matcher_533,
             self._matcher_534,
             self._matcher_535,
             self._matcher_536,
             self._matcher_537,
-            self._matcher_538,
-            self._matcher_540
+            self._matcher_539
         ])
+    def _matcher_541(self, stream):
+        return stream.with_scope(self._matcher_540)
     def _matcher_542(self, stream):
-        return stream.with_scope(self._matcher_541)
+        return stream.match(lambda item: item == 'w', "'w'")
     def _matcher_543(self, stream):
-        return stream.match(lambda item: item == 'u', "'u'")
+        return stream.match(lambda item: item == 'h', "'h'")
     def _matcher_544(self, stream):
-        return stream.match(lambda item: item == 'n', "'n'")
+        return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_545(self, stream):
-        return stream.match(lambda item: item == 'i', "'i'")
-    def _matcher_546(self, stream):
-        return stream.match(lambda item: item == 'v', "'v'")
-    def _matcher_547(self, stream):
-        return stream.match(lambda item: item == 'e', "'e'")
-    def _matcher_548(self, stream):
         return stream.match(lambda item: item == 'r', "'r'")
-    def _matcher_549(self, stream):
-        return stream.match(lambda item: item == 's', "'s'")
-    def _matcher_550(self, stream):
+    def _matcher_546(self, stream):
         return stream.match(lambda item: item == 'e', "'e'")
-    def _matcher_551(self, stream):
+    def _matcher_547(self, stream):
         return self._rules['nameChar'](stream)
-    def _matcher_552(self, stream):
-        return stream.operator_not(self._matcher_551)
-    def _matcher_553(self, stream):
+    def _matcher_548(self, stream):
+        return stream.operator_not(self._matcher_547)
+    def _matcher_549(self, stream):
         return stream.operator_and([
+            self._matcher_542,
             self._matcher_543,
             self._matcher_544,
             self._matcher_545,
             self._matcher_546,
-            self._matcher_547,
-            self._matcher_548,
-            self._matcher_549,
-            self._matcher_550,
-            self._matcher_552
+            self._matcher_548
         ])
+    def _matcher_550(self, stream):
+        return stream.with_scope(self._matcher_549)
+    def _matcher_551(self, stream):
+        return stream.match(lambda item: item == 'u', "'u'")
+    def _matcher_552(self, stream):
+        return stream.match(lambda item: item == 'n', "'n'")
+    def _matcher_553(self, stream):
+        return stream.match(lambda item: item == 'i', "'i'")
     def _matcher_554(self, stream):
-        return stream.with_scope(self._matcher_553)
+        return stream.match(lambda item: item == 'v', "'v'")
     def _matcher_555(self, stream):
         return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_556(self, stream):
-        return stream.match(lambda item: item == 'x', "'x'")
+        return stream.match(lambda item: item == 'r', "'r'")
     def _matcher_557(self, stream):
-        return stream.match(lambda item: item == 'a', "'a'")
-    def _matcher_558(self, stream):
-        return stream.match(lambda item: item == 'm', "'m'")
-    def _matcher_559(self, stream):
-        return stream.match(lambda item: item == 'p', "'p'")
-    def _matcher_560(self, stream):
-        return stream.match(lambda item: item == 'l', "'l'")
-    def _matcher_561(self, stream):
-        return stream.match(lambda item: item == 'e', "'e'")
-    def _matcher_562(self, stream):
         return stream.match(lambda item: item == 's', "'s'")
-    def _matcher_563(self, stream):
+    def _matcher_558(self, stream):
+        return stream.match(lambda item: item == 'e', "'e'")
+    def _matcher_559(self, stream):
         return self._rules['nameChar'](stream)
-    def _matcher_564(self, stream):
-        return stream.operator_not(self._matcher_563)
-    def _matcher_565(self, stream):
+    def _matcher_560(self, stream):
+        return stream.operator_not(self._matcher_559)
+    def _matcher_561(self, stream):
         return stream.operator_and([
+            self._matcher_551,
+            self._matcher_552,
+            self._matcher_553,
+            self._matcher_554,
             self._matcher_555,
             self._matcher_556,
             self._matcher_557,
             self._matcher_558,
-            self._matcher_559,
-            self._matcher_560,
-            self._matcher_561,
-            self._matcher_562,
-            self._matcher_564
+            self._matcher_560
         ])
+    def _matcher_562(self, stream):
+        return stream.with_scope(self._matcher_561)
+    def _matcher_563(self, stream):
+        return stream.match(lambda item: item == 'e', "'e'")
+    def _matcher_564(self, stream):
+        return stream.match(lambda item: item == 'x', "'x'")
+    def _matcher_565(self, stream):
+        return stream.match(lambda item: item == 'a', "'a'")
     def _matcher_566(self, stream):
-        return stream.with_scope(self._matcher_565)
+        return stream.match(lambda item: item == 'm', "'m'")
     def _matcher_567(self, stream):
-        return stream.match(lambda item: 'a' <= item <= 'z', "'a'-'z'")
+        return stream.match(lambda item: item == 'p', "'p'")
     def _matcher_568(self, stream):
-        return stream.with_scope(self._matcher_567)
+        return stream.match(lambda item: item == 'l', "'l'")
     def _matcher_569(self, stream):
-        return stream.match(lambda item: 'A' <= item <= 'Z', "'A'-'Z'")
+        return stream.match(lambda item: item == 'e', "'e'")
     def _matcher_570(self, stream):
-        return stream.with_scope(self._matcher_569)
+        return stream.match(lambda item: item == 's', "'s'")
     def _matcher_571(self, stream):
-        return stream.operator_or([
-            self._matcher_568,
-            self._matcher_570
-        ])
+        return self._rules['nameChar'](stream)
     def _matcher_572(self, stream):
-        return stream.match(lambda item: 'a' <= item <= 'z', "'a'-'z'")
+        return stream.operator_not(self._matcher_571)
     def _matcher_573(self, stream):
-        return stream.with_scope(self._matcher_572)
+        return stream.operator_and([
+            self._matcher_563,
+            self._matcher_564,
+            self._matcher_565,
+            self._matcher_566,
+            self._matcher_567,
+            self._matcher_568,
+            self._matcher_569,
+            self._matcher_570,
+            self._matcher_572
+        ])
     def _matcher_574(self, stream):
-        return stream.match(lambda item: 'A' <= item <= 'Z', "'A'-'Z'")
+        return stream.with_scope(self._matcher_573)
     def _matcher_575(self, stream):
-        return stream.with_scope(self._matcher_574)
+        return stream.match(lambda item: 'a' <= item <= 'z', "'a'-'z'")
     def _matcher_576(self, stream):
-        return stream.match(lambda item: '0' <= item <= '9', "'0'-'9'")
+        return stream.with_scope(self._matcher_575)
     def _matcher_577(self, stream):
-        return stream.with_scope(self._matcher_576)
+        return stream.match(lambda item: 'A' <= item <= 'Z', "'A'-'Z'")
     def _matcher_578(self, stream):
-        return stream.operator_or([
-            self._matcher_573,
-            self._matcher_575,
-            self._matcher_577
-        ])
+        return stream.with_scope(self._matcher_577)
     def _matcher_579(self, stream):
-        return stream.match(lambda item: item == ' ', "' '")
-    def _matcher_580(self, stream):
-        return stream.with_scope(self._matcher_579)
-    def _matcher_581(self, stream):
-        return stream.match(lambda item: item == '\n', "'\\n'")
-    def _matcher_582(self, stream):
-        return stream.with_scope(self._matcher_581)
-    def _matcher_583(self, stream):
-        return self._rules['comment'](stream)
-    def _matcher_584(self, stream):
-        return stream.with_scope(self._matcher_583)
-    def _matcher_585(self, stream):
         return stream.operator_or([
-            self._matcher_580,
-            self._matcher_582,
-            self._matcher_584
+            self._matcher_576,
+            self._matcher_578
         ])
+    def _matcher_580(self, stream):
+        return stream.match(lambda item: 'a' <= item <= 'z', "'a'-'z'")
+    def _matcher_581(self, stream):
+        return stream.with_scope(self._matcher_580)
+    def _matcher_582(self, stream):
+        return stream.match(lambda item: 'A' <= item <= 'Z', "'A'-'Z'")
+    def _matcher_583(self, stream):
+        return stream.with_scope(self._matcher_582)
+    def _matcher_584(self, stream):
+        return stream.match(lambda item: '0' <= item <= '9', "'0'-'9'")
+    def _matcher_585(self, stream):
+        return stream.with_scope(self._matcher_584)
     def _matcher_586(self, stream):
-        return stream.operator_star(self._matcher_585)
+        return stream.operator_or([
+            self._matcher_581,
+            self._matcher_583,
+            self._matcher_585
+        ])
     def _matcher_587(self, stream):
-        return stream.with_scope(self._matcher_586)
+        return stream.match(lambda item: item == ' ', "' '")
     def _matcher_588(self, stream):
-        return stream.match(lambda item: item == '/', "'/'")
+        return stream.with_scope(self._matcher_587)
     def _matcher_589(self, stream):
-        return stream.match(lambda item: item == '/', "'/'")
-    def _matcher_590(self, stream):
         return stream.match(lambda item: item == '\n', "'\\n'")
+    def _matcher_590(self, stream):
+        return stream.with_scope(self._matcher_589)
     def _matcher_591(self, stream):
-        return stream.operator_and([
-            self._matcher_590
-        ])
+        return self._rules['comment'](stream)
     def _matcher_592(self, stream):
-        return stream.operator_not(self._matcher_591)
+        return stream.with_scope(self._matcher_591)
     def _matcher_593(self, stream):
-        return stream.match(lambda item: True, 'any')
-    def _matcher_594(self, stream):
-        return stream.operator_and([
-            self._matcher_592,
-            self._matcher_593
+        return stream.operator_or([
+            self._matcher_588,
+            self._matcher_590,
+            self._matcher_592
         ])
+    def _matcher_594(self, stream):
+        return stream.operator_star(self._matcher_593)
     def _matcher_595(self, stream):
         return stream.with_scope(self._matcher_594)
     def _matcher_596(self, stream):
-        return stream.operator_star(self._matcher_595)
+        return stream.match(lambda item: item == '/', "'/'")
     def _matcher_597(self, stream):
-        return stream.match(lambda item: item == '\n', "'\\n'")
+        return stream.match(lambda item: item == '/', "'/'")
     def _matcher_598(self, stream):
-        return stream.operator_and([
-            self._matcher_588,
-            self._matcher_589,
-            self._matcher_596,
-            self._matcher_597
-        ])
+        return stream.match(lambda item: item == '\n', "'\\n'")
     def _matcher_599(self, stream):
-        return stream.with_scope(self._matcher_598)
+        return stream.operator_and([
+            self._matcher_598
+        ])
+    def _matcher_600(self, stream):
+        return stream.operator_not(self._matcher_599)
+    def _matcher_601(self, stream):
+        return stream.match(lambda item: True, 'any')
+    def _matcher_602(self, stream):
+        return stream.operator_and([
+            self._matcher_600,
+            self._matcher_601
+        ])
+    def _matcher_603(self, stream):
+        return stream.with_scope(self._matcher_602)
+    def _matcher_604(self, stream):
+        return stream.operator_star(self._matcher_603)
+    def _matcher_605(self, stream):
+        return stream.match(lambda item: item == '\n', "'\\n'")
+    def _matcher_606(self, stream):
+        return stream.operator_and([
+            self._matcher_596,
+            self._matcher_597,
+            self._matcher_604,
+            self._matcher_605
+        ])
+    def _matcher_607(self, stream):
+        return stream.with_scope(self._matcher_606)
 natives['Parser'] = Parser
 class Optimizer:
     def __init__(self):
@@ -2818,10 +2852,11 @@ class CodeGenerator:
             'ListItem': self._matcher_204,
             'Format': self._matcher_209,
             'Call': self._matcher_216,
-            'Lookup': self._matcher_221,
-            'astList': self._matcher_227,
-            'matcher': self._matcher_229,
-            'repr': self._matcher_234,
+            'Get': self._matcher_223,
+            'Lookup': self._matcher_228,
+            'astList': self._matcher_234,
+            'matcher': self._matcher_236,
+            'repr': self._matcher_241,
         }
         self._main = self._rules.pop('_main')
     def run(self, stream):
@@ -3614,29 +3649,52 @@ class CodeGenerator:
     def _matcher_216(self, stream):
         return stream.with_scope(self._matcher_215)
     def _matcher_217(self, stream):
-        return self._rules['repr'](stream)
+        return self._rules['ast'](stream)
     def _matcher_218(self, stream):
         return stream.bind('x', self._matcher_217(stream))
     def _matcher_219(self, stream):
+        return self._rules['repr'](stream)
+    def _matcher_220(self, stream):
+        return stream.bind('y', self._matcher_219(stream))
+    def _matcher_221(self, stream):
+        return stream.action(lambda self: self.lookup('join')([
+            self.lookup('x'),
+            '[',
+            self.lookup('y'),
+            ']'
+        ]))
+    def _matcher_222(self, stream):
+        return stream.operator_and([
+            self._matcher_218,
+            self._matcher_220,
+            self._matcher_221
+        ])
+    def _matcher_223(self, stream):
+        return stream.with_scope(self._matcher_222)
+    def _matcher_224(self, stream):
+        return self._rules['repr'](stream)
+    def _matcher_225(self, stream):
+        return stream.bind('x', self._matcher_224(stream))
+    def _matcher_226(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             'self.lookup(',
             self.lookup('x'),
             ')'
         ]))
-    def _matcher_220(self, stream):
+    def _matcher_227(self, stream):
         return stream.operator_and([
-            self._matcher_218,
-            self._matcher_219
+            self._matcher_225,
+            self._matcher_226
         ])
-    def _matcher_221(self, stream):
-        return stream.with_scope(self._matcher_220)
-    def _matcher_222(self, stream):
+    def _matcher_228(self, stream):
+        return stream.with_scope(self._matcher_227)
+    def _matcher_229(self, stream):
         return self._rules['ast'](stream)
-    def _matcher_223(self, stream):
-        return stream.operator_star(self._matcher_222)
-    def _matcher_224(self, stream):
-        return stream.bind('xs', self._matcher_223(stream))
-    def _matcher_225(self, stream):
+    def _matcher_230(self, stream):
+        return stream.operator_star(self._matcher_229)
+    def _matcher_231(self, stream):
+        return stream.bind('xs', self._matcher_230(stream))
+    def _matcher_232(self, stream):
         return stream.action(lambda self: self.lookup('join')([
             '\n',
             self.lookup('indent')(
@@ -3647,14 +3705,14 @@ class CodeGenerator:
             ),
             '\n'
         ]))
-    def _matcher_226(self, stream):
+    def _matcher_233(self, stream):
         return stream.operator_and([
-            self._matcher_224,
-            self._matcher_225
+            self._matcher_231,
+            self._matcher_232
         ])
-    def _matcher_227(self, stream):
-        return stream.with_scope(self._matcher_226)
-    def _matcher_228(self, stream):
+    def _matcher_234(self, stream):
+        return stream.with_scope(self._matcher_233)
+    def _matcher_235(self, stream):
         return stream.action(lambda self: self.bind('id', self.lookup('join')([
             '_matcher_',
             self.lookup('nextid')(
@@ -3677,23 +3735,23 @@ class CodeGenerator:
             'self.',
             self.lookup('id')
         ]))))
-    def _matcher_229(self, stream):
-        return stream.with_scope(self._matcher_228)
-    def _matcher_230(self, stream):
+    def _matcher_236(self, stream):
+        return stream.with_scope(self._matcher_235)
+    def _matcher_237(self, stream):
         return stream.match(lambda item: True, 'any')
-    def _matcher_231(self, stream):
-        return stream.bind('x', self._matcher_230(stream))
-    def _matcher_232(self, stream):
+    def _matcher_238(self, stream):
+        return stream.bind('x', self._matcher_237(stream))
+    def _matcher_239(self, stream):
         return stream.action(lambda self: self.lookup('repr')(
             self.lookup('x')
         ))
-    def _matcher_233(self, stream):
+    def _matcher_240(self, stream):
         return stream.operator_and([
-            self._matcher_231,
-            self._matcher_232
+            self._matcher_238,
+            self._matcher_239
         ])
-    def _matcher_234(self, stream):
-        return stream.with_scope(self._matcher_233)
+    def _matcher_241(self, stream):
+        return stream.with_scope(self._matcher_240)
 natives['CodeGenerator'] = CodeGenerator
 class PartCollector:
     def __init__(self, n, last, parts, doneMsg):
