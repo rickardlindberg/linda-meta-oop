@@ -1,3 +1,25 @@
+actor Main = "Args" -> selftest()
+
+universe Part1 =
+    CLI()
+    GridParser()
+    EngineParser()
+    ExpandAdjecant()
+    PartSummer()
+    examples
+        ["Args" "example1.txt"] -> [["Result" 4361]]
+        ["Args" "input1.txt"] -> [["Result" 520019]]
+
+universe Part2 =
+    CLI()
+    GridParser()
+    EngineParser()
+    ExpandAdjecant()
+    GearSummer()
+    examples
+        ["Args" "example1.txt"] -> [["Result" 467835]]
+        ["Args" "input1.txt"] -> [["Result" 75519888]]
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -9,6 +31,11 @@ actor GridParser =
                                   -> nextRow():row
                                   -> xs
         col = !'\n' .:x           -> [x row nextCol()]
+    examples
+        ["File" "*\n*.\n"] ->
+            [["Grid"
+                [["*" 0 0]]
+                [["*" 1 0] ["." 1 1]]]]
 
 actor EngineParser =
     "Grid" row*:xs -> []:numbers
@@ -27,6 +54,21 @@ actor EngineParser =
             | [['0'-'9':x] .:row .:col !.] -> append(positions [row col]) -> x
         symbol =
             | [!"." .:x    .:row .:col !.] -> append(symbols [x row col])
+    examples
+        ["Grid"
+            [["1" 0 0]]
+            [["*" 1 0] ["." 1 1]]] ->
+        [["Engine"
+            ["Numbers" [1 [0 0]]]
+            ["Symbols" ["*" 1 0]]]]
+        ["Grid"
+            [["1" 0 0] ["2" 0 1]]] ->
+        [["Engine"
+            ["Numbers" [12 [0 0] [0 1]]]
+            ["Symbols"]]]
+
+def append list thing =
+    list.append(thing)
 
 actor ExpandAdjecant =
     "Engine" ["Numbers" number*:xs !.]
@@ -51,6 +93,52 @@ actor ExpandAdjecant =
             | [.:row .:col] positionsRest:xs ->
                 [[sub(row 1) col]
                  [add(row 1) col] ~xs]
+    examples
+        ["Engine"
+            ["Numbers" [12 [0 0] [0 1]]]
+            ["Symbols" ["*" 2 2]]] ->
+        [["FlatEngine"
+            ["Numbers" [12 [negate(1) negate(1)] [negate(1) 0]
+                             [ 0 negate(1)]
+                             [ 1 negate(1)] [ 1 0]
+                                                [negate(1) 1] [negate(1) 2]
+                                                         [ 0 2]
+                                                [ 1 1] [ 1 2]]]
+
+            ["Symbols" ["*" 2 2]]]]
+        ["Engine"
+            ["Numbers" [1 [0 0]]]
+            ["Symbols" ["*" 2 2]]] ->
+        [["FlatEngine"
+            ["Numbers" [1 [negate(1) negate(1)] [negate(1) 0] [negate(1) 1]
+                            [ 0 negate(1)]          [ 0 1]
+                            [ 1 negate(1)] [ 1 0] [ 1 1]]]
+            ["Symbols" ["*" 2 2]]]]
+        ["Engine"
+            ["Numbers" [123 [0 0] [0 1] [0 2]]]
+            ["Symbols" ["*" 2 2]]] ->
+        [["FlatEngine"
+            ["Numbers" [123 [negate(1) negate(1)] [negate(1) 0]
+                              [ 0 negate(1)]
+                              [ 1 negate(1)] [ 1 0]
+                                                 [negate(1) 1]
+
+                                                 [ 1 1]
+                                                          [negate(1) 2] [negate(1) 3]
+                                                                   [ 0 3]
+                                                          [ 1 2] [ 1 3]]]
+
+
+            ["Symbols" ["*" 2 2]]]]
+
+def negate x =
+    return -x
+
+def sub x y =
+    return x - y
+
+def add x y =
+    return x + y
 
 actor PartSummer =
     "FlatEngine" ["Numbers" number*:xs !.]
@@ -70,3 +158,19 @@ actor GearSummer =
         symbol =
             | ["*" .:row .:col] -> getRatio(row col numbers)
             | .                 -> 0
+
+def countIfOverlap number set1 set2 =
+    for x in set1:
+        if x in set2:
+            return number
+    return 0
+
+def getRatio row col numbers =
+    x = []
+    for number in numbers:
+        if [row, col] in number[1:]:
+            x.append(number[0])
+    if len(x) == 2:
+        return x[0] * x[1]
+    else:
+        return 0
