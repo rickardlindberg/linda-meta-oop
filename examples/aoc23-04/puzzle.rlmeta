@@ -1,3 +1,24 @@
+actor Main = "Args" -> selftest()
+
+universe Part1 =
+    CLI()
+    ScorecardParser()
+    PointCounter()
+    examples
+        ["Args" "example1.txt"] -> [["Result" 13]]
+        ["Args" "input1.txt"] -> [["Result" 21088]]
+
+universe Part2 =
+    CLI()
+    ScorecardParser()
+    CardCounter()
+    examples
+        ["Args" "example1.txt"] -> [["Result" 30]]
+        ["Args" "input1.txt"] -> [["Result" 6874754]]
+
+def add x y =
+    return x+y
+
 actor CLI =
     "Args" .:input !. -> put(["File" read(input)])
 
@@ -12,6 +33,13 @@ actor ScorecardParser =
             ^'\n' -> ["Card" x ["Winning" ~xs] ["Gotten" ~ys]]
         number = '0'-'9':x '0'-'9'*:xs -> int({x xs})
         space = ' '*
+    examples
+        ["File" "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53\n"] ->
+            [["Scorecards"
+                ["Card"
+                    1
+                    ["Winning" 41 48 83 86 17]
+                    ["Gotten" 83 86 6 31 17 9 48 53]]]]
 
 actor PointCounter =
     "Scorecards" countCard*:xs -> put(["Result" sum(xs)])
@@ -27,3 +55,27 @@ actor CardCounter =
     where
         countCard = ["Card" . ["Winning" .*:winning] ["Gotten" .*:gotten]]
             -> [1 countMatching(winning gotten)]
+
+def points winning gotten =
+    y = countMatching(winning, gotten)
+    if y > 0:
+        return 2**(y-1)
+    else:
+        return 0
+
+def countMatching winning gotten =
+    y = 0
+    for x in gotten:
+        if x in winning:
+            y += 1
+    return y
+
+def patch cards count adder =
+    xs = []
+    for i in range(count):
+        y, z = cards[i]
+        xs.append([y+adder, z])
+    return xs+cards[count:]
+
+// TODO: how to test in rlmeta?
+// assert patch([[1, 1], [1, 1], [1, 1]], 2, 1) == [[2, 1], [2, 1], [1, 1]]
