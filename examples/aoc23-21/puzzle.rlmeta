@@ -17,7 +17,7 @@ actor Parser =
         map = row*:xs
             -> Counter():nextRow
             -> dict([~~~xs]):map
-            -> ["Map" get(map "start") mover(map)]
+            -> ["Map" map.start mover(map)]
         row = col*:xs '\n'
             -> nextRow():row
             -> Counter():nextCol
@@ -43,9 +43,6 @@ def mover map =
             if map.get(pos, None) == "."
         ]
     return move
-
-def get dict name =
-    return dict[name]
 
 actor Mover =
     "Map" .:start .:move !. -> put(["Result" walk64(start move)])
