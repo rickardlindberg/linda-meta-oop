@@ -39,21 +39,21 @@ actor GridParser =
 
 actor EngineParser =
     "Grid" row*:xs -> []:numbers
-                   -> []:symbols
-                   -> xs
+                   -> collectDictList([~~xs]):result
                    -> put(["Engine" ["Numbers" ~numbers]
-                                    ["Symbols" ~symbols]])
+                                    ["Symbols" ~result.symbols]])
     where
-        row = [col*:xs !.]   -> xs
-        col = number | symbol | .
+        row = [col*:xs !.]   -> [~~xs]
+        col = number | symbol | . -> []
         number = digits:x -> []:positions
                           -> append(numbers [x ~positions])
+                          -> []
         digits =
             | digit:x digit*:xs -> int({x xs})
         digit =
             | [['0'-'9':x] .:row .:col !.] -> append(positions [row col]) -> x
         symbol =
-            | [!"." .:x    .:row .:col !.] -> append(symbols [x row col])
+            | [!"." .:x    .:row .:col !.] -> [tuple("symbols" [x row col])]
     examples
         ["Grid"
             [["1" 0 0]]

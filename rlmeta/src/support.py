@@ -1,5 +1,6 @@
 import sys
 import unittest
+from collections import defaultdict
 
 class Stream:
 
@@ -169,10 +170,8 @@ class Runtime:
         return [x for xs in lists for x in xs]
 
     def collectDictList(self, tuples):
-        result = {}
+        result = defaultdict(list)
         for key, value in tuples:
-            if key not in result:
-                result[key] = []
             result[key].append(value)
         return result
 
